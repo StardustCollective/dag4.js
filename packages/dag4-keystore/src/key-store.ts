@@ -56,7 +56,7 @@ export class KeyStore {
     return Wallet.generate().getPrivateKey().toString("hex")
   }
 
-  encryptedPhrase (phrase: string, password: string) {
+  encryptPhrase (phrase: string, password: string) {
     return V3Keystore.encryptPhrase(phrase, password);
   }
 
@@ -106,9 +106,9 @@ export class KeyStore {
     }
   }
 
-  getChildKeyFromMasterKey (masterKey: hdkey, index: number) {
-    const childKey = masterKey.derivePath(CONSTANTS.BIP_44_DAG_PATH + index);
-    const wallet = childKey.getWallet();
+  deriveAccountFromMaster (masterKey: hdkey, index: number) {
+    const accountKey = masterKey.derivePath(CONSTANTS.BIP_44_DAG_PATH + index);
+    const wallet = accountKey.getWallet();
     return wallet.getPrivateKey().toString("hex")
   }
 
@@ -145,6 +145,11 @@ export class KeyStore {
 
   getDagAddressFromPrivateKey (privateKeyHex: string) {
     return this.getDagAddressFromPublicKey(this.getPublicKeyFromPrivate(privateKeyHex));
+  }
+
+  getEthAddressFromPrivateKey (privateKeyHex: string) {
+    const wallet = Wallet.fromPrivateKey(Buffer.from(privateKeyHex, "hex"));
+    return wallet.getAddressString();
   }
 
   getDagAddressFromPublicKey (publicKeyHex: string) {

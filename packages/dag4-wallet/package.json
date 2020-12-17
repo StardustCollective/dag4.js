@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-wallet",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -13,14 +13,14 @@
     "prebuild": "rimraf dist/",
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "rollup": "rollup -c ../../scripts/config/rollup.config.js",
-    "prerelease": "npm run build",
+    "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
     "release:preflight": "npm pack ./dist --dry-run"
   },
   "dependencies": {
-    "@stardust-collective/dag4-core": "^0.0.2",
-    "@stardust-collective/dag4-keystore": "^0.0.1",
+    "@stardust-collective/dag4-core": "^0.0.3",
+    "@stardust-collective/dag4-keystore": "^0.0.2",
     "@stardust-collective/dag4-network": "^0.0.1"
   }
 }

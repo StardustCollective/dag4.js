@@ -7,7 +7,7 @@ describe('V3 Keystore', () => {
 
     const phrase = "solution rookie cake shine hand attack claw awful harsh level case vocal";
 
-    const jsonKey = await keyStore.encryptedPhrase(phrase, 'password');
+    const jsonKey = await keyStore.encryptPhrase(phrase, 'password');
 
     const phrase2 = await keyStore.decryptPhrase(jsonKey, 'password');
 
