@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig-package-esm.json",
+  "compilerOptions": {
+    "baseUrl": "src",
+    "outDir": "dist/esm",
+    "declarationDir": "dist/types",
+    "composite": false,
+    "paths": {
+      "@stardust-collective/dag4-core/*": ["core/*"]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}

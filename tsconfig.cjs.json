@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig-package-cjs.json",
+  "compilerOptions": {
+    "baseUrl": "src",
+    "outDir": "dist/cjs",
+    "declarationDir": "dist/types",
+    "composite": false,
+    "paths": {
+      "@stardust-collective/dag4-core/*": ["core/*"]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}

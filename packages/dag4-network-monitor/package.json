@@ -1,0 +1,13 @@
+{
+  "name": "dag4-network-monitor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "cleanup": "rimraf dist/",
+    "clean": "tsc --build --clean",
+    "build": "tsc -b"
+  },
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "declaration": true,
+    "module": "esNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": false,
+    "target": "esNext",
+    "lib": [
+      "esNext",
+      "dom"
+    ],
+    "strict": false,
+    "noUnusedLocals": false,
+    "composite": false
+  }
+}

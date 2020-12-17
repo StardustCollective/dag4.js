@@ -1,0 +1,33 @@
+{
+  "PRIVATE_KEY": "114d7d51019c7f704388e03fb5c74174f27e2fc68ac88c82832ec9b1174b17fd",
+  "PUBLIC_KEY": "04315d2c7182cac157d9dcc7f5fd2a4b5101df86568a4313470cbab06f672b9db302816e45218641828fef633c770079293e3db8f8a20c787f95944bbe6ea71c0a",
+  "COMPACT_PUBLIC_KEY": "02315d2c7182cac157d9dcc7f5fd2a4b5101df86568a4313470cbab06f672b9db3",
+  "DAG_ADDRESS": "DAG5WtmeekZLUS4vxCDhe9safyE6wFQ94EaczotN",
+  "ETH_ADDRESS": "0xCb156fCC8Bcda96Fb2790a25d29824B91148d99F",
+  "BTC_ADDRESS": "1JydYsDv3BQAWDr2taH7ncXyzU7BBuS946",
+  "PASSPHRASE": "test1",
+  "SEED_PHRASE": "yard impulse luxury drive today throw farm pepper survey wreck glass federal",
+  "SEED_PRIVATE_KEY": "677c919bf7f5129c2fa245774e08f8c64be16bf6ef4d9d3fcad570c7a503d8cb",
+  "JSON_PRIVATE_KEY": "5f83be83fdd3c38bdc3f383896260604f42053fd4d6591af0cf946b841bbb4b1",
+  "JSON_ENCRYPTED_PRIVATE_KEY": {
+    "version": 3,
+    "id": "c16c76d0-126d-411a-a0a8-69aabd92546b",
+    "address": "75a426f8136891afe4244347ce6931f5826e5cc7",
+    "crypto": {
+      "ciphertext": "9957a56d4e8cb48865605c17df84414009798f50a1bd375613b03c937273f516",
+      "cipherparams": {
+        "iv": "73ecb21e1002ff2939b321b24728a52f"
+      },
+      "cipher": "aes-128-ctr",
+      "kdf": "scrypt",
+      "kdfparams": {
+        "dklen": 32,
+        "salt": "2cd0620a5a3de2c08fedafb65cce2a2c4957a37b34296c7999c143bc5dbcd7d5",
+        "n": 262144,
+        "r": 8,
+        "p": 1
+      },
+      "mac": "906c9efbe7c39969675aef3c517eb8925454bdf0a71e9392c57d6bbf0649ee9c"
+    }
+  }
+}

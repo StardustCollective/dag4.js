@@ -1,0 +1,7 @@
+
+# dist
+dist/
+bak/
+
+# dependencies
+node_modules/
