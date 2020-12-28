@@ -1,7 +1,7 @@
 import {keyStore, KeyTrio} from '@stardust-collective/dag4-keystore';
 import {Subject} from 'rxjs';
 
-import {loadBalancerApi, blockExplorerApi, Transaction} from '@stardust-collective/dag4-network';
+import {loadBalancerApi, blockExplorerApi} from '@stardust-collective/dag4-network';
 import {PendingTx} from '@stardust-collective/dag4-network/types';
 
 export class DagAccount {
@@ -9,7 +9,6 @@ export class DagAccount {
   private m_keyTrio: KeyTrio;
 
   private sessionChange$ = new Subject<boolean>();
-  private txs: Transaction[];
 
   constructor() {
 
@@ -54,14 +53,8 @@ export class DagAccount {
     this.sessionChange$.next(true);
   }
 
-  async getTransactions () {
-    this.txs = await blockExplorerApi.getTransactionsByAddress(this.address);
-
-    return this.txs;
-  }
-
-  async getTransactionsCache () {
-    return this.txs || this.getTransactions();
+  getTransactions (limit?: number, searchAfter?: string) {
+    return blockExplorerApi.getTransactionsByAddress(this.address, limit, searchAfter);
   }
 
   validateDagAddress (address: string) {
@@ -82,6 +75,23 @@ export class DagAccount {
     }
 
     return result;
+  }
+
+  async getFeeRecommendation () {
+
+    //Get last tx ref
+    const lastRef = await loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    if (!lastRef.prevHash) {
+      return 0;
+    }
+
+    //Check for pending TX
+    const lastTx = await loadBalancerApi.checkTransaction(lastRef.prevHash);
+    if (!lastTx) {
+      return 0;
+    }
+
+    return 1 / 1e8;
   }
 
   async generateSignedTransaction (toAddress: string, amount: number, fee = 0) {

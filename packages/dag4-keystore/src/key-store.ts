@@ -10,6 +10,7 @@ import Wallet from 'ethereumjs-wallet'
 import {hdkey} from 'ethereumjs-wallet'
 
 import * as EC from "elliptic";
+import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
 const curve = new EC.ec("secp256k1");
 
 //SIZE
@@ -98,7 +99,7 @@ export class KeyStore {
     }
   }
 
-  getMasterKeyFromMnemonic (mnemonic: string) {
+  getMasterKeyFromMnemonic (mnemonic: string): HDKey {
     if (bip39.validateMnemonic(mnemonic)) {
       const seedBytes = bip39.mnemonicToSeedSync(mnemonic);
       const masterKey = hdkey.fromMasterSeed(seedBytes);
@@ -190,13 +191,13 @@ export class KeyStore {
 
     const serializedTx = txEncode.kryoSerialize(encodedTx);
 
-    const hash = await keyStore.sha256(Buffer.from(serializedTx, 'hex'));
+    const hash = await this.sha256(Buffer.from(serializedTx, 'hex'));
 
     lastRefResponse.tx.edge.signedObservationEdge.signatureBatch.hash = hash;
 
-    const signature = keyStore.sign(privateKey, hash);
+    const signature = this.sign(privateKey, hash);
 
-    const success = keyStore.verify(publicKey, hash, signature);
+    const success = this.verify(publicKey, hash, signature);
 
     if (!success) {
       throw new Error('Sign-Verify failed');
@@ -214,6 +215,8 @@ export class KeyStore {
 }
 
 export const keyStore = new KeyStore();
+
+export type HDKey = EthereumHDKey;
 
 type AddressLastRef = {
   prevHash: string,

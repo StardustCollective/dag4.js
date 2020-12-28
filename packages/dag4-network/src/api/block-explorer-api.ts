@@ -17,8 +17,28 @@ export class BlockExplorerApi {
     return this.service.$get<Snapshot>('/snapshot/' + height);
   }
 
-  async getTransactionsByAddress (address: string) {
-    return this.service.$get<Transaction[]>('/address/' + address + '/transaction' );
+  async getTransactionsByAddress (address: string, limit: number = 0, searchAfter = '') {
+    let params;
+
+    if (limit || searchAfter) {
+      params = {};
+
+      if (limit > 0) {
+        params.limit = limit;
+      }
+
+      if (searchAfter) {
+        try {
+          new Date(searchAfter).toISOString();
+        } catch(e) {
+          throw new Error('ParamError: "searchAfter" is not valid ISO 8601');
+        }
+
+        params.search_after = searchAfter;
+      }
+    }
+
+    return this.service.$get<Transaction[]>('/address/' + address + '/transaction', params);
   }
 
   async getCheckpointBlock(id: string) {

@@ -5,7 +5,7 @@ import {loadBalancerApi} from './api/load-balancer-api';
 
 export class DagNetwork {
 
-  private connectedNetwork: NetworkInfo;
+  private connectedNetwork: NetworkInfo = { id: 'main', beUrl: '', lbUrl: ''};
 
   private networkChange$ = new Subject<NetworkInfo>();
 
@@ -36,5 +36,8 @@ export class DagNetwork {
   getNetwork () {
     return this.connectedNetwork;
   }
+
 }
+
+export const dagNetwork = new DagNetwork();
 
