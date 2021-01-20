@@ -1,4 +1,5 @@
-import {PeerNodeState} from '@stardust-collective/dag4-network/dto/peer-metrics'
+import {PeerNodeState} from './peer-metrics';
+
 
 export type PeerAddressBalance = {
   tps10: number;

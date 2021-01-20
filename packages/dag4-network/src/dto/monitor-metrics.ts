@@ -1,4 +1,4 @@
-import {PeerMetricsRawData, PeerNodeState} from '@stardust-collective/dag4-network/dto/peer-metrics'
+import {PeerMetricsRawData, PeerNodeState} from './peer-metrics'
 
 
 export type MonitorMetrics = {

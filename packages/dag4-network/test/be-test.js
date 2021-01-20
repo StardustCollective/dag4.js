@@ -12,7 +12,7 @@ async function test () {
     console.log(d);
     console.log(d.toLocaleTimeString());
 
-    const results = await blockExplorerApi.getTransactionsByAddress('DAG2rMPHX4w1cMMjowmewRMjD1in53yRURt6Eijh', 10, "2020-12-24T01:57:00Z")
+    const results = await blockExplorerApi.getTransactionsByAddress('DAG3buDiD1WVT1Z8q3hDGMiWJYbnJEZv8WCeSmHc', 2);//0, "2020-12-24T01:57:00Z")
 
     console.log(JSON.stringify(results,null,' '));
 
