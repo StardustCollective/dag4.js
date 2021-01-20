@@ -1,4 +1,7 @@
+
+
 const dag = require("../../dist/cjs/key-store");
+const testData = require('../resources/test-data.json');
 
 const phrase = "solution rookie cake shine hand attack claw awful harsh level case vocal";
 
@@ -33,4 +36,30 @@ function test2() {
 
 }
 
-test2()
+async function testGenerateTx () {
+
+    const privateKey = testData.PRIVATE_KEY;
+    const publicKey = dag.keyStore.getPublicKeyFromPrivate(privateKey);
+    const address = dag.keyStore.getDagAddressFromPublicKey(publicKey);
+    const keyTrio = { privateKey, publicKey, address };
+    const tx = await dag.keyStore.generateTransaction (1234.123456789, 'DAG5A4s8whzjwz2y9VxjLQgL9bwtUjuRzvemTGFd', keyTrio, { prevHash: '', ordinal: 0 });
+
+    console.log(JSON.stringify(tx, null, 2));
+    // expect(hashReference).to.equal(HASH_REFERENCE);
+
+}
+
+async function testSameAddress () {
+
+    const privateKey = testData.PRIVATE_KEY;
+    const publicKey = dag.keyStore.getPublicKeyFromPrivate(privateKey);
+    const address = dag.keyStore.getDagAddressFromPublicKey(publicKey);
+    const keyTrio = { privateKey, publicKey, address };
+    const tx = await dag.keyStore.generateTransaction (1234.123456789, 'DAG5WtmeekZLUS4vxCDhe9safyE6wFQ94EaczotN', keyTrio, { prevHash: '', ordinal: 0 });
+
+    console.log(JSON.stringify(tx, null, 2));
+    // expect(hashReference).to.equal(HASH_REFERENCE);
+
+}
+
+testSameAddress()

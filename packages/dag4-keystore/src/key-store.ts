@@ -171,9 +171,13 @@ export class KeyStore {
 
   async generateTransaction (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
 
-    //Normalize the amount
-    amount *= 1e8;
-    fee *= 1e8;
+    if (toAddress === keyTrio.address) {
+      throw new Error('KeyStore.ERROR - An address cannot send a transaction to itself');
+    }
+
+    //Normalize to integer and only preserve 8 decimals of precision
+    amount = Math.floor(amount * 1e8);
+    fee = Math.floor(fee * 1e8);
 
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 
