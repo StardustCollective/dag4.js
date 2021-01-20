@@ -1,9 +1,13 @@
 
 export class LocalStorageDb {
 
-  private readonly keyPrefix = 'stargazer-';
+  private keyPrefix = 'dag4-';
 
   constructor (private storageClient: ILocalStorageDb) {}
+
+  setPrefix (prefix: string) {
+    this.keyPrefix = prefix;
+  }
 
   set (key: string, value: any) {
     this.storageClient.setItem(this.keyPrefix + key, JSON.stringify(value));
@@ -17,7 +21,6 @@ export class LocalStorageDb {
     this.storageClient.removeItem(this.keyPrefix + key);
   }
 }
-
 
 export interface ILocalStorageDb {
   getItem(key: string): string | null;

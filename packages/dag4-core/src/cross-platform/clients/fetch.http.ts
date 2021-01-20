@@ -1,8 +1,9 @@
-
+declare let window;
+const defaultFetch = typeof window !== 'undefined' ? window.fetch.bind(window) : undefined;
 
 export class FetchRestService {
 
-  constructor (private httpClient) {}
+  constructor (private httpClient = defaultFetch) {}
 
   invoke(options: RestApiOptionsRequest): Promise<any> {
     return this.makeServiceRequest(this.buildRequest(options));
