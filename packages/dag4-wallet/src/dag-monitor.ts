@@ -15,7 +15,9 @@ export class DagMonitor {
   private pollPendingTxsId: any;
   private txsCache: Transaction[];
 
-  constructor (private walletParent: WalletParent) {}
+  constructor (private walletParent: WalletParent) {
+    this.cacheUtils.setPrefix('stargazer-');
+  }
 
   observeMemPoolChange() {
     return this.memPoolChange$;
@@ -71,8 +73,6 @@ export class DagMonitor {
 
       if (!txHistoryListItem || txHistoryListItem.pending) {
 
-        nextPool.push(pendingTx);
-
         let mTx: Transaction;
 
         try {
@@ -86,6 +86,10 @@ export class DagMonitor {
             mTx.pending = true;
             mTx.pendingMsg = 'Pending...';
           }
+
+          //pending-tx still waiting on Node
+          nextPool.push(pendingTx);
+
         } else {
 
           try {
@@ -103,10 +107,13 @@ export class DagMonitor {
             //will be confirmed shortly
             mTx.pendingMsg = 'Will confirm shortly...';
             txChanged = true;
+
+            //pending-tx transitioning from Node to BlockExplorer
+            nextPool.push(pendingTx);
           }
         }
 
-        if (!txHistoryListItem) {
+        if (mTx && !txHistoryListItem) {
           transTxs.push(mTx);
         }
       }
@@ -129,10 +136,7 @@ export class DagMonitor {
         this.setToMemPoolMonitor(nextPool);
       }
 
-      //As long as no memPollTx have been confirmed in this cycle, poll as usual
-      if (!pendingHasConfirmed) {
-        this.pollPendingTxsId = setTimeout(() => this.pollPendingTxs(), 10000) as any;
-      }
+      this.pollPendingTxsId = setTimeout(() => this.pollPendingTxs(), 10000) as any;
     }
     else if (pool.length > 0) {
       //NOTE: All tx in persisted pool have completed
