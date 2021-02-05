@@ -1,5 +1,5 @@
 import {DNC} from '../DNC';
-import {AddressBalance, AddressLastAcceptedTransaction, Transaction} from '../dto';
+import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../dto';
 import {ClusterInfo, ClusterPeerInfo} from '../dto';
 import {PeerMetrics} from '../dto/peer-metrics';
 import {PeerMetricsResponse} from './peer-node-api';
@@ -23,6 +23,10 @@ export class LoadBalancerApi {
 
   async getAddressLastAcceptedTransactionRef (address: string) {
     return this.service.$get<AddressLastAcceptedTransaction>('/transaction/last-ref/' + address);
+  }
+
+  async getTotalSupply () {
+    return this.service.$get<TotalSupply>('/total-supply');
   }
 
   async postTransaction (tx: any) {

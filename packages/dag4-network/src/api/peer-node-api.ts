@@ -7,6 +7,11 @@ class PeerNodeApi {
 
   private service = new RestApi('');
 
+  async getTotalSupply (host: string) {
+    this.host = host;
+    return this.service.$get<any>('total-supply');
+  }
+
   async getMajorityHeight (host: string) {
     this.host = host + ':9002/';
     return this.service.$get<any>('metrics');

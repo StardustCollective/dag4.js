@@ -29,7 +29,7 @@ class CrossPlatformDi {
   //======================
   //= Persistent Storage =
   //======================
-  private keyValueDbClient: IKeyValueDb = { get: empty, set: empty, delete: empty };
+  private keyValueDbClient: IKeyValueDb = { get: empty, set: empty, delete: empty, setPrefix: empty };
 
   registerKeyValueDbClient (client: IKeyValueDb) {
     this.keyValueDbClient = client;
