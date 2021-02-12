@@ -5,6 +5,12 @@ import {RestApi} from '@stardust-collective/dag4-core';
 export class BlockExplorerApi {
   private service = new RestApi(DNC.BLOCK_EXPLORER_URL);
 
+  constructor (host?: string) {
+    if (host) {
+      this.config().baseUrl(host);
+    }
+  }
+
   config () {
     return this.service.configure();
   }

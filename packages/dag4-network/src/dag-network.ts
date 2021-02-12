@@ -1,7 +1,8 @@
 import {Subject} from 'rxjs';
 import {NetworkInfo} from './types/network-info';
-import {blockExplorerApi} from './api/block-explorer-api';
-import {loadBalancerApi} from './api/load-balancer-api';
+import {BlockExplorerApi, blockExplorerApi} from './api/block-explorer-api';
+import {LoadBalancerApi, loadBalancerApi} from './api/load-balancer-api';
+import {PeerNodeApi} from './api';
 
 export class DagNetwork {
 
@@ -22,6 +23,19 @@ export class DagNetwork {
     return this.networkChange$;
   }
 
+  node (host: string) {
+    return new PeerNodeApi(host);
+  }
+
+  explorer (host: string) {
+    return new BlockExplorerApi(host);
+  }
+
+  loadBalancer (host: string) {
+    return new LoadBalancerApi(host);
+  }
+
+  //Configure the network of the global instances: blockExplorerApi and loadBalancerApi
   setNetwork(netInfo: NetworkInfo) {
     if (this.connectedNetwork !== netInfo) {
       this.connectedNetwork = netInfo;

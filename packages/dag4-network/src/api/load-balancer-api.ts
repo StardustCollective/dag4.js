@@ -9,6 +9,12 @@ export class LoadBalancerApi {
 
   private service = new RestApi(DNC.LOAD_BALANCER_URL);
 
+  constructor (host?: string) {
+    if (host) {
+      this.config().baseUrl(host);
+    }
+  }
+
   config () {
     return this.service.configure();
   }

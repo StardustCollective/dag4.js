@@ -3,9 +3,9 @@
 
 This is the Constellation Hypergraph [JavaScript API][docs].
 
-You need to run a local or remote [Hypergraph](https://github.com/Constellation-Labs/constellation) node to use this library.
+You need to run a [Hypergraph](https://github.com/Constellation-Labs/constellation) node to use this library.
 
-Please read the [documentation][docs] for more.
+Please read the [documentation][docs] for more detailed instructions. The following includes basic install and configuration.
 
 ## Installation
 
@@ -41,7 +41,7 @@ dag.network.config({
 })
 ```
 
-Now you can use it:
+Now you can use it to:
 
 ```ts
 // Get latest snapshot from the block explorer
@@ -85,7 +85,7 @@ If you are using the types in a `commonjs` module, like in a Node app, you just 
 
 ## Documentation
 
-Documentation can be found at [Gitbook][docs].
+Documentation can be found at [Wiki][docs].
 
 ## Building
 
@@ -121,6 +121,6 @@ npm test
 
 [repo]: https://github.com/StardustCollective/dag4.js
 [npm-url]: https://npmjs.org/package/dag4
-[docs]: https://stardust-collective-1.gitbook.io/dag4/
+[docs]: https://github.com/StardustCollective/dag4.js/wiki
 [discord-url]: https://discord.gg/bb8SCX9sWk
 [telegram-url]: https://t.me/StardustSupport

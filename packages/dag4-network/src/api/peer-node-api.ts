@@ -2,55 +2,66 @@
 import {PeerMetricsRawData, PeerMetrics} from '../dto/peer-metrics';
 import {ClusterInfo, ClusterPeerInfo} from '../dto/cluster-peer-info';
 import {RestApi} from '@stardust-collective/dag4-core';
+import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../dto';
 
-class PeerNodeApi {
+export class PeerNodeApi {
 
   private service = new RestApi('');
 
-  async getTotalSupply (host: string) {
-    this.host = host;
-    return this.service.$get<any>('total-supply');
+  constructor (private mHost: string = '') {}
+
+  //health ping
+  async getHealth () {
+    return this.service.$get<any>('health');
   }
 
-  async getMajorityHeight (host: string) {
-    this.host = host + ':9002/';
-    return this.service.$get<any>('metrics');
-  }
-
-  async getMetrics (host: string): Promise<PeerMetrics> {
-    this.host = host;
+  async getMetrics (): Promise<PeerMetrics> {
     const startTime = Date.now();
     return this.service.$get<PeerMetricsResponse>('metrics').then(rawData => PeerMetrics.parse(rawData.metrics, Date.now() - startTime));
   }
 
-  //health ping
-  async getHealth (host: string) {
-    this.host = host;
-    return this.service.$get<any>('health');
-  }
-
   //micrometer-metrics
-  async getMicroMetrics (host: string) {
-    this.host = host;
+  async getMicroMetrics () {
     return this.service.$get<any>('micrometer-metrics');
   }
 
-  //?? not sure of the use. requires KeyPair(public, private)
-  async signEndpoint (host: string, keyPair: string) {
-    this.host = host;
-    return this.service.$get<any>('sign');
+  async getTotalSupply () {
+    return this.service.$get<TotalSupply>('total-supply');
   }
 
-  getClusterInfo (host: string): Promise<ClusterPeerInfo[]> {
-    this.host = host;
+  async getAddressBalance (address: string) {
+    return this.service.$get<AddressBalance>('/address/' + address);
+  }
+
+  async getAddressLastAcceptedTransactionRef (address: string) {
+    return this.service.$get<AddressLastAcceptedTransaction>('/transaction/last-ref/' + address);
+  }
+
+  async postTransaction (tx: any) {
+    return this.service.$post<string>('/transaction', tx);
+  }
+
+  async checkTransaction (hash: string) {
+    return this.service.$get<Transaction>('/transaction/' + hash);
+  }
+
+  getClusterInfo (): Promise<ClusterPeerInfo[]> {
     return this.service.$get<ClusterInfo[]>('cluster/info').then(info => this.processClusterInfo(info));
   }
 
-  private set host(val: string) {
+  set host(val: string) {
     if (!val.startsWith('http')) {
       val = 'http://' + val;
     }
-    this.service.configure().baseUrl(val + ':9000/');
+    if (!val.includes(':', 8)) {
+      val = val+ ':9000/';
+    }
+    this.mHost = val;
+    this.service.configure().baseUrl(val);
+  }
+
+  get host () {
+    return this.mHost;
   }
 
   private processClusterInfo (info: ClusterInfo[]): ClusterPeerInfo[] {
