@@ -3,6 +3,7 @@ import {Subject} from 'rxjs';
 
 import {loadBalancerApi, blockExplorerApi} from '@stardust-collective/dag4-network';
 import {PendingTx} from '@stardust-collective/dag4-network/types';
+import {BigNumber} from 'bignumber.js';
 
 export class DagAccount {
 
@@ -70,7 +71,7 @@ export class DagAccount {
       const addressObj = await loadBalancerApi.getAddressBalance(this.address);
 
       if (addressObj && !isNaN(addressObj.balance)) {
-        result = addressObj.balance / 1e8;
+        result = new  BigNumber(addressObj.balance).dividedBy(1e8).toNumber();
       }
     }
 
@@ -109,7 +110,8 @@ export class DagAccount {
 
     if (txHash) {
       //this.memPool.addToMemPoolMonitor({ timestamp: Date.now(), hash: txHash, amount: amount * 1e8, receiver: toAddress, sender: this.address });
-      return { timestamp: Date.now(), hash: txHash, amount: amount * 1e8, receiver: toAddress, sender: this.address } as PendingTx;
+      amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
+      return { timestamp: Date.now(), hash: txHash, amount: amount, receiver: toAddress, sender: this.address } as PendingTx;
     }
   }
 
@@ -118,6 +120,14 @@ export class DagAccount {
   }
 
 }
+
+// function normalizeMult (num: number) {
+//   return Math.floor(new BigNumber(num).multipliedBy(1e8).toNumber());
+// }
+//
+// function normalizeDiv (num: number) {
+//   return (new BigNumber(num).dividedBy(1e8).toNumber());
+// }
 
 
 

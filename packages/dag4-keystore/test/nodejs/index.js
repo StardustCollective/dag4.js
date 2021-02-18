@@ -36,6 +36,7 @@ function test2() {
 
 }
 
+
 async function testGenerateTx () {
 
     const privateKey = testData.PRIVATE_KEY;
@@ -44,8 +45,13 @@ async function testGenerateTx () {
     const keyTrio = { privateKey, publicKey, address };
     const tx = await dag.keyStore.generateTransaction (1234.123456789, 'DAG5A4s8whzjwz2y9VxjLQgL9bwtUjuRzvemTGFd', keyTrio, { prevHash: '', ordinal: 0 });
 
+    //TEST remove 9th decimal precision
     console.log(JSON.stringify(tx, null, 2));
     // expect(hashReference).to.equal(HASH_REFERENCE);
+
+    //TEST for no float-point precision rounding error
+    const tx2 = await dag.keyStore.generateTransaction (145.1612903, 'DAG5A4s8whzjwz2y9VxjLQgL9bwtUjuRzvemTGFd', keyTrio, { prevHash: '', ordinal: 0 });
+    console.log(JSON.stringify(tx2, null, 2));
 
 }
 
@@ -62,4 +68,4 @@ async function testSameAddress () {
 
 }
 
-testSameAddress()
+testGenerateTx()

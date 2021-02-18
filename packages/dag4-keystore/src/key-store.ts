@@ -12,6 +12,7 @@ import {hdkey} from 'ethereumjs-wallet'
 import * as EC from "elliptic";
 import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
 const curve = new EC.ec("secp256k1");
+import { BigNumber } from "bignumber.js";
 
 //SIZE
 // elliptic - 360kb
@@ -176,8 +177,8 @@ export class KeyStore {
     }
 
     //Normalize to integer and only preserve 8 decimals of precision
-    amount = Math.floor(amount * 1e8);
-    fee = Math.floor(fee * 1e8);
+    amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
+    fee = Math.floor(new BigNumber(fee).multipliedBy(1e8).toNumber());
 
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 

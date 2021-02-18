@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-keystore",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -20,6 +20,7 @@
     "release:preflight": "npm pack ./dist --dry-run"
   },
   "dependencies": {
+    "bignumber.js": "^9.0.1",
     "bip39": "^3.0.2",
     "blakejs": "^1.1.0",
     "bn.js": "^5.1.3",

@@ -121,6 +121,6 @@ npm test
 
 [repo]: https://github.com/StardustCollective/dag4.js
 [npm-url]: https://npmjs.org/package/dag4
-[docs]: https://github.com/StardustCollective/dag4.js/wiki
+[docs]: https://github.com/StardustCollective/dag4.js/wiki/Overview
 [discord-url]: https://discord.gg/bb8SCX9sWk
 [telegram-url]: https://t.me/StardustSupport

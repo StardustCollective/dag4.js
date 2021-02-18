@@ -10,6 +10,9 @@ export class DagNetwork {
 
   private networkChange$ = new Subject<NetworkInfo>();
 
+  loadBalancerApi = loadBalancerApi;
+  blockExplorerApi = blockExplorerApi;
+
   config(netInfo?: NetworkInfo) {
     if (netInfo) {
       this.setNetwork(netInfo);
@@ -23,11 +26,11 @@ export class DagNetwork {
     return this.networkChange$;
   }
 
-  node (host: string) {
+  validatorNode (host: string) {
     return new PeerNodeApi(host);
   }
 
-  explorer (host: string) {
+  blockExplorer (host: string) {
     return new BlockExplorerApi(host);
   }
 
