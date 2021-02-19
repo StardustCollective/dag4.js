@@ -74,7 +74,7 @@ dag.network.config({
 })
 ```
 
-If you are using the types in a `commonjs` module, like in a Node app, you just have to enable `esModuleInterop` and `allowSyntheticDefaultImports` in your `tsconfig` for typesystem compatibility:
+If you are using the types in a `commonjs` module, like in a Node app, you have to enable `esModuleInterop` and `allowSyntheticDefaultImports` in your `tsconfig` for typesystem compatibility:
 
 ```js
 "compilerOptions": {
@@ -121,6 +121,6 @@ npm test
 
 [repo]: https://github.com/StardustCollective/dag4.js
 [npm-url]: https://npmjs.org/package/dag4
-[docs]: https://github.com/StardustCollective/dag4.js/wiki/Overview
+[docs]: https://github.com/StardustCollective/dag4.js/wiki
 [discord-url]: https://discord.gg/bb8SCX9sWk
 [telegram-url]: https://t.me/StardustSupport
