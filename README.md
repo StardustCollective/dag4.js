@@ -119,6 +119,11 @@ npm test
 -   [Discord][discord-url]
 -   [Telegram][telegram-url]
 
+---
+### License
+[![License: GPL v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+This project is licensed under the terms of the **MIT** license.
+
 [repo]: https://github.com/StardustCollective/dag4.js
 [npm-url]: https://npmjs.org/package/dag4
 [docs]: https://github.com/StardustCollective/dag4.js/wiki

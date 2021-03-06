@@ -22,6 +22,8 @@ import { BigNumber } from "bignumber.js";
 const CONSTELLATION_COIN = 1137;
 const ETH_WALLET_PATH = 60;
 
+const BASE58_ALPHABET = /['123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+/;
+
 //NOTE: During recover account from seed phrase, detect ETH accounts - inform user of derivation path and compatibility?  ETH (reuse ETH accounts) or DAG (ledger support)
 const CONSTANTS = {
   BIP_44_DAG_PATH: `m/44'/${CONSTELLATION_COIN}'/0'/0/`,
@@ -133,9 +135,15 @@ export class KeyStore {
     return validSig;
   }
 
-  //^[0-9a-fA-F]{30,64}$
   validateDagAddress (address: string) {
-    return address.length > 30 && address.startsWith("DAG");
+    const validLen = address.length === 40;
+    const validPrefix = address.substr(0, 3) === 'DAG';
+    const par = Number(address.charAt(3));
+    const validParity = par > 0 && par < 10;
+    const match = BASE58_ALPHABET.exec(address.substring(4));
+    const validBase58 = match.length > 0 && match[0].length === 36;
+
+    return validLen && validPrefix && validParity && validBase58;
   }
 
   getPublicKeyFromPrivate (privateKey: string, compact = false) {
@@ -173,7 +181,15 @@ export class KeyStore {
   async generateTransaction (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
 
     if (toAddress === keyTrio.address) {
-      throw new Error('KeyStore.ERROR - An address cannot send a transaction to itself');
+      throw new Error('KeyStore :: An address cannot send a transaction to itself');
+    }
+
+    if (amount <= 1e-8) {
+      throw new Error('KeyStore :: The transfer amount must be greater than 1e-8');
+    }
+
+    if (fee < 0) {
+      throw new Error('KeyStore :: The transfer fee cannot be a negative 1e-8');
     }
 
     //Normalize to integer and only preserve 8 decimals of precision

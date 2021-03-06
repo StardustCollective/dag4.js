@@ -14,6 +14,7 @@ export class DagMonitor {
   private memPoolChange$ = new Subject<DagWalletMonitorUpdate>();
   private pollPendingTxsId: any;
   private txsCache: Transaction[];
+  private running = false;
 
   constructor (private walletParent: WalletParent) {
     this.cacheUtils.setPrefix('stargazer-');
@@ -39,7 +40,10 @@ export class DagMonitor {
     //   txChanged: true, transTxs: pool, pendingHasConfirmed: true
     // });
 
-    setTimeout(() => this.pollPendingTxs(), 1000);
+    if (!this.running) {
+      this.running = true;
+      setTimeout(() => this.pollPendingTxs(), 1000);
+    }
   }
 
   getMemPoolFromMonitor(): PendingTx[] {
@@ -56,7 +60,7 @@ export class DagMonitor {
     this.cacheUtils.set(key, pool);
   }
 
-  async pollPendingTxs () {
+  private async pollPendingTxs () {
 
     const txHistoryList = await this.getTransactionHistoryFromExplorer();
     const pool = this.getMemPoolFromMonitor();
@@ -140,6 +144,7 @@ export class DagMonitor {
     }
     else if (pool.length > 0) {
       //NOTE: All tx in persisted pool have completed
+      this.running = false;
       this.setToMemPoolMonitor(nextPool);
     }
 
@@ -150,7 +155,10 @@ export class DagMonitor {
   }
 
   startMonitor () {
-    this.pollPendingTxs();
+    if (!this.running) {
+      this.running = true;
+      this.pollPendingTxs();
+    }
   }
 
   private get cacheUtils() {

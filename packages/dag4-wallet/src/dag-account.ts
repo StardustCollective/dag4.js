@@ -105,7 +105,7 @@ export class DagAccount {
   async transferDag (toAddress: string, amount: number, fee = 0) {
 
     const lastRef = await loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
-    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef);
+    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
     const txHash = await loadBalancerApi.postTransaction(tx);
 
     if (txHash) {

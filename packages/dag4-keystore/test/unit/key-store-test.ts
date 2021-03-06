@@ -13,6 +13,25 @@ describe('Key Store', () => {
     expect(result).to.equal(true);
   });
 
+  it('IsInvalid DAG address', async () => {
+
+    //Bad length
+    const result = keyStore.validateDagAddress('DAG2itmeekZLUS4vxCDhe9safyE6wFQ94EaczotNn');
+    expect(result).to.equal(false);
+
+    //Bad prefix
+    const result1 = keyStore.validateDagAddress('DOG2itmeekZLUS4vxCDhe9safyE6wFQ94EaczotN');
+    expect(result1).to.equal(false);
+
+    //Bad Parity
+    const result2 = keyStore.validateDagAddress('DAGJitmeekZLUS4vxCDhe9safyE6wFQ94EaczotN');
+    expect(result2).to.equal(false);
+
+    //Bad Base58 Match
+    const result3 = keyStore.validateDagAddress('DAG20itmeekZLUS4vxCDhe9safyE6wFQ94EaczotN');
+    expect(result3).to.equal(false);
+  });
+
   it('Public key from Private', () => {
 
     const result = keyStore.getPublicKeyFromPrivate(testData.PRIVATE_KEY);
