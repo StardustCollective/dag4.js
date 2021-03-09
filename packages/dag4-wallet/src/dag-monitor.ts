@@ -12,9 +12,9 @@ type WalletParent = {
 export class DagMonitor {
 
   private memPoolChange$ = new Subject<DagWalletMonitorUpdate>();
-  private pollPendingTxsId: any;
   private txsCache: Transaction[];
-  private running = false;
+  private lastTimer: number;
+  private pendingTimer = 0;
 
   constructor (private walletParent: WalletParent) {
     this.cacheUtils.setPrefix('stargazer-');
@@ -40,10 +40,9 @@ export class DagMonitor {
     //   txChanged: true, transTxs: pool, pendingHasConfirmed: true
     // });
 
-    if (!this.running) {
-      this.running = true;
-      setTimeout(() => this.pollPendingTxs(), 1000);
-    }
+    this.lastTimer = Date.now();
+    this.pendingTimer = 1000;
+    setTimeout(() => this.pollPendingTxs(), 1000);
   }
 
   getMemPoolFromMonitor(): PendingTx[] {
@@ -61,6 +60,11 @@ export class DagMonitor {
   }
 
   private async pollPendingTxs () {
+
+    if (Date.now() - this.lastTimer < this.pendingTimer) {
+      console.log('canceling extra timer');
+      return; //ignore any repeat timers that happen before the min timer
+    }
 
     const txHistoryList = await this.getTransactionHistoryFromExplorer();
     const pool = this.getMemPoolFromMonitor();
@@ -139,12 +143,12 @@ export class DagMonitor {
       if (pool.length > nextPool.length) {
         this.setToMemPoolMonitor(nextPool);
       }
-
-      this.pollPendingTxsId = setTimeout(() => this.pollPendingTxs(), 10000) as any;
+      this.pendingTimer = 10000;
+      this.lastTimer = Date.now();
+      setTimeout(() => this.pollPendingTxs(), 10000);
     }
     else if (pool.length > 0) {
       //NOTE: All tx in persisted pool have completed
-      this.running = false;
       this.setToMemPoolMonitor(nextPool);
     }
 
@@ -155,10 +159,7 @@ export class DagMonitor {
   }
 
   startMonitor () {
-    if (!this.running) {
-      this.running = true;
-      this.pollPendingTxs();
-    }
+    this.pollPendingTxs();
   }
 
   private get cacheUtils() {

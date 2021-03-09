@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-core/-/dag4-core-1.0.0.tgz#0d85fbabb4ec60eadea4f80f9e7665619944ccad"
   integrity sha512-d6c213LCOes3d4AU/AlbDq2/ytH3JhfCiRFarKxvC+Lym7g0H8q2glMe4Gwii827yT0LYx4Fq9erTFLpXyMIRg==
 
-"@stardust-collective/dag4-keystore@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.1.tgz#80be424d84dfeef3bdc65ad9413a150283ad1adc"
-  integrity sha512-WimE85XkjD4Bs3Hj2hThKzq6j10wh8B2asC2jAI1WUrlb4PH3ediaoWvLrEkVRypEB+51LeA8bqZnO0hcou3HA==
+"@stardust-collective/dag4-keystore@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.4.tgz#3f43b8183f528796e40de6edacdd1493e0c2e0ca"
+  integrity sha512-r53jctON3+waEK2XzEECc7CP4OgMNqCJAygwR1BS7HMYGM6+ZVxzPCBnYabGc8Yb8oJAJHWs6Pp81fINWHeC7A==
   dependencies:
     bignumber.js "^9.0.1"
     bip39 "^3.0.2"
@@ -39,13 +39,13 @@
     "@stardust-collective/dag4-core" "^1.0.0"
     rxjs "^6.6.3"
 
-"@stardust-collective/dag4-wallet@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-wallet/-/dag4-wallet-1.0.1.tgz#4ce10662d43d95c22da9e0753f31e7ab43fbc4b2"
-  integrity sha512-JbmUYrTtNRrFdlIaJg5ADyC04prE2YNSyy5TH1OuWwvcsnh/RdIPWGJ+NoVd2V7QIHXdb+xKSZrhnScpI/hCFA==
+"@stardust-collective/dag4-wallet@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-wallet/-/dag4-wallet-1.0.6.tgz#6c2b21e68fdf35f9d1d659680a345b8b7c9ab3be"
+  integrity sha512-sLw3Dj80Tcxa8hKp1jXYQQn0aHUXk1YEtGOzTqc5O9oGsaKK5Mv33e4UQX9QAkqUYStamrfh9sEyYvvzOqQCUA==
   dependencies:
     "@stardust-collective/dag4-core" "^1.0.0"
-    "@stardust-collective/dag4-keystore" "^1.0.1"
+    "@stardust-collective/dag4-keystore" "^1.0.4"
     "@stardust-collective/dag4-network" "^1.0.1"
     bignumber.js "^9.0.1"
 

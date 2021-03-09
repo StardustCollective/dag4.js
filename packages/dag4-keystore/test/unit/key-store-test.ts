@@ -15,9 +15,13 @@ describe('Key Store', () => {
 
   it('IsInvalid DAG address', async () => {
 
-    //Bad length
-    const result = keyStore.validateDagAddress('DAG2itmeekZLUS4vxCDhe9safyE6wFQ94EaczotNn');
+    //Empty
+    const result = keyStore.validateDagAddress('');
     expect(result).to.equal(false);
+
+    //Bad length
+    const result0 = keyStore.validateDagAddress('DAG2itmeekZLUS4vxCDhe9safyE6wFQ94EaczotNn');
+    expect(result0).to.equal(false);
 
     //Bad prefix
     const result1 = keyStore.validateDagAddress('DOG2itmeekZLUS4vxCDhe9safyE6wFQ94EaczotN');
