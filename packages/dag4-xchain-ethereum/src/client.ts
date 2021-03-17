@@ -5,6 +5,10 @@ import {Client} from '@xchainjs/xchain-ethereum';
 import knownTokenList from './data/tokens.json';
 import {getAddressBalances} from './token-balances';
 
+import * as utils from '@xchainjs/xchain-util';
+
+export {utils};
+
 type XClientEthParams = {
   explorerUrl?: ExplorerUrl
   etherscanApiKey?: string
