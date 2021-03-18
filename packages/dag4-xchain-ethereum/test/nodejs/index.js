@@ -9,7 +9,8 @@ async function testGetKnownTokenBalances() {
     const ethClient = new XChainEthClient({
         network: 'testnet',
         privateKey: PRIVATE_KEY,
-        infuraCreds: { projectId: '8167d6b614d245239ea136e5fe3e012e' }
+        infuraCreds: { projectId: '8167d6b614d245239ea136e5fe3e012e' },
+
     });
 
     const assets = [

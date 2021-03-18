@@ -52,7 +52,9 @@ export class XChainEthClient extends Client {
       return t.address
     }));
 
-    const provider = ethers.getDefaultProvider(null, { ethers: this.infuraProjectId});
+    //const provider = ethers.getDefaultProvider(null, { ethers: this.infuraProjectId, quorum: 1});
+
+    const provider = new ethers.providers.InfuraProvider(null, this.infuraProjectId);
 
     const ethBalance = await provider.getBalance(address);
 
