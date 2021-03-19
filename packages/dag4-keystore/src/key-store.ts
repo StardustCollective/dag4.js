@@ -161,6 +161,7 @@ export class KeyStore {
 
   getEthAddressFromPrivateKey (privateKeyHex: string) {
     const wallet = Wallet.fromPrivateKey(Buffer.from(privateKeyHex, "hex"));
+
     return wallet.getAddressString();
   }
 

@@ -2,6 +2,8 @@ import {DNC} from '../DNC';
 import {Block, Snapshot, Transaction} from '../dto';
 import {RestApi} from '@stardust-collective/dag4-core';
 
+type HashOrHeight = string | number;
+
 export class BlockExplorerApi {
   private service = new RestApi(DNC.BLOCK_EXPLORER_URL);
 
@@ -19,12 +21,16 @@ export class BlockExplorerApi {
     return this.service.$get<Snapshot>('/snapshot/latest');
   }
 
-  async getSnapshot (height: number) {
-    return this.service.$get<Snapshot>('/snapshot/' + height);
+  async getSnapshot (id: HashOrHeight) {
+    return this.service.$get<Snapshot>('/snapshot/' + id);
   }
 
-  async getTransactionsByAddress (address: string, limit: number = 0, searchAfter = '') {
-    let params;
+  async getTransactionsBySnapshot (id: HashOrHeight) {
+    return this.service.$get<Transaction[]>('/snapshot/' + id + '/transaction');
+  }
+
+  async getTransactionsByAddress (address: string, limit: number = 0, searchAfter = '', sentOnly = false, receivedOnly = false) {
+    let params, path = '/address/' + address + '/transaction';
 
     if (limit || searchAfter) {
       params = {};
@@ -44,15 +50,23 @@ export class BlockExplorerApi {
       }
     }
 
-    return this.service.$get<Transaction[]>('/address/' + address + '/transaction', params);
+
+    if (sentOnly) {
+      path += '/sent'
+    }
+    else if (receivedOnly) {
+      path += '/received'
+    }
+
+    return this.service.$get<Transaction[]>(path, params);
   }
 
-  async getCheckpointBlock(id: string) {
-    return this.service.$get<Block>('/checkpoint-block/' + id);
+  async getCheckpointBlock(hash: string) {
+    return this.service.$get<Block>('/checkpoint-block/' + hash);
   }
 
-  async getTransaction (id: string) {
-    return this.service.$get<Transaction>('/transaction/' + id);
+  async getTransaction (hash: string) {
+    return this.service.$get<Transaction>('/transaction/' + hash);
   }
 }
 

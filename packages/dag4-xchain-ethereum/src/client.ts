@@ -3,7 +3,7 @@ import {Network} from '@xchainjs/xchain-client';
 import {BigNumber, ethers, FixedNumber} from 'ethers';
 import {Client} from '@xchainjs/xchain-ethereum';
 import knownTokenList from './data/tokens.json';
-import {getAddressBalances} from './token-balances';
+import {tokenContractService} from './token-contract-service';
 
 import * as utils from '@xchainjs/xchain-util';
 
@@ -17,22 +17,29 @@ type XClientEthParams = {
   privateKey?: string;
 }
 
+type InfuraProvider = ethers.providers.InfuraProvider;
 
 
 export class XChainEthClient extends Client {
 
-  private infuraProjectId: string;
+  private infuraProvider: InfuraProvider;
 
   constructor ({ network = 'testnet', explorerUrl, privateKey, etherscanApiKey, infuraCreds }: XClientEthParams) {
     super({ network, explorerUrl, etherscanApiKey, infuraCreds });
 
-    this.infuraProjectId = infuraCreds && infuraCreds.projectId;
+    if (infuraCreds.projectId) {
+      this.infuraProvider = new ethers.providers.InfuraProvider(null, infuraCreds.projectId);
+    }
 
     this['changeWallet'](new ethers.Wallet(privateKey, this.getProvider()));
   }
 
   isValidEthereumAddress (address: string) {
     return ethers.utils.isAddress(address);
+  }
+
+  getTokenInfo (address: string) {
+    return tokenContractService.getTokenInfo(this.infuraProvider, address);
   }
 
   getKnownTokens (chainId: number) {
@@ -54,13 +61,13 @@ export class XChainEthClient extends Client {
 
     //const provider = ethers.getDefaultProvider(null, { ethers: this.infuraProjectId, quorum: 1});
 
-    const provider = new ethers.providers.InfuraProvider(null, this.infuraProjectId);
 
-    const ethBalance = await provider.getBalance(address);
+
+    const ethBalance = await this.infuraProvider.getBalance(address);
 
     const ethBalanceNum = FixedNumber.fromValue(BigNumber.from(ethBalance), 18).toUnsafeFloat()
 
-    const tokenBalances = await getAddressBalances(provider, address, tokens);
+    const tokenBalances = await tokenContractService.getAddressBalances(this.infuraProvider, address, tokens);
 
     const assetBalances = Object.keys(tokenBalances).map(address => {
       const assetInfo: CustomAsset = map[address];
