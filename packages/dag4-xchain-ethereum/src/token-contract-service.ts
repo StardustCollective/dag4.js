@@ -21,6 +21,12 @@ type AddressBalanceMap = {
 
 const TOKEN_BALANCE_CONTRACT = '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39';
 
+const NETWORK_TO_CONTRACT_MAP = {
+  1: '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39',
+  3: '0x8D9708f3F514206486D7E988533f770a16d074a7',
+  4: '0x3183B673f4816C94BeF53958BaF93C671B7F8Cf2'
+}
+
 export class TokenContractService {
 
   formatAddressBalances<T> (values: T[], addresses: string[], tokens: string[]) {
@@ -36,10 +42,10 @@ export class TokenContractService {
   }
 
 
-  async getAddressBalances (provider: Provider | Signer, ethAddress: string, tokenContractAddress: string[]) {
+  async getAddressBalances (provider: Provider | Signer, ethAddress: string, tokenContractAddress: string[], chainId = 1) {
 
     const contract = new Contract(
-      TOKEN_BALANCE_CONTRACT,
+      NETWORK_TO_CONTRACT_MAP[chainId],
       BalanceCheckerABI as any,
       provider
     );
@@ -49,10 +55,10 @@ export class TokenContractService {
     return this.formatAddressBalances<BigNumber>(balances, [ethAddress], tokenContractAddress)[ethAddress];
   }
 
-  async getTokenBalance(provider: Provider | Signer, ethAddress: string, tokenContractAddress: string) {
+  async getTokenBalance(provider: Provider | Signer, ethAddress: string, tokenContractAddress: string, chainId = 1) {
 
     const contract = new Contract(
-      TOKEN_BALANCE_CONTRACT,
+      NETWORK_TO_CONTRACT_MAP[chainId],
       BalanceCheckerABI as any,
       provider
     );
@@ -65,12 +71,12 @@ export class TokenContractService {
 
   async getTokenInfo (
     provider: Provider | Signer,
-    tokenAddress: string
+    tokenContractAddress: string
   ) {
 
     let name = '', decimals, symbol;
 
-    const contract = new Contract(tokenAddress, MetaABI as any, provider);
+    const contract = new Contract(tokenContractAddress, MetaABI as any, provider);
 
     try {
       decimals = await contract.decimals();
@@ -82,7 +88,7 @@ export class TokenContractService {
     }
 
     return {
-      address: tokenAddress,
+      address: tokenContractAddress,
       decimals,
       symbol,
       name

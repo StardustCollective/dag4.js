@@ -38,14 +38,14 @@ export class XChainEthClient extends Client {
     return ethers.utils.isAddress(address);
   }
 
-  getTokenInfo (address: string, chainId = 1) {
+  getTokenInfo (tokenContractAddress: string, chainId = 1) {
     const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
-    return tokenContractService.getTokenInfo(infuraProvider, address);
+    return tokenContractService.getTokenInfo(infuraProvider, tokenContractAddress);
   }
 
   async getTokenBalance (ethAddress: string, tokenInfo: CustomAsset, chainId = 1) {
     const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
-    const tokenBalances = await tokenContractService.getTokenBalance(infuraProvider, ethAddress, tokenInfo.address);
+    const tokenBalances = await tokenContractService.getTokenBalance(infuraProvider, ethAddress, tokenInfo.address, chainId);
 
     return FixedNumber.fromValue(BigNumber.from(tokenBalances[tokenInfo.address]), tokenInfo.decimals).toUnsafeFloat()
   }
@@ -76,7 +76,7 @@ export class XChainEthClient extends Client {
 
     const ethBalanceNum = FixedNumber.fromValue(BigNumber.from(ethBalance), 18).toUnsafeFloat()
 
-    const tokenBalances = await tokenContractService.getAddressBalances(infuraProvider, address, tokens);
+    const tokenBalances = await tokenContractService.getAddressBalances(infuraProvider, address, tokens, chainId);
 
     const assetBalances = Object.keys(tokenBalances).map(address => {
       const assetInfo: CustomAsset = map[address];
