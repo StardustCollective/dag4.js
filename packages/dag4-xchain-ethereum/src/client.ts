@@ -22,13 +22,13 @@ type InfuraProvider = ethers.providers.InfuraProvider;
 
 export class XChainEthClient extends Client {
 
-  private infuraProvider: InfuraProvider;
+  private infuraProjectId: string;
 
   constructor ({ network = 'testnet', explorerUrl, privateKey, etherscanApiKey, infuraCreds }: XClientEthParams) {
     super({ network, explorerUrl, etherscanApiKey, infuraCreds });
 
     if (infuraCreds.projectId) {
-      this.infuraProvider = new ethers.providers.InfuraProvider(null, infuraCreds.projectId);
+      this.infuraProjectId = infuraCreds.projectId;
     }
 
     this['changeWallet'](new ethers.Wallet(privateKey, this.getProvider()));
@@ -38,8 +38,16 @@ export class XChainEthClient extends Client {
     return ethers.utils.isAddress(address);
   }
 
-  getTokenInfo (tokenAddress: string) {
-    return tokenContractService.getTokenInfo(this.infuraProvider, tokenAddress);
+  getTokenInfo (address: string, chainId = 1) {
+    const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
+    return tokenContractService.getTokenInfo(infuraProvider, address);
+  }
+
+  async getTokenBalance (ethAddress: string, tokenInfo: CustomAsset, chainId = 1) {
+    const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
+    const tokenBalances = await tokenContractService.getTokenBalance(infuraProvider, ethAddress, tokenInfo.address);
+
+    return FixedNumber.fromValue(BigNumber.from(tokenBalances[tokenInfo.address]), tokenInfo.decimals).toUnsafeFloat()
   }
 
   getKnownTokens (chainId: number) {
@@ -62,12 +70,13 @@ export class XChainEthClient extends Client {
     //const provider = ethers.getDefaultProvider(null, { ethers: this.infuraProjectId, quorum: 1});
 
 
+    const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
 
-    const ethBalance = await this.infuraProvider.getBalance(address);
+    const ethBalance = await infuraProvider.getBalance(address);
 
     const ethBalanceNum = FixedNumber.fromValue(BigNumber.from(ethBalance), 18).toUnsafeFloat()
 
-    const tokenBalances = await tokenContractService.getAddressBalances(this.infuraProvider, address, tokens);
+    const tokenBalances = await tokenContractService.getAddressBalances(infuraProvider, address, tokens);
 
     const assetBalances = Object.keys(tokenBalances).map(address => {
       const assetInfo: CustomAsset = map[address];
@@ -86,9 +95,9 @@ export class XChainEthClient extends Client {
 
 type CustomAsset = {
   "address": string,
-  "name"?: string,
   "symbol": string,
   "decimals": number,
+  "name"?: string,
   "logoURI"?: string
   "balance"?: number
 }

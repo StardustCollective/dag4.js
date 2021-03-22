@@ -22,6 +22,18 @@ async function testGetKnownTokenBalances() {
 
 }
 
+async function testGetTokenBalance() {
+
+    const tokenInfo =
+        { address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', symbol: 'USDC', decimals: 6 };
+
+
+    const tokens = await ethClient.getTokenBalance('0xcd4328383abc5399a910b7e01c8047d95b3afa8a', tokenInfo);
+
+    console.log(JSON.stringify(tokens, null, 2))
+
+}
+
 async function testGetTokenInfo() {
 
     const info = await ethClient.getTokenInfo('0x875773784Af8135eA0ef43b5a374AaD105c5D39e');
@@ -29,4 +41,4 @@ async function testGetTokenInfo() {
     console.log(JSON.stringify(info, null, 2))
 }
 
-testGetTokenInfo();
+testGetTokenBalance();

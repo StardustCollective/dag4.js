@@ -36,11 +36,7 @@ export class TokenContractService {
   }
 
 
-  async getAddressBalances (
-    provider: Provider | Signer,
-    address: string,
-    tokens: string[]
-  ) {
+  async getAddressBalances (provider: Provider | Signer, ethAddress: string, tokenContractAddress: string[]) {
 
     const contract = new Contract(
       TOKEN_BALANCE_CONTRACT,
@@ -48,9 +44,22 @@ export class TokenContractService {
       provider
     );
 
-    const balances = await contract.balances([address], tokens);
+    const balances = await contract.balances([ethAddress], tokenContractAddress);
 
-    return this.formatAddressBalances<BigNumber>(balances, [address], tokens)[address];
+    return this.formatAddressBalances<BigNumber>(balances, [ethAddress], tokenContractAddress)[ethAddress];
+  }
+
+  async getTokenBalance(provider: Provider | Signer, ethAddress: string, tokenContractAddress: string) {
+
+    const contract = new Contract(
+      TOKEN_BALANCE_CONTRACT,
+      BalanceCheckerABI as any,
+      provider
+    );
+
+    const balances = await contract.balances([ethAddress], [tokenContractAddress]);
+
+    return this.formatAddressBalances<BigNumber>(balances, [ethAddress], [tokenContractAddress])[ethAddress];
   }
 
 
