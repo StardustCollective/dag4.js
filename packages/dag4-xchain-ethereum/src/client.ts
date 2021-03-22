@@ -38,8 +38,8 @@ export class XChainEthClient extends Client {
     return ethers.utils.isAddress(address);
   }
 
-  getTokenInfo (address: string) {
-    return tokenContractService.getTokenInfo(this.infuraProvider, address);
+  getTokenInfo (tokenAddress: string) {
+    return tokenContractService.getTokenInfo(this.infuraProvider, tokenAddress);
   }
 
   getKnownTokens (chainId: number) {

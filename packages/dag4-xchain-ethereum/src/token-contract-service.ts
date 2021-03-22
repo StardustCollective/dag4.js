@@ -59,21 +59,18 @@ export class TokenContractService {
     tokenAddress: string
   ) {
 
-    const contract = new Contract(
-      tokenAddress,
-      MetaABI as any,
-      provider
-    );
+    let name = '', decimals, symbol;
 
-    let name = '';
-
-    const decimals = await contract.decimals();
-    const symbol = await contract.symbol();
+    const contract = new Contract(tokenAddress, MetaABI as any, provider);
 
     try {
+      decimals = await contract.decimals();
+      symbol = await contract.symbol();
       name = await contract.name();
     }
-    catch(e) {}
+    catch (e) {
+      throw new Error(e.message);
+    }
 
     return {
       address: tokenAddress,
