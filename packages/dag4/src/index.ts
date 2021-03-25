@@ -23,14 +23,36 @@ export namespace DagTypes {
   export type RestApiOptionsRequest = _RestApiOptionsRequest;
 }
 
-const account = new DagAccount();
-const monitor = new DagMonitor(account);
+class Dag4Packages {
+  private account: DagAccount;
+  private monitor: DagMonitor;
+
+  createOrGetAccount () {
+    if (!this.account) {
+      this.account = new DagAccount();
+    }
+    return this.account;
+  }
+
+  createOrGetMonitor () {
+    if (!this.monitor) {
+      this.monitor = new DagMonitor(this.createOrGetAccount());
+    }
+    return this.monitor;
+  }
+}
+
+const dag4Packages = new Dag4Packages();
 
 export const dag = {
   keyStore,
   di: dagDi,
-  account,
-  monitor,
+  get account () {
+    return dag4Packages.createOrGetAccount();
+  },
+  get monitor () {
+    return dag4Packages.createOrGetMonitor();
+  },
   network: dagNetwork,
   arrayUtils
 }

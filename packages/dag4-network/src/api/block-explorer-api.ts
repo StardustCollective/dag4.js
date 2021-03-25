@@ -2,6 +2,7 @@ import {DNC} from '../DNC';
 import {Block, Snapshot, Transaction} from '../dto';
 import {RestApi} from '@stardust-collective/dag4-core';
 
+
 type HashOrHeight = string | number;
 
 export class BlockExplorerApi {

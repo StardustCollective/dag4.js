@@ -1,7 +1,11 @@
 export type PendingTx = {
-  timestamp: number;
   hash: string;
-  amount: number;
-  receiver: string;
   sender: string;
+  receiver: string;
+  amount: number;
+  ordinal: number;
+  status: 'POSTED' | 'MEM_POOL' | 'DROPPED' | 'CHECKPOINT_ACCEPTED' | 'GLOBAL_STATE_PENDING' | 'CONFIRMED';
+  pending?: boolean;
+  pendingMsg?: string;
+  timestamp: number;
 }

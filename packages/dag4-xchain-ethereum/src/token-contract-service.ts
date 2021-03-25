@@ -2,7 +2,7 @@ import {ethers} from 'ethers';
 import { Contract, Signer } from 'ethers';
 
 import BalanceCheckerABI from './abis/BalanceChecker.abi.json';
-import MetaABI from './abis/Meta.abi.json';
+import ERC20_ABI from './abis/erc20.abi.json';
 import BigNumber from 'bignumber.js';
 
 type Provider = ethers.providers.Provider;
@@ -23,7 +23,7 @@ const TOKEN_BALANCE_CONTRACT = '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39';
 
 const NETWORK_TO_CONTRACT_MAP = {
   1: '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39',
-  3: '0x8D9708f3F514206486D7E988533f770a16d074a7',
+  3: '0x9a5f9a99054a513d1d6d3eb1fef7d06981b4ba9d',
   4: '0x3183B673f4816C94BeF53958BaF93C671B7F8Cf2'
 }
 
@@ -76,7 +76,7 @@ export class TokenContractService {
 
     let name = '', decimals, symbol;
 
-    const contract = new Contract(tokenContractAddress, MetaABI as any, provider);
+    const contract = new Contract(tokenContractAddress, ERC20_ABI as any, provider);
 
     try {
       decimals = await contract.decimals();

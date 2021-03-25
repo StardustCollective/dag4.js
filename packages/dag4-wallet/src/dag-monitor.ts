@@ -3,18 +3,26 @@ import {blockExplorerApi, loadBalancerApi, Transaction} from '@stardust-collecti
 import {Subject} from 'rxjs';
 import {PendingTx} from '@stardust-collective/dag4-network/types';
 import {dagNetwork} from '@stardust-collective/dag4-network';
+import {CbTransaction} from '@stardust-collective/dag4-network/types/dto/cb-transaction';
+
+const TEN_MINUTES = 10 * 60 * 1000;
 
 type WalletParent = {
   getTransactions (limit?: number, searchAfter?: string): Promise<Transaction[]>;
   address: string;
 }
 
+type WaitFor = {
+  promise: Promise<boolean>,
+  resolve: (val: boolean) => void
+}
+
 export class DagMonitor {
 
   private memPoolChange$ = new Subject<DagWalletMonitorUpdate>();
-  private txsCache: Transaction[];
   private lastTimer: number;
   private pendingTimer = 0;
+  private waitForMap: { [hash:string]: WaitFor } = {};
 
   constructor (private walletParent: WalletParent) {
     this.cacheUtils.setPrefix('stargazer-');
@@ -34,14 +42,9 @@ export class DagMonitor {
 
     this.cacheUtils.set(key, payload);
 
-    // const pool = this.getMemPoolFromMonitor();
-    //
-    // this.memPoolChange$.next( {
-    //   txChanged: true, transTxs: pool, pendingHasConfirmed: true
-    // });
-
     this.lastTimer = Date.now();
     this.pendingTimer = 1000;
+
     setTimeout(() => this.pollPendingTxs(), 1000);
   }
 
@@ -59,16 +62,25 @@ export class DagMonitor {
     this.cacheUtils.set(key, pool);
   }
 
+  async waitForTransaction (hash: string) {
+    if (!this.waitForMap[hash]) {
+      const waitFor = {} as WaitFor;
+      waitFor.promise = new Promise<boolean>(resolve => waitFor.resolve = resolve);
+      this.waitForMap[hash] = waitFor;
+    }
+
+    return this.waitForMap[hash].promise;
+  }
+
   private async pollPendingTxs () {
 
-    if (Date.now() - this.lastTimer < this.pendingTimer) {
+    if (Date.now() - this.lastTimer + 1000 < this.pendingTimer) {
       console.log('canceling extra timer');
       return; //ignore any repeat timers that happen before the min timer
     }
 
-    const txHistoryList = await this.getTransactionHistoryFromExplorer();
     const pool = this.getMemPoolFromMonitor();
-    const transTxs: Transaction[] = [];
+    const transTxs: PendingTx[] = [];
     const nextPool: PendingTx[] = [];
 
     let pendingHasConfirmed = false;
@@ -77,79 +89,91 @@ export class DagMonitor {
     for (let index = 0; index < pool.length; index++) {
       const pendingTx = pool[index];
       const txHash = pendingTx.hash;
-      const txHistoryListItem = txHistoryList && arrayUtils.findItemByFieldValue(txHistoryList, 'hash', txHash);
 
-      if (!txHistoryListItem || txHistoryListItem.pending) {
+      let cbTx: CbTransaction;
 
-        let mTx: Transaction;
+      try {
+        cbTx = await loadBalancerApi.getTransaction(txHash);
+      } catch(e) {}
+
+      if (cbTx) {
+
+        if (cbTx.cbBaseHash) {
+          if (pendingTx.status !== 'CHECKPOINT_ACCEPTED') {
+            txChanged = true;
+            pendingTx.status = 'CHECKPOINT_ACCEPTED'
+            pendingTx.pendingMsg = 'Accepted into check-point block...';
+          }
+        }
+        else if (pendingTx.status !== 'MEM_POOL') {
+          txChanged = true;
+          pendingTx.status = 'MEM_POOL';
+          pendingTx.pendingMsg = 'Accepted into mem-pool...';
+        }
+
+        pendingTx.timestamp = cbTx.rxTime;
+
+        //pending-tx still waiting on Node
+        nextPool.push(pendingTx);
+      }
+      else {
+
+        let beTx: Transaction;
 
         try {
-          mTx = await loadBalancerApi.checkTransaction(txHash);
+          beTx = await blockExplorerApi.getTransaction(txHash);
         } catch(e) {}
 
-        if (mTx) {
-          //if memPollTx already in history we do nothing
-          if (!txHistoryListItem) {
-            mTx = {...mTx, ...pendingTx} as any;
-            mTx.pending = true;
-            mTx.pendingMsg = 'Pending...';
-          }
+        if (beTx) {
+          pendingTx.timestamp = new Date(beTx.timestamp).valueOf();
+          pendingHasConfirmed = true;
+          txChanged = true;
 
-          //pending-tx still waiting on Node
-          nextPool.push(pendingTx);
+          pendingTx.pending = false;
+          pendingTx.status = 'CONFIRMED'
+          pendingTx.pendingMsg = 'Confirmed';
+
+          if (this.waitForMap[txHash]) {
+            this.waitForMap[txHash].resolve(true);
+            this.waitForMap[txHash] = null;
+          }
 
         } else {
 
-          try {
-            mTx = await blockExplorerApi.getTransaction(txHash);
-          } catch(e) {}
+          if (pendingTx.status !== 'CHECKPOINT_ACCEPTED' && pendingTx.timestamp + TEN_MINUTES > Date.now()) {
+            //TX has been dropped
+            pendingTx.status = 'DROPPED';
+            pendingTx.pending = false;
+            txChanged = true;
+          }
+          else {
 
-          if (mTx) {
-            mTx = txHistoryListItem || mTx;
-            mTx.pending = false;
-            mTx.pendingMsg = 'Confirmed';
-            pendingHasConfirmed = true;
-            txChanged = true;
-          } else {
-            mTx = txHistoryListItem || ({ ...pendingTx } as any);
-            //will be confirmed shortly
-            mTx.pendingMsg = 'Will confirm shortly...';
-            txChanged = true;
+            if (pendingTx.status !== 'GLOBAL_STATE_PENDING') {
+              pendingTx.status = 'GLOBAL_STATE_PENDING'
+              pendingTx.pendingMsg = 'Will confirm shortly...';
+              txChanged = true;
+            }
 
             //pending-tx transitioning from Node to BlockExplorer
             nextPool.push(pendingTx);
           }
         }
+      }
 
-        if (mTx && !txHistoryListItem) {
-          transTxs.push(mTx);
-        }
-      }
-      else {
-        if (!txHistoryListItem) {
-          txChanged = true;
-          pendingHasConfirmed = true;
-          txHistoryListItem.pending = false;
-          txHistoryListItem.pendingMsg = 'Confirmed';
-          transTxs.push(txHistoryListItem);
-        }
-      }
+      transTxs.push(pendingTx);
     }
 
     //Has any memPollTxs pending
     if (nextPool.length) {
 
-      //Is one or more memPollTx no longer pending. Happens after a resync or page load.
-      if (pool.length > nextPool.length) {
-        this.setToMemPoolMonitor(nextPool);
-      }
+      this.setToMemPoolMonitor(nextPool);
       this.pendingTimer = 10000;
       this.lastTimer = Date.now();
       setTimeout(() => this.pollPendingTxs(), 10000);
     }
     else if (pool.length > 0) {
       //NOTE: All tx in persisted pool have completed
-      this.setToMemPoolMonitor(nextPool);
+      this.setToMemPoolMonitor([]);
     }
 
     this.memPoolChange$.next( {
@@ -165,14 +189,6 @@ export class DagMonitor {
   private get cacheUtils() {
     return crossPlatformDi.getKeyValueDbClient();
   }
-
-  private async getTransactionHistoryFromExplorer () {
-    if (!this.txsCache) {
-      this.txsCache = await this.walletParent.getTransactions(5);
-    }
-
-    return this.txsCache;
-  }
 }
 
 type NetworkInfo = {
@@ -181,6 +197,16 @@ type NetworkInfo = {
 
 export type DagWalletMonitorUpdate = {
   pendingHasConfirmed: boolean;
-  transTxs: Transaction[];
+  transTxs: PendingTx[];
   txChanged: boolean;
 }
+
+// class MonitorPendingTx {
+//   hash: string;
+//   sender: string;
+//   receiver: string;
+//   amount: number;
+//   ordinal: number;
+//   pending = true;
+//   pendingMsg: string;
+// }

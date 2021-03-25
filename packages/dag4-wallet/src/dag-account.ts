@@ -87,7 +87,7 @@ export class DagAccount {
     }
 
     //Check for pending TX
-    const lastTx = await loadBalancerApi.checkTransaction(lastRef.prevHash);
+    const lastTx = await loadBalancerApi.getTransaction(lastRef.prevHash);
     if (!lastTx) {
       return 0;
     }
@@ -102,7 +102,7 @@ export class DagAccount {
     return tx;
   }
 
-  async transferDag (toAddress: string, amount: number, fee = 0) {
+  async transferDag (toAddress: string, amount: number, fee = 0): Promise<PendingTx> {
 
     const lastRef = await loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
     const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
@@ -111,7 +111,7 @@ export class DagAccount {
     if (txHash) {
       //this.memPool.addToMemPoolMonitor({ timestamp: Date.now(), hash: txHash, amount: amount * 1e8, receiver: toAddress, sender: this.address });
       amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
-      return { timestamp: Date.now(), hash: txHash, amount: amount, receiver: toAddress, sender: this.address } as PendingTx;
+      return { timestamp: Date.now(), hash: txHash, amount: amount, receiver: toAddress, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
     }
   }
 

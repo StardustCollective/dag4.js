@@ -3,6 +3,7 @@ import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction
 import {ClusterInfo, ClusterPeerInfo} from '../dto';
 import {PeerMetrics} from '../dto/peer-metrics';
 import {PeerMetricsResponse} from './peer-node-api';
+import {CbTransaction} from '../dto/cb-transaction';
 import {RestApi} from '@stardust-collective/dag4-core';
 
 export class LoadBalancerApi {
@@ -39,8 +40,21 @@ export class LoadBalancerApi {
     return this.service.$post<string>('/transaction', tx);
   }
 
-  async checkTransaction (hash: string) {
-    return this.service.$get<Transaction>('/transaction/' + hash);
+  async getTransaction (hash: string) {
+    return this.service.$get<CbTransaction>('/transaction/' + hash);
+  }
+
+  async checkTransactionStatus (hash: string) {
+    const tx = await this.service.$get<CbTransaction>('/transaction/' + hash);
+
+    if (tx) {
+      if (tx.cbBaseHash) {
+        return { accepted: true, inMemPool: false };
+      }
+      return { accepted: false, inMemPool: true };
+    }
+
+    return null;
   }
 
   async getClusterInfo (): Promise<ClusterPeerInfo[]> {

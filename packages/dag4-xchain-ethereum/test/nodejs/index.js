@@ -1,3 +1,5 @@
+const xchainUtil = require("@xchainjs/xchain-util");
+const {getTokenAddress} = require("@xchainjs/xchain-ethereum");
 
 const {XChainEthClient} = require("../../dist/cjs/client");
 
@@ -34,6 +36,18 @@ async function testGetTokenBalance() {
 
 }
 
+async function testGetTokenBalanceTestnet() {
+
+    const tokenInfo =
+        { address: '0xeb349b537d77eec95d2761177c7581d6535630a1', symbol: 'FOO', decimals: 18 };
+
+
+    const tokens = await ethClient.getTokenBalance('0xC769323999C7b5cAD4c125bE0F33e83Ee4FB25c0', tokenInfo, 3);
+
+    console.log(JSON.stringify(tokens, null, 2))
+
+}
+
 async function testGetTokenInfo() {
 
     const info = await ethClient.getTokenInfo('0x875773784Af8135eA0ef43b5a374AaD105c5D39e');
@@ -41,4 +55,14 @@ async function testGetTokenInfo() {
     console.log(JSON.stringify(info, null, 2))
 }
 
-testGetTokenBalance();
+async function testXChainUtils () {
+
+    const asset = {chain: "ETH", symbol: "LTX-0xa393473d64d2F9F026B60b6Df7859A689715d092", ticker: "LTX"};
+
+
+    console.log(xchainUtil.assetToString(asset));
+    console.log(getTokenAddress(asset));
+
+}
+
+testXChainUtils();

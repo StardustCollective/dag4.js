@@ -1,0 +1,23 @@
+{
+  "name": "example-dag4-wallet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@stardust-collective/dag4": "^1.0.7",
+    "node-fetch": "^2.6.1",
+    "node-localstorage": "^2.1.6"
+  },
+  "devDependencies": {
+    "ts-node": "~8.3.0",
+    "tsconfig-paths": "^3.8.0",
+    "tslint": "~6.1.0",
+    "typescript": "~4.0.2"
+  }
+}

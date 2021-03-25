@@ -13,6 +13,4 @@ export type Transaction = {
   };
   snapshotHash : string;
   checkpointBlock : string;
-  pending?: boolean;
-  pendingMsg?: string;
 }

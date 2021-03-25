@@ -1,11 +1,14 @@
-import {ExplorerUrl, InfuraCreds} from '@xchainjs/xchain-ethereum';
-import {Network} from '@xchainjs/xchain-client';
+import {ExplorerUrl, getTokenAddress, InfuraCreds, TxOverrides} from '@xchainjs/xchain-ethereum';
+import {FeeOptionKey, Network, TxHash, TxParams} from '@xchainjs/xchain-client';
 import {BigNumber, ethers, FixedNumber} from 'ethers';
 import {Client} from '@xchainjs/xchain-ethereum';
 import knownTokenList from './data/tokens.json';
 import {tokenContractService} from './token-contract-service';
 
 import * as utils from '@xchainjs/xchain-util';
+import {Asset, AssetETH, assetToString, BaseAmount} from '@xchainjs/xchain-util';
+import {Address} from '@xchainjs/xchain-client/lib/types';
+import {BASE_TOKEN_GAS_COST, SIMPLE_GAS_COST} from '@xchainjs/xchain-ethereum/lib/utils';
 
 export {utils};
 
@@ -24,8 +27,8 @@ export class XChainEthClient extends Client {
 
   private infuraProjectId: string;
 
-  constructor ({ network = 'testnet', explorerUrl, privateKey, etherscanApiKey, infuraCreds }: XClientEthParams) {
-    super({ network, explorerUrl, etherscanApiKey, infuraCreds });
+  constructor ({network = 'testnet', explorerUrl, privateKey, etherscanApiKey, infuraCreds}: XClientEthParams) {
+    super({network, explorerUrl, etherscanApiKey, infuraCreds});
 
     if (infuraCreds.projectId) {
       this.infuraProjectId = infuraCreds.projectId;
@@ -59,13 +62,13 @@ export class XChainEthClient extends Client {
     const map = {};
 
     const tokens = customList.map(t => {
-      map[t.address] = { ...t };
+      map[t.address] = {...t};
       return t.address;
     })
-    .concat(this.getKnownTokens(chainId).map(t => {
-      map[t.address] = { ...t };
-      return t.address
-    }));
+      .concat(this.getKnownTokens(chainId).map(t => {
+        map[t.address] = {...t};
+        return t.address
+      }));
 
     //const provider = ethers.getDefaultProvider(null, { ethers: this.infuraProjectId, quorum: 1});
 
