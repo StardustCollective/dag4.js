@@ -1,11 +1,11 @@
-import {dag4} from '@stardust-collective/dag4';
+import {dag} from '@stardust-collective/dag4';
 import fetch from 'node-fetch';
 import {ExampleWallet} from './example-wallet';
 const { LocalStorage } = require('node-localstorage');
 
-dag4.di.useFetchHttpClient(fetch);
-dag4.di.useLocalStorageClient(new LocalStorage('./scratch'));
-dag4.network.config({
+dag.di.useFetchHttpClient(fetch);
+dag.di.useLocalStorageClient(new LocalStorage('./scratch'));
+dag.network.config({
   id: 'ceres',
   beUrl: 'https://api-be.exchanges.constellationnetwork.io',
   lbUrl: 'http://lb.exchanges.constellationnetwork.io:9000'

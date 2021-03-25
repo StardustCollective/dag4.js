@@ -1,5 +1,5 @@
 
-import {dag4, DagTypes} from '@stardust-collective/dag4';
+import {dag, DagTypes} from '@stardust-collective/dag4';
 import {DagWalletMonitorUpdate} from '@stardust-collective/dag4-wallet';
 import {Subscription} from 'rxjs';
 
@@ -16,44 +16,44 @@ export class ExampleWallet {
   private subscription: Subscription;
 
   constructor () {
-    this.subscription = dag4.monitor.observeMemPoolChange().subscribe((U) => this.pollPendingTxs(U));
+    this.subscription = dag.monitor.observeMemPoolChange().subscribe((U) => this.pollPendingTxs(U));
   }
 
   async createEncryptedWalletsAB () {
     //Create Wallet A using JsonPrivateKey. Encrypted JsonPrivateKey requires password to later decrypt.
-    const jsonPrivateKey: JSONPrivateKey = await dag4.keyStore.generateEncryptedPrivateKey(PASSWORD);
+    const jsonPrivateKey: JSONPrivateKey = await dag.keyStore.generateEncryptedPrivateKey(PASSWORD);
 
     //decrypt JSON to extract the private key
-    this.wallet1PrivateKey = await dag4.keyStore.decryptPrivateKey(jsonPrivateKey, PASSWORD);
-    this.wallet1DAGAddress = await dag4.keyStore.getDagAddressFromPrivateKey(this.wallet1PrivateKey);
+    this.wallet1PrivateKey = await dag.keyStore.decryptPrivateKey(jsonPrivateKey, PASSWORD);
+    this.wallet1DAGAddress = await dag.keyStore.getDagAddressFromPrivateKey(this.wallet1PrivateKey);
   }
 
 
   async createWallets1and2 () {
 
     //decrypt JSON to extract the private key
-    this.wallet1PrivateKey = await dag4.keyStore.generatePrivateKey();
-    this.wallet1DAGAddress = await dag4.keyStore.getDagAddressFromPrivateKey(this.wallet1PrivateKey);
+    this.wallet1PrivateKey = await dag.keyStore.generatePrivateKey();
+    this.wallet1DAGAddress = await dag.keyStore.getDagAddressFromPrivateKey(this.wallet1PrivateKey);
 
     //Create Wallet B using generatePrivateKey
-    this.wallet2PrivateKey = await dag4.keyStore.generatePrivateKey();
-    this.wallet2DAGAddress = await dag4.keyStore.getDagAddressFromPrivateKey(this.wallet2PrivateKey);
+    this.wallet2PrivateKey = await dag.keyStore.generatePrivateKey();
+    this.wallet2DAGAddress = await dag.keyStore.getDagAddressFromPrivateKey(this.wallet2PrivateKey);
 
-    console.log(`Wallet 1: ${dag4.network.getNetwork().lbUrl}/address/${this.wallet1DAGAddress}`);
-    console.log(`Wallet 2: ${dag4.network.getNetwork().lbUrl}/address/${this.wallet2DAGAddress}`);
+    console.log(`Wallet 1: ${dag.network.getNetwork().lbUrl}/address/${this.wallet1DAGAddress}`);
+    console.log(`Wallet 2: ${dag.network.getNetwork().lbUrl}/address/${this.wallet2DAGAddress}`);
   }
 
   async tapFaucet (address: string) {
 
-    if (dag4.keyStore.validateDagAddress(address)) {
+    if (dag.keyStore.validateDagAddress(address)) {
 
-      const networkId = dag4.network.getNetwork().id || 'ceres';
+      const networkId = dag.network.getNetwork().id || 'ceres';
 
-      const faucetApi = dag4.di.createRestApi(FAUCET_URL);
+      const faucetApi = dag.di.createRestApi(FAUCET_URL);
 
       const pendingTx = await faucetApi.$get<DagTypes.PendingTx>(networkId + '/' + address, {amount: 1});
 
-      console.log(`tapFaucet to ${address} - ${dag4.network.getNetwork().lbUrl}/transaction/${pendingTx.hash}`);
+      console.log(`tapFaucet to ${address} - ${dag.network.getNetwork().lbUrl}/transaction/${pendingTx.hash}`);
 
       console.log(JSON.stringify(pendingTx,null,2));
 
@@ -69,7 +69,7 @@ export class ExampleWallet {
 
       console.log('Check Balance ' + label + '(' + i + ')');
 
-      const balanceObj = await dag4.network.loadBalancerApi.getAddressBalance(address);
+      const balanceObj = await dag.network.loadBalancerApi.getAddressBalance(address);
 
       if (balanceObj && balanceObj.balance) {
         console.log('Check Balance - SUCCESS');
@@ -89,31 +89,31 @@ export class ExampleWallet {
     await this.createWallets1and2();
 
     //Set the active account to Wallet 1
-    dag4.account.loginPrivateKey(this.wallet1PrivateKey);
+    dag.account.loginPrivateKey(this.wallet1PrivateKey);
 
-    await this.tapFaucet(dag4.account.address);
+    await this.tapFaucet(dag.account.address);
 
-    await this.checkBalance(dag4.account.address, 'Faucet');
+    await this.checkBalance(dag.account.address, 'Faucet');
 
-    const fee = await dag4.account.getFeeRecommendation();
+    const fee = await dag.account.getFeeRecommendation();
 
-    let pendingTx = await dag4.account.transferDag(this.wallet2DAGAddress, 1, fee);
+    let pendingTx = await dag.account.transferDag(this.wallet2DAGAddress, 1, fee);
 
     console.log('Transfer Dag, from Wallet 1 to Wallet 2');
-    console.log(`${dag4.network.getNetwork().lbUrl}/transaction/${pendingTx.hash}`);
+    console.log(`${dag.network.getNetwork().lbUrl}/transaction/${pendingTx.hash}`);
     console.log(JSON.stringify(pendingTx,null,2));
 
-    dag4.monitor.addToMemPoolMonitor(pendingTx);
+    dag.monitor.addToMemPoolMonitor(pendingTx);
 
-    await dag4.monitor.waitForTransaction(pendingTx.hash);
+    await dag.monitor.waitForTransaction(pendingTx.hash);
 
     //Switch to Wallet 2
-    dag4.account.loginPrivateKey(this.wallet2PrivateKey);
+    dag.account.loginPrivateKey(this.wallet2PrivateKey);
 
-    pendingTx = await dag4.account.transferDag(FAUCET_ADDRESS, 1);
+    pendingTx = await dag.account.transferDag(FAUCET_ADDRESS, 1);
 
     console.log('Transfer Dag from Wallet #2 back to Faucet');
-    console.log(`${dag4.network.getNetwork().lbUrl}/transaction/${pendingTx.hash}`);
+    console.log(`${dag.network.getNetwork().lbUrl}/transaction/${pendingTx.hash}`);
     console.log(JSON.stringify(pendingTx,null,2));
 
     await this.checkCheckPointBlockStatus(pendingTx.hash);
@@ -127,7 +127,7 @@ export class ExampleWallet {
 
     for (let i = 1; ; i++) {
 
-      const result = await dag4.network.loadBalancerApi.checkTransactionStatus(hash);
+      const result = await dag.network.loadBalancerApi.checkTransactionStatus(hash);
 
       if (result.accepted) {
         console.log('Checkpoint Block Status - ACCEPTED');
