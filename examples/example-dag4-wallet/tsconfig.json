@@ -2,7 +2,7 @@
   "extends": "../../tsconfig-package-cjs.json",
   "compilerOptions": {
     "baseUrl": "./src",
-    "outDir": "dist/cjs",
+    "outDir": "dist",
     "declarationDir": "dist/types",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
