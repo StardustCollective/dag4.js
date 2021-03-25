@@ -1,9 +1,7 @@
 
-# DAG4 - Constellation Hypergraph JavaScript API
+# DAG4 - DAG JavaScript API
 
-This is the Constellation Hypergraph [JavaScript API][docs].
-
-You need to run a [Hypergraph](https://github.com/Constellation-Labs/constellation) node to use this library.
+This is the DAG [JavaScript API][docs] for Constellation Network.
 
 Please read the [documentation][docs] for more detailed instructions. The following includes basic install and configuration.
 
@@ -19,12 +17,6 @@ npm install @stardust-collective/dag4
 
 ```bash
 yarn add @stardust-collective/dag4
-```
-
-build using the [dag4.js][repo] repository:
-
-```bash
-npm run build
 ```
 
 ## Usage

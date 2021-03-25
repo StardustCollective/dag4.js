@@ -6,9 +6,8 @@ import nodeBuiltins from 'rollup-plugin-node-builtins'
 import json from '@rollup/plugin-json'
 import commonjs from '@rollup/plugin-commonjs'
 import replace from '@rollup/plugin-replace'
-import { uglify } from 'rollup-plugin-uglify'
 import { terser } from 'rollup-plugin-terser'
-import { typescriptPaths } from 'rollup-plugin-typescript-paths'
+import typescript from '@rollup/plugin-typescript';
 
 import { getIfUtils, removeEmpty } from 'webpack-config-utils'
 
@@ -17,13 +16,11 @@ const { getOutputFileName } = require('./helpers')
 const env = process.env.NODE_ENV || 'development'
 const { ifProduction } = getIfUtils(env)
 
-// const LIB_NAME = 'dag';//pascalCase(normalizePackageName(pkg.name))
 const ROOT = resolve('./')
 const DIST = resolve(ROOT, 'dist')
 const pkg  = require(resolve(ROOT, 'package.json'))
 
-// const pkgName = pkg.name.split('/')[1];
-const LIB_NAME = 'dag';//pkgName.includes('-') ? pkgName.split('-')[1] : pkgName;
+const LIB_NAME = 'dag4';
 /**
  * Object literals are open-ended for js checking, so we need to be explicit
  * @type {{entry:{esm5: string, esm2015: string},bundles:string}}
@@ -49,7 +46,8 @@ const external = (pkg.peerDependencies && Object.keys(pkg.peerDependencies)) || 
 const plugins = /** @type {Plugin[]} */ ([
 
   // Allow TypeScript alias paths
-  typescriptPaths({ transform: m => m.replace('src','dist/esm') }),
+  //typescriptPaths({ transform: m => { m.replace('build','dist/esm')} }),
+  typescript(),
 
   // Allow json resolution
   json(),
@@ -96,7 +94,7 @@ const ESMconfig = {
   output: [
     {
       file: getOutputFileName(
-          resolve(PATHS.bundles, 'index.esm.js'),
+          resolve(PATHS.bundles, 'dag4.esm.js'),
           ifProduction()
       ),
       format: 'es',
@@ -112,10 +110,11 @@ const UMDconfig = {
   ...CommonConfig,
   //context: 'window',
   input: resolve(PATHS.entry.esm, 'index.js'),
-  external: Object.keys(pkg.dependencies || {}).filter(key => /^dag4-/.test(key)),
+  //external: Object.keys(pkg.dependencies || {}).filter(key => /^dag4-/.test(key)),
+  external: [ 'fs' ],
   output: {
     file: getOutputFileName(
-      resolve(PATHS.bundles, 'index.umd.js'),
+      resolve(PATHS.bundles, 'dag4.umd.js'),
       ifProduction()
     ),
     format: 'umd',
@@ -124,10 +123,10 @@ const UMDconfig = {
     indent: false,
     extend: true,
     banner: `// ${pkg.homepage} v${pkg.version} Copyright ${(new Date).getFullYear()} ${pkg.author}`,
-    globals: Object.assign({}, ...Object.keys(pkg.dependencies || {}).filter(key => /^dag4-/.test(key)).map(key => ({[key]: "dag4"})))
+    //globals: Object.assign({}, ...Object.keys(pkg.dependencies || {}).filter(key => /^dag4-/.test(key)).map(key => ({[key]: "dag4"})))
   },
   plugins: removeEmpty(
-    /** @type {Plugin[]} */ ([...plugins, ifProduction(uglify())])
+    /** @type {Plugin[]} */ ([...plugins, ifProduction(terser())])
   ),
 }
 
@@ -135,6 +134,7 @@ const IIFEconfig = {
   ...CommonConfig,
   context: 'window',
   input: resolve(PATHS.entry.esm, 'index.js'),
+  external: [ 'fs' ],
   output: {
     file: getOutputFileName(
         resolve(PATHS.bundles, 'index.iife.js'),
@@ -145,7 +145,7 @@ const IIFEconfig = {
     sourcemap: true,
   },
   plugins: removeEmpty(
-      /** @type {Plugin[]} */ ([...plugins, ifProduction(uglify())])
+      /** @type {Plugin[]} */ ([...plugins, ifProduction(terser())])
   ),
 }
 
