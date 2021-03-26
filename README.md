@@ -24,10 +24,10 @@ yarn add @stardust-collective/dag4
 ```js
 // In Node.js
 const fetch = require('node-fetch');
-const dag4 = require("@stardust-collective/dag4");
+const { dag4 } = require("@stardust-collective/dag4");
 
-dag.di.useFetchHttpClient(fetch);
-dag.network.config({
+dag4.di.useFetchHttpClient(fetch);
+dag4.network.config({
     beUrl: 'https://block-explorer.constellationnetwork.io',
     lbUrl: 'http://lb.constellationnetwork.io:9000'
 })
@@ -37,10 +37,10 @@ Now you can use it to:
 
 ```ts
 // Get latest snapshot from the block explorer
-dag.network.blockExplorerApi.getLatestSnapshot();
+dag4.network.blockExplorerApi.getLatestSnapshot();
 
 // Get the total supply from a validator node
-dag.network.loadBalancerApi.getTotalSupply();
+dag4.network.loadBalancerApi.getTotalSupply();
 ```
 
 ### Usage with TypeScript
@@ -52,15 +52,15 @@ You can use `dag4.js` as follows:
 import dag4
 
 ```typescript
-import { dag } from '@stardust-collective/dag4';
+import { dag4 } from '@stardust-collective/dag4';
 ```
 
 Configure Network
 ```ts
 import fetch from 'node-fetch';
 
-dag.di.useFetchHttpClient(fetch);
-dag.network.config({
+dag4.di.useFetchHttpClient(fetch);
+dag4.network.config({
    beUrl: 'https://block-explorer.constellationnetwork.io',
    lbUrl: 'http://lb.constellationnetwork.io:9000'
 })
