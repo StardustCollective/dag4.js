@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@stardust-collective/dag4": "^1.0.7",
+    "@stardust-collective/dag4": "^1.1.0",
     "node-fetch": "^2.6.1",
     "node-localstorage": "^2.1.6"
   },

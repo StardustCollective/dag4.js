@@ -5,7 +5,7 @@ import {PendingTx} from '@stardust-collective/dag4-network/types';
 import {dagNetwork} from '@stardust-collective/dag4-network';
 import {CbTransaction} from '@stardust-collective/dag4-network/types/dto/cb-transaction';
 
-const TEN_MINUTES = 10 * 60 * 1000;
+const TWELVE_MINUTES = 12 * 60 * 1000;
 
 type WalletParent = {
   getTransactions (limit?: number, searchAfter?: string): Promise<Transaction[]>;
@@ -140,7 +140,7 @@ export class DagMonitor {
 
         } else {
 
-          if (pendingTx.status !== 'CHECKPOINT_ACCEPTED' && pendingTx.timestamp + TEN_MINUTES > Date.now()) {
+          if (pendingTx.status !== 'CHECKPOINT_ACCEPTED' && pendingTx.status !== 'GLOBAL_STATE_PENDING' && pendingTx.timestamp + TWELVE_MINUTES > Date.now()) {
             //TX has been dropped
             pendingTx.status = 'DROPPED';
             pendingTx.pending = false;

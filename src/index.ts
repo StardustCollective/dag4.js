@@ -44,7 +44,7 @@ class Dag4Packages {
 
 const dag4Packages = new Dag4Packages();
 
-export const dag = {
+export const dag4 = {
   keyStore,
   di: dagDi,
   get account () {
