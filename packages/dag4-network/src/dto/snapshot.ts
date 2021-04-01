@@ -21,5 +21,6 @@ export type Snapshot = {
   latestSnapshotInfo?: SnapshotCacheInfo;
   "hash": string,
   "height": number,
-  "checkpointBlocks": string[]
+  "checkpointBlocks": string[],
+  "timestamp": string
 }
