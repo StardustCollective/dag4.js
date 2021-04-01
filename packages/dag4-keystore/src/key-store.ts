@@ -75,10 +75,25 @@ export class KeyStore {
   }
 
   async decryptPrivateKey (jKey: V3Keystore, password) {
-    typeCheckJKey(jKey);
-    const wallet = await Wallet.fromV3(jKey, password);
-    const key = wallet.getPrivateKey().toString("hex")
-    return key;
+
+    if(this.isValidJsonPrivateKey(jKey)) {
+      const wallet = await Wallet.fromV3(jKey, password);
+      const key = wallet.getPrivateKey().toString("hex")
+      return key;
+    }
+
+    throw new Error('Invalid JSON Private Key format');
+  }
+
+  isValidJsonPrivateKey (jKey: V3Keystore) {
+
+    const params = (jKey && jKey.crypto && jKey.crypto.kdfparams);
+
+    if (params && params.salt && params.n !== undefined && params.r !== undefined && params.p !== undefined  && params.dklen !== undefined) {
+      return true;
+    }
+
+    return false;
   }
 
   //Extended keys can be used to derive child keys
