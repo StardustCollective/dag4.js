@@ -1,11 +1,17 @@
 
-export class LocalStorageDb {
+export class StateStorageDb {
 
   private keyPrefix = 'dag4-';
 
-  constructor (private storageClient: ILocalStorageDb) {}
+  constructor (private storageClient: IStateStorageClient) {}
 
   setPrefix (prefix: string) {
+    if (!prefix) {
+      prefix = 'dag4-';
+    }
+    else if (prefix.charAt(prefix.length - 1) !== '-') {
+      prefix += '-';
+    }
     this.keyPrefix = prefix;
   }
 
@@ -14,7 +20,10 @@ export class LocalStorageDb {
   }
 
   get (key: string): any {
-    return JSON.parse(this.storageClient.getItem(this.keyPrefix + key));
+    const value = this.storageClient.getItem(this.keyPrefix + key);
+    if (value) {
+      return JSON.parse(value);
+    }
   }
 
   delete (key: string) {
@@ -22,7 +31,7 @@ export class LocalStorageDb {
   }
 }
 
-export interface ILocalStorageDb {
+export interface IStateStorageClient {
   getItem(key: string): string | null;
   removeItem(key: string): void;
   setItem(key: string, value: string): void;

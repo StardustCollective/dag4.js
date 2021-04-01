@@ -1,9 +1,7 @@
 import { IHttpClient } from './i-http-client';
 import {IKeyValueDb} from './i-key-value-db';
-
-const missingDI = () => {
-  throw new Error('KeyValueDbClient not installed')
-};
+import {StateStorageDb} from './clients/state-storage-db';
+import {MemoryStorageClient} from './clients/memory-storage-client';
 
 // Cross Platform Dependency Injection
 class CrossPlatformDi {
@@ -29,16 +27,16 @@ class CrossPlatformDi {
   }
 
   //======================
-  //= Persistent Storage =
+  //= State Storage =
   //======================
-  private keyValueDbClient: IKeyValueDb = { get: missingDI, set: missingDI, delete: missingDI, setPrefix: missingDI };
+  private keyValueDb: IKeyValueDb = new StateStorageDb(new MemoryStorageClient());
 
-  registerKeyValueDbClient (client: IKeyValueDb) {
-    this.keyValueDbClient = client;
+  registerKeyValueDbClient (db: IKeyValueDb) {
+    this.keyValueDb = db;
   }
 
   getKeyValueDbClient (): IKeyValueDb {
-    return this.keyValueDbClient;
+    return this.keyValueDb;
   }
 }
 

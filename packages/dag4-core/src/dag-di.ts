@@ -3,7 +3,7 @@ import {IHttpClient} from './cross-platform/i-http-client';
 import {crossPlatformDi} from './cross-platform/cross-platform-di';
 import {IKeyValueDb} from './cross-platform/i-key-value-db';
 import {FetchRestService} from './cross-platform/clients/fetch.http';
-import {LocalStorageDb} from './cross-platform/clients/local-storage-db';
+import {StateStorageDb} from './cross-platform/clients/state-storage-db';
 
 
 export class DagDi {
@@ -17,7 +17,7 @@ export class DagDi {
   }
 
   useLocalStorageClient(storageClient?) {
-    this.registerKeyValueDbClient(new LocalStorageDb(storageClient));
+    this.registerKeyValueDbClient(new StateStorageDb(storageClient));
   }
 
   registerHttpClient (client: IHttpClient, baseUrl?: string) {
