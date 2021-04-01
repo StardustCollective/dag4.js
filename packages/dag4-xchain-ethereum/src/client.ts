@@ -1,14 +1,11 @@
-import {ExplorerUrl, getTokenAddress, InfuraCreds, TxOverrides} from '@xchainjs/xchain-ethereum';
-import {FeeOptionKey, Network, TxHash, TxParams} from '@xchainjs/xchain-client';
+import {ExplorerUrl, InfuraCreds} from '@xchainjs/xchain-ethereum';
+import { Network} from '@xchainjs/xchain-client';
 import {BigNumber, ethers, FixedNumber} from 'ethers';
 import {Client} from '@xchainjs/xchain-ethereum';
 import knownTokenList from './data/tokens.json';
 import {tokenContractService} from './token-contract-service';
 
 import * as utils from '@xchainjs/xchain-util';
-import {Asset, AssetETH, assetToString, BaseAmount} from '@xchainjs/xchain-util';
-import {Address} from '@xchainjs/xchain-client/lib/types';
-import {BASE_TOKEN_GAS_COST, SIMPLE_GAS_COST} from '@xchainjs/xchain-ethereum/lib/utils';
 
 export {utils};
 
@@ -20,10 +17,10 @@ type XClientEthParams = {
   privateKey?: string;
 }
 
-type InfuraProvider = ethers.providers.InfuraProvider;
-
+const InfuraProvider = ethers.providers.InfuraProvider;
 
 export class XChainEthClient extends Client {
+
 
   private infuraProjectId: string;
 
@@ -42,12 +39,12 @@ export class XChainEthClient extends Client {
   }
 
   getTokenInfo (tokenContractAddress: string, chainId = 1) {
-    const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
+    const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
     return tokenContractService.getTokenInfo(infuraProvider, tokenContractAddress);
   }
 
   async getTokenBalance (ethAddress: string, tokenInfo: CustomAsset, chainId = 1) {
-    const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
+    const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
     const tokenBalances = await tokenContractService.getTokenBalance(infuraProvider, ethAddress, tokenInfo.address, chainId);
 
     return FixedNumber.fromValue(BigNumber.from(tokenBalances[tokenInfo.address]), tokenInfo.decimals).toUnsafeFloat()
@@ -73,7 +70,7 @@ export class XChainEthClient extends Client {
     //const provider = ethers.getDefaultProvider(null, { ethers: this.infuraProjectId, quorum: 1});
 
 
-    const infuraProvider = new ethers.providers.InfuraProvider(chainId, this.infuraProjectId);
+    const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
 
     const ethBalance = await infuraProvider.getBalance(address);
 
@@ -94,6 +91,12 @@ export class XChainEthClient extends Client {
     return [ethAsset].concat(assetBalances.filter(b => b.balance > 0));
 
   }
+
+  async waitForTransaction (hash: string, chainId = 1) {
+    const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
+
+    return infuraProvider.waitForTransaction(hash);
+  }
 }
 
 type CustomAsset = {
@@ -104,6 +107,8 @@ type CustomAsset = {
   "logoURI"?: string
   "balance"?: number
 }
+
+
 
 //Get Token Info by ContractAddress
 //https://api.etherscan.io/api?module=token&action=tokeninfo&contractaddress=0x0e3a2a1f2146d86a604adc220b4967a898d7fe07&apikey=YourApiKeyToken

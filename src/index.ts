@@ -6,13 +6,13 @@ import {
   RestApi as _RestApi,
   RestApiOptionsRequest as _RestApiOptionsRequest
 } from '@stardust-collective/dag4-core';
-import {dagNetwork, Transaction as _Transaction} from '@stardust-collective/dag4-network';
+import {dagNetwork, Snapshot as _Snapshot, Transaction as _Transaction} from '@stardust-collective/dag4-network';
 import {keyStore, HDKey as _HDKey} from '@stardust-collective/dag4-keystore';
 import {PendingTx as _PendingTx, NetworkInfo as _NetworkInfo} from '@stardust-collective/dag4-network/types';
 import {DagAccount, DagMonitor} from '@stardust-collective/dag4-wallet';
 
 
-export namespace DagTypes {
+export namespace Dag4Types {
   export type HDKey = _HDKey;
   export type RestApi = _RestApi;
   export type IKeyValueDb = _IKeyValueDb;
@@ -20,6 +20,7 @@ export namespace DagTypes {
   export type Transaction = _Transaction;
   export type PendingTx = _PendingTx;
   export type NetworkInfo = _NetworkInfo;
+  export type Snapshot = _Snapshot;
   export type RestApiOptionsRequest = _RestApiOptionsRequest;
 }
 
@@ -53,6 +54,26 @@ export const dag4 = {
   get monitor () {
     return dag4Packages.createOrGetMonitor();
   },
+  config: (config: Dag4Config) => {
+    dagDi.getKeyValueDbClient().setPrefix(config.appId);
+    dagNetwork.config(config.network);
+  },
   network: dagNetwork,
   arrayUtils
 }
+
+type Dag4Config = {
+  appId: string;
+  network: Dag4Types.NetworkInfo
+}
+
+// dag4.config({
+//   appId: 'stargazer',
+//   network: {
+//     id: 'main',
+//     beUrl: '',
+//     lbUrl: ''
+//   }
+// })
+
+//

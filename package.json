@@ -28,10 +28,10 @@
     "url": "https://github.com/StardustCollective/dag4.js/issues"
   },
   "dependencies": {
-    "@stardust-collective/dag4-core": "^1.0.1",
-    "@stardust-collective/dag4-keystore": "^1.0.4",
-    "@stardust-collective/dag4-network": "^1.0.2",
-    "@stardust-collective/dag4-wallet": "^1.0.8"
+    "@stardust-collective/dag4-core": "^1.0.2",
+    "@stardust-collective/dag4-keystore": "^1.0.5",
+    "@stardust-collective/dag4-network": "^1.0.3",
+    "@stardust-collective/dag4-wallet": "^1.0.9"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
