@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@stardust-collective/dag4-core": "^1.0.2",
-    "@stardust-collective/dag4-keystore": "^1.0.5",
-    "@stardust-collective/dag4-network": "^1.0.3",
+    "@stardust-collective/dag4-keystore": "^1.0.6",
+    "@stardust-collective/dag4-network": "^1.0.4",
     "bignumber.js": "^9.0.1"
   },
   "devDependencies": {

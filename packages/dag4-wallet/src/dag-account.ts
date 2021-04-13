@@ -16,7 +16,13 @@ export class DagAccount {
   }
 
   get address () {
-    return this.m_keyTrio && this.m_keyTrio.address;
+    const address = this.m_keyTrio && this.m_keyTrio.address;
+
+    if (!address) {
+      throw new Error('Need to login before calling methods on dag4.account');
+    }
+
+    return address;
   }
 
   get keyTrio () {
@@ -64,15 +70,12 @@ export class DagAccount {
 
   async getBalance () {
 
-    let result = 0;
+    let result: number = undefined;
 
-    if (this.address) {
+    const addressObj = await loadBalancerApi.getAddressBalance(this.address);
 
-      const addressObj = await loadBalancerApi.getAddressBalance(this.address);
-
-      if (addressObj && !isNaN(addressObj.balance)) {
-        result = new  BigNumber(addressObj.balance).dividedBy(1e8).toNumber();
-      }
+    if (addressObj && !isNaN(addressObj.balance)) {
+      result = new  BigNumber(addressObj.balance).dividedBy(1e8).toNumber();
     }
 
     return result;
@@ -102,17 +105,93 @@ export class DagAccount {
     return tx;
   }
 
-  async transferDag (toAddress: string, amount: number, fee = 0): Promise<PendingTx> {
+  async transferDag (toAddress: string, amount: number, fee = 0, autoEstimateFee = false): Promise<PendingTx> {
 
+    let normalizedAmount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
     const lastRef = await loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+
+    if (fee === 0 && autoEstimateFee) {
+      const tx = await loadBalancerApi.getTransaction(lastRef.prevHash);
+
+      if (tx) {
+
+        const addressObj = await loadBalancerApi.getAddressBalance(this.address);
+
+        //Check to see if sending max amount
+        if (addressObj.balance === normalizedAmount) {
+          amount -= 1e-8
+          normalizedAmount--;
+        }
+
+        fee = 1e-8;
+      }
+    }
+
     const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
     const txHash = await loadBalancerApi.postTransaction(tx);
 
     if (txHash) {
       //this.memPool.addToMemPoolMonitor({ timestamp: Date.now(), hash: txHash, amount: amount * 1e8, receiver: toAddress, sender: this.address });
-      amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
-      return { timestamp: Date.now(), hash: txHash, amount: amount, receiver: toAddress, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
+      return { timestamp: Date.now(), hash: txHash, amount: normalizedAmount, receiver: toAddress, fee, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
     }
+  }
+
+  async waitForCheckPointAccepted (hash: string) {
+
+    let attempts = 0;
+
+    for (let i = 1; ; i++) {
+
+      const result = await loadBalancerApi.checkTransactionStatus(hash);
+
+      if (result) {
+        if (result.accepted) {
+          break;
+        }
+      }
+      else {
+        attempts++;
+
+        if (attempts > 10) {
+          throw new Error('Unable to find transaction');
+        }
+      }
+
+      await this.wait(2.5);
+    }
+
+    return true;
+  }
+
+  async waitForBalanceChange (initialValue?: number) {
+
+    if (initialValue === undefined) {
+      initialValue = await this.getBalance();
+      await this.wait(5);
+    }
+
+    let changed = false;
+
+    //Run for a max of 2 minutes (5 * 24 times)
+    for (let i = 1; i < 24; i++) {
+
+      const result = await this.getBalance();
+
+      if (result !== undefined) {
+        if(result !== initialValue) {
+          changed = true;
+          break;
+        }
+      }
+
+      await this.wait(5);
+    }
+
+    return changed;
+  }
+
+  private wait (time = 5): Promise<void> {
+   return new Promise(resolve => setTimeout(resolve, time * 1000));
   }
 
   transferDagBatch(transfers: TransferBatchItem[]) {
