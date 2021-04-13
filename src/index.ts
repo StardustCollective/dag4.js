@@ -28,16 +28,27 @@ class Dag4Packages {
   private account: DagAccount;
   private monitor: DagMonitor;
 
-  createOrGetAccount () {
+  createAccount (privateKey?: string) {
+
+    const account =  new DagAccount();
+
+    if (privateKey) {
+      account.loginPrivateKey(privateKey);
+    }
+
+    return account;
+  }
+
+  createOrGetGlobalAccount () {
     if (!this.account) {
       this.account = new DagAccount();
     }
     return this.account;
   }
 
-  createOrGetMonitor () {
+  createOrGetGlobalMonitor () {
     if (!this.monitor) {
-      this.monitor = new DagMonitor(this.createOrGetAccount());
+      this.monitor = new DagMonitor(this.createOrGetGlobalAccount());
     }
     return this.monitor;
   }
@@ -48,11 +59,14 @@ const dag4Packages = new Dag4Packages();
 export const dag4 = {
   keyStore,
   di: dagDi,
+  createAccount (privateKey?: string) {
+    return dag4Packages.createAccount(privateKey);
+  },
   get account () {
-    return dag4Packages.createOrGetAccount();
+    return dag4Packages.createOrGetGlobalAccount();
   },
   get monitor () {
-    return dag4Packages.createOrGetMonitor();
+    return dag4Packages.createOrGetGlobalMonitor();
   },
   config: (config: Dag4Config) => {
     dagDi.getKeyValueDbClient().setPrefix(config.appId);
