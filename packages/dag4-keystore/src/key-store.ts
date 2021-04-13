@@ -180,7 +180,19 @@ export class KeyStore {
     return wallet.getAddressString();
   }
 
+  //publicKeyHex should start with { 02, 03 } compressed or { 04 } uncompressed
+  //  where 02 or 03 represent a compressed point (x only)
+  //  while 04 represents a complete point (x,y)
   getDagAddressFromPublicKey (publicKeyHex: string) {
+
+    const encoding = publicKeyHex.substring(0,2);
+
+    if (encoding !== '04') {
+      if (encoding === '02' || encoding === '03') {
+        throw new Error('Compress public key currently not supported')
+      }
+      publicKeyHex = '04' + publicKeyHex;
+    }
 
     publicKeyHex = CONSTANTS.PKCS_PREFIX + publicKeyHex;
 
