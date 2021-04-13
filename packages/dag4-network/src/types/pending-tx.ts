@@ -8,4 +8,5 @@ export type PendingTx = {
   pending?: boolean;
   pendingMsg?: string;
   timestamp: number;
+  fee: number;
 }
