@@ -43,6 +43,12 @@ export class XChainEthClient extends Client {
     return tokenContractService.getTokenInfo(infuraProvider, tokenContractAddress);
   }
 
+  getTransactionCount(address: string, chainId = 1) {
+    const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
+
+    return infuraProvider.getTransactionCount(address, 'pending');
+  }
+
   async getTokenBalance (ethAddress: string, tokenInfo: CustomAsset, chainId = 1) {
     const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
     const tokenBalances = await tokenContractService.getTokenBalance(infuraProvider, ethAddress, tokenInfo.address, chainId);
