@@ -2,15 +2,15 @@
 # yarn lockfile v1
 
 
-"@stardust-collective/dag4-core@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-core/-/dag4-core-1.0.2.tgz#2cec7a1295cb3dda76589d2ab435b08c9d85341e"
-  integrity sha512-S9Dnp0wF/fmKGm+sum33140yrFo4OJyGph1tZOQeTFJ4IXf6xIVW//6vu/Cun5h5X24cUfuWY3PnbRXIjlCnqA==
+"@stardust-collective/dag4-core@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-core/-/dag4-core-1.0.3.tgz#5facc1744e3532a48c4a7f8aeed3b8ce842a48e2"
+  integrity sha512-/NwK8Vo9QzkrugT1nZJfQ2gxdmQ9LrmO+1k6RihCz/dqiWY5sktgVCagUYO7BCkVBdpD8lerZ0mp/6mrqDG6fg==
 
-"@stardust-collective/dag4-keystore@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.6.tgz#867b20272ad6328cadaf6e50ff9b9187fdd43393"
-  integrity sha512-+/xxaZp6CRnALRv8gROMXsVEpo3gJukzDaPlnLUYOn12BLhZebjWPu9ItXxXyXqVz8ShnVimyzH7kOq/Ncc6lQ==
+"@stardust-collective/dag4-keystore@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.7.tgz#5ee14e131d16fe6fb26f42818d085c292267f327"
+  integrity sha512-dSUmgvIE//MPQN0bwws+PmcMosZOlt4pZiWF5brhcBtZd3noHKuYZ+yKB9FqeA06yThzYExjRp4ZdJIh/aynpg==
   dependencies:
     bignumber.js "^9.0.1"
     bip39 "^3.0.2"
@@ -31,12 +31,12 @@
     stream-browserify "^3.0.0"
     uuid "^3.4.0"
 
-"@stardust-collective/dag4-network@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.4.tgz#12baaa54fb0f4cf6a2dbd867993c2654465c68ed"
-  integrity sha512-wGpbib2dtaC6fwPPjsAAsEwMA5plMfjV9rcDh6oebMmWC9rBYp68mmE4WT8/BVh8lKkHebybM2OM73UvpAi7Ig==
+"@stardust-collective/dag4-network@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.5.tgz#94efb7c1104f8fd24388cb4ef6eff7788baf43f8"
+  integrity sha512-pJyDYZtinmuVQscqka17H3khXoZo5fEqiQ5M3nguH8vJN51h+aP6ghUxblwmFT4xxfKVjQqZbvtt4Z0yVhGgWQ==
   dependencies:
-    "@stardust-collective/dag4-core" "^1.0.2"
+    "@stardust-collective/dag4-core" "^1.0.3"
     rxjs "^6.6.3"
 
 "@types/bn.js@^4.11.3":

@@ -152,7 +152,7 @@ export class DagAccount {
       else {
         attempts++;
 
-        if (attempts > 10) {
+        if (attempts > 20) {
           throw new Error('Unable to find transaction');
         }
       }
