@@ -2,8 +2,9 @@ import {Buffer} from 'buffer';
 
 import randomBytes from 'randombytes';
 
-//Enforce a minimum complexity in resulting hash
+//Enforce a minimum complexity in resulting hash: 8725724278030335
 const MIN_SALT = Number.MAX_SAFE_INTEGER - 2**48;
+
 
 class TxEncode {
 

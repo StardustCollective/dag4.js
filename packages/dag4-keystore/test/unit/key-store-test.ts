@@ -64,6 +64,40 @@ describe('Key Store', () => {
     // console.log(keyStore.generateSeedPhrase());
   });
 
+  it('Error-Check: Fee is less than 0',  async () => {
+
+    const keyTrio = { privateKey: '', publicKey: '', address: '1' };
+    let tx;
+    try {
+      tx = await keyStore.generateTransaction(1, '2', keyTrio, null, -1);
+    }
+    catch (e) {
+      expect(e.message).to.equal('KeyStore :: Fee must be greater or equal to zero');
+      return;
+    }
+
+    expect(tx).to.equal(undefined);
+
+  });
+
+  it('Error-Check: Amount is less than 0',  async () => {
+
+    const keyTrio = { privateKey: '', publicKey: '', address: '1' };
+    let tx;
+    try {
+      tx = await keyStore.generateTransaction(1e-9, '2', keyTrio, null);
+    }
+    catch (e) {
+      expect(e.message).to.equal('KeyStore :: Amount must be greater than 1e-8');
+      return;
+    }
+
+    expect(tx).to.equal(undefined);
+
+  });
+
+
+
 
   it('ETH address from Public', () => {
 

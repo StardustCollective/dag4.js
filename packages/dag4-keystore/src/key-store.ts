@@ -27,8 +27,22 @@ const BASE58_ALPHABET = /['123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstu
 //NOTE: During recover account from seed phrase, detect ETH accounts - inform user of derivation path and compatibility?  ETH (reuse ETH accounts) or DAG (ledger support)
 const CONSTANTS = {
   BIP_44_DAG_PATH: `m/44'/${CONSTELLATION_COIN}'/0'/0/`,
-  BIP_44_ETH_PATH: `m/44'/${ETH_WALLET_PATH}'/0'/0/`,
+  BIP_44_ETH_PATH: `m/44'/${ETH_WALLET_PATH}'/0'/0/`,            //MetaMask and Trezor
+  //BIP_44_ETH_PATH_LEGACY: `m/44'/${ETH_WALLET_PATH}'/0'/`,             //MEW, Legacy
+  BIP_44_ETH_PATH_LEDGER: `m/44'/${ETH_WALLET_PATH}'/`,                //Ledger Live
   PKCS_PREFIX: '3056301006072a8648ce3d020106052b8104000a034200' //Removed last 2 digits. 04 is part of Public Key.
+}
+
+export enum DERIVATION_PATH {
+  DAG,
+  ETH,
+  ETH_LEDGER
+}
+
+const DERIVATION_PATH_MAP = {
+  [DERIVATION_PATH.DAG]: CONSTANTS.BIP_44_DAG_PATH,
+  [DERIVATION_PATH.ETH]: CONSTANTS.BIP_44_ETH_PATH,
+  [DERIVATION_PATH.ETH_LEDGER]: CONSTANTS.BIP_44_ETH_PATH_LEDGER
 }
 
 const typeCheckJKey = (key: V3Keystore) => {
@@ -106,12 +120,12 @@ export class KeyStore {
   }
 
   //Returns the first account
-  getPrivateKeyFromMnemonic (mnemonic: string) {
+  getPrivateKeyFromMnemonic (mnemonic: string, derivationPath: DERIVATION_PATH = DERIVATION_PATH.DAG) {
     if (bip39.validateMnemonic(mnemonic)) {
       const seedBytes = bip39.mnemonicToSeedSync(mnemonic);
 
       const rootKey = hdkey.fromMasterSeed(seedBytes);
-      const hardenedKey = rootKey.derivePath(CONSTANTS.BIP_44_DAG_PATH + 0);
+      const hardenedKey = rootKey.derivePath(DERIVATION_PATH_MAP[derivationPath] + 0);
 
       return hardenedKey.getWallet().getPrivateKey().toString("hex")
     }
@@ -125,8 +139,8 @@ export class KeyStore {
     }
   }
 
-  deriveAccountFromMaster (masterKey: hdkey, index: number) {
-    const accountKey = masterKey.derivePath(CONSTANTS.BIP_44_DAG_PATH + index);
+  deriveAccountFromMaster (masterKey: hdkey, index: number, derivationPath: DERIVATION_PATH = DERIVATION_PATH.DAG) {
+    const accountKey = masterKey.derivePath(DERIVATION_PATH_MAP[derivationPath] + index);
     const wallet = accountKey.getWallet();
     return wallet.getPrivateKey().toString("hex")
   }
@@ -214,17 +228,17 @@ export class KeyStore {
       throw new Error('KeyStore :: An address cannot send a transaction to itself');
     }
 
-    if (amount <= 1e-8) {
-      throw new Error('KeyStore :: The transfer amount must be greater than 1e-8');
-    }
-
-    if (fee < 0) {
-      throw new Error('KeyStore :: The transfer fee cannot be a negative 1e-8');
-    }
-
     //Normalize to integer and only preserve 8 decimals of precision
     amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
     fee = Math.floor(new BigNumber(fee).multipliedBy(1e8).toNumber());
+
+    if (amount < 1) {
+      throw new Error('KeyStore :: Amount must be greater than 1e-8');
+    }
+
+    if (fee < 0) {
+      throw new Error('KeyStore :: Fee must be greater or equal to zero');
+    }
 
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 
