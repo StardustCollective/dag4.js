@@ -56,8 +56,14 @@ export class FetchRestService {
       this.httpClient(options.url, options)
         .then( async (res) => {
           if (res.status !== 200) {
-            //console.log(options.url);
-            throw new Error(res.status + ' - ' + res.statusText + ' - ' + await res.text())
+            const text = await res.text();
+
+            // let error = new Error(text);
+            //
+            // error.status = res.status;
+            // error.statusText = res.statusText;
+
+            throw new Error(text);
           }
           return res.text();
         })
