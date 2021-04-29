@@ -1,0 +1,38 @@
+{
+  "name": "@stardust-collective/dag4-keyring",
+  "version": "0.0.1",
+  "description": "A wallet management tool for multi-chain accounts.",
+  "author": "Frank Fox",
+  "email": "ffox77@gmail.com",
+  "license": "MIT",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
+  "typings": "types/index.d.ts",
+  "homepage": "https://github.com/StardustCollective/dag4.js/packages/dag4-keyring/#readme",
+  "scripts": {
+    "prebuild": "rimraf dist/",
+    "build": "tsc && tsc -p tsconfig.cjs.json",
+    "rollup": "rollup -c ../../scripts/config/rollup.config.js",
+    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/**/set*-tests.ts",
+    "prerelease": "npm run build",
+    "release": "node ../../scripts/package/copy && npm run release:npm",
+    "release:npm": "npm publish ./dist -access public",
+    "release:preflight": "npm pack ./dist --dry-run"
+  },
+  "dependencies": {
+    "@metamask/obs-store": "^6.0.2",
+    "bn.js": "^4.12.0",
+    "buffer": "^5.6.0",
+    "eth-sig-util": "^3.0.1",
+    "ethereumjs-util": "^7.0.10"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.12",
+    "@types/node": "^14.6.2",
+    "chai": "^4.2.0",
+    "mocha": "^8.1.3",
+    "rimraf": "^3.0.2",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.0.3"
+  }
+}
