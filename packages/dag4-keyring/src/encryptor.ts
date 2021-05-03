@@ -12,7 +12,6 @@ type Payload = {
 
 export class Encryptor<T> {
 
-  // Takes a Pojo, returns cypher text.
   encrypt (password: string, data: T): Promise<string> {
     const salt = this.generateSalt();
 
@@ -23,6 +22,15 @@ export class Encryptor<T> {
       .then( (payload) => {
         payload.salt = salt
         return JSON.stringify(payload);
+      })
+  }
+
+  decrypt (password: string, text: string | Payload): Promise<T> {
+    const payload = typeof(text) === 'string' ? JSON.parse(text) as Payload : text;
+    const salt = payload.salt;
+    return this.keyFromPassword(password, salt)
+      .then( (key) => {
+        return this.decryptWithKey(key, payload)
       })
   }
 
@@ -42,15 +50,6 @@ export class Encryptor<T> {
         iv: vectorStr
       }
     })
-  }
-
-  decrypt (password: string, text: string | Payload): Promise<T> {
-    const payload = typeof(text) === 'string' ? JSON.parse(text) as Payload : text;
-    const salt = payload.salt;
-    return this.keyFromPassword(password, salt)
-      .then( (key) => {
-        return this.decryptWithKey(key, payload)
-      })
   }
 
   private decryptWithKey (key: CryptoKey, payload: Payload) {
@@ -94,7 +93,7 @@ export class Encryptor<T> {
     })
   }
 
-  serializeBufferFromStorage (str: string) {
+  private serializeBufferFromStorage (str: string) {
     var stripStr = (str.slice(0, 2) === '0x') ? str.slice(2) : str
     var buf = new Uint8Array(stripStr.length / 2)
     for (let i = 0; i < stripStr.length; i += 2) {
@@ -104,7 +103,7 @@ export class Encryptor<T> {
     return buf
   }
 
-  serializeBufferForStorage (buffer: Buffer) {
+  private serializeBufferForStorage (buffer: Buffer) {
     var result = '0x'
     var len = buffer.length || buffer.byteLength
     for (let i = 0; i < len; i++) {
@@ -113,7 +112,7 @@ export class Encryptor<T> {
     return result
   }
 
-  unprefixedHex (num: number) {
+  private unprefixedHex (num: number) {
     let hex = num.toString(16)
     while (hex.length < 2) {
       hex = '0' + hex
@@ -121,7 +120,7 @@ export class Encryptor<T> {
     return hex
   }
 
-  generateSalt (byteCount = 32) {
+  private generateSalt (byteCount = 32) {
     const view = new Uint8Array(byteCount);
     crypto.getRandomValues(view);
     return Buffer.from(view).toString('hex');

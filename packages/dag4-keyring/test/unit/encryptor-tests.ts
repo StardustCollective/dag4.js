@@ -1,29 +1,26 @@
 import {expect} from 'chai';
-import {Encryptor} from '../../dist/cjs/encryptor';
+import {Encryptor} from '../../src/encryptor';
+import {KeyringManager} from '../../src';
 
+const keyringManager = new KeyringManager();
 const encryptor = new Encryptor();
 
+keyringManager.setPassword('password');
+
+// The KeyringController is also an event emitter:
+keyringManager.on('newAccount', (address) => {
+  console.log(`New account created: ${address}`)
+})
+keyringManager.on('removedAccount', (address) => {
+  console.log(`account removed: ${address}`)
+})
+
+keyringManager.on('update', (state) => {
+  console.log(`update`);
+  console.log(JSON.stringify(state,null,2));
+})
+
 describe('encryptor', () => {
-
-  it('serializeBufferForStorage', () => {
-
-    const buf = Buffer.alloc(2);
-    buf[0] = 16
-    buf[1] = 1
-
-    const output = encryptor.serializeBufferForStorage(buf)
-
-    expect('0x1001').to.equal(output)
-  });
-
-  it('serializeBufferFromStorage', () => {
-
-    const input = '0x1001';
-    const output = encryptor.serializeBufferFromStorage(input)
-
-    expect(output[0]).to.equal(16);
-    expect(output[1]).to.equal(1);
-  })
 
   it('encrypt & decrypt', (done) => {
 

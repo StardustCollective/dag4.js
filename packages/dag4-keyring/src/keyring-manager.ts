@@ -2,44 +2,52 @@ import {ObservableStore} from '@metamask/obs-store'
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import {Encryptor} from './encryptor'
 
-import {IKeyringChainWallet, KeyringChainId, KeyringChainWalletId} from './keyrings/kcs';
-import {HdKeyring} from './keyrings/rings';
-import {MultiChainWallet} from './keyrings/wallets/multi-chain-wallet';
-import {IKeyringAccount} from './keyrings/keyring-account';
-import {SimpleChainWallet} from './keyrings/wallets/simple-chain-wallet';
+import {
+  IKeyringWallet,
+  KeyringNetwork,
+  KeyringWalletSerialized,
+  KeyringWalletState,
+  KeyringWalletType
+} from './kcs';
+import {HdKeyring} from './rings';
+import {MultiChainWallet} from './wallets/multi-chain-wallet';
+import {IKeyringAccount} from './kcs';
+import {SingleAccountWallet} from './wallets/single-account-wallet';
+import * as dag4 from '@stardust-collective/dag4-core';
 
-type WalletState = {
-  type: KeyringChainWalletId, data: any
+
+// type WalletState = {
+//   type: KeyringWalletType, data: any
+// }
+//
+// type VaultEncrypted = {
+//   salt: string, iv: string, vault: string
+// }
+
+type VaultSerialized = {
+  wallets: KeyringWalletSerialized[]
 }
 
-type VaultEncrypted = {
-  salt: string, iv: string, vault: string
-}
-
-type VaultState = {
-  wallets: WalletState[]
-}
-
-type VaultMemoryState = VaultState & {
+export type KeyringVaultState = {
   isUnlocked: boolean
+  wallets: KeyringWalletState[]
 };
 
 export class KeyringManager extends SafeEventEmitter  {
 
-  private encryptor = new Encryptor<VaultState>();
-  private wallets: IKeyringChainWallet[];
   //Encrypted State
-  private store: ObservableStore<VaultEncrypted>;
-  private memStore: ObservableStore<VaultMemoryState>;
+  private storage = dag4.dagDi.getStateStorageDb();
+
+  private encryptor = new Encryptor<VaultSerialized>();
+  private wallets: IKeyringWallet[];
+
+  private memStore: ObservableStore<KeyringVaultState>;
   private password: string;
 
-  constructor (opts = {} as { initState: any }) {
+  constructor () {
     super()
 
-    const initState = opts.initState || {}
-
-    this.store = new ObservableStore<VaultEncrypted>(initState)
-    this.memStore = new ObservableStore<VaultMemoryState>({
+    this.memStore = new ObservableStore<KeyringVaultState>({
       isUnlocked: false,
       wallets: [],
     })
@@ -47,81 +55,107 @@ export class KeyringManager extends SafeEventEmitter  {
     this.wallets = []
   }
 
+  isUnlocked () {
+    return !!this.password;
+  }
+
+  generateSeedPhrase () {
+    return HdKeyring.generateMnemonic();
+  }
+
   fullUpdate () {
     this.emit('update', this.memStore.getState())
-    return this.memStore.getState()
   }
 
   // - creates a single wallet with multiple chains, each with their own account.
-  createMultiChainHdWallet(seed?: string) {
+  createMultiChainHdWallet(label: string, seed?: string) {
     const wallet = new MultiChainWallet();
-    wallet.deserialize({ mnemonic: seed });
+    label = label || 'Wallet #' + (this.wallets.length+1);
+    wallet.create(label, seed);
     this.wallets.push(wallet);
     return wallet;
   }
 
   // - creates a single wallet with one chain, creates first account by default.
-  createSingleChainHdWallet(seed: string, chain: KeyringChainId) {
+  private createSingleChainHdWallet(seed: string, chain: KeyringNetwork) {
 
   }
 
   // - creates a single wallet with multiple chains, creates first account by default, one per chain.
-  createCrossChainHdWallet(seed: string) {
+  private createCrossChainHdWallet(seed: string) {
 
   }
 
   // - creates a single wallet with one chain, creates first account by default, one per chain.
-  createSimpleWallet(chain: KeyringChainId, privateKey?: string) {
-
+  private createSingleAccountWallet(label: string, network: KeyringNetwork, privateKey?: string) {
+    const wallet = new SingleAccountWallet();
+    label = label || network + ' #' + (this.wallets.length+1);
+    wallet.create(network, privateKey, label);
+    this.wallets.push(wallet);
+    return wallet;
   }
-  
-  async createNewVault (password: string) {
-    if (typeof password !== 'string') {
-      return new Error('Password must be text.')
+
+  async removeWalletById (id: string) {
+    const keep = this.wallets.filter(w => w.id !== id);
+
+    if (keep.length < this.wallets.length) {
+      this.wallets = keep;
+      await this.persistAllWallets();
+      this.updateMemStoreWallets();
+      this.fullUpdate();
     }
-    
+    else {
+      throw new Error('Unable to find Wallet');
+    }
+  }
+
+  
+  async createOrRestoreVault (label: string, seed?: string, password?: string) {
+
+    if (password) {
+      if (typeof password !== 'string') {
+        new Error('Password has invalid format.')
+      }
+      this.password = password;
+    }
+    else if (!this.password) {
+      new Error('A password is required to create or restore a Vault')
+    }
+
+    if (seed && !HdKeyring.validateMnemonic(seed)) {
+      new Error('Seed phrase is invalid.')
+    }
+
     this.clearWallets()
-    this.createMultiChainHdWallet();
-    await this.persistAllWallets(password);
+    const wallet = this.createMultiChainHdWallet(label, seed);
+    await this.persistAllWallets(this.password);
+    this.updateMemStoreWallets();
     this.updateUnlocked();
     this.fullUpdate();
+
+    return wallet;
   }
-  
-  async restoreVault (password: string, seed: string) {
-    if (typeof password !== 'string') {
-      return new Error('Password must be text.')
-    }
 
-    if (!HdKeyring.validateMnemonic(seed)) {
-      return new Error('Seed phrase is invalid.')
-    }
+  async createNewPrivateKeyWallet(label: string, chain: KeyringNetwork, privateKey?: string) {
+    const wallet = this.createSingleAccountWallet(label, chain, privateKey);
 
-    this.clearWallets()
-    this.createMultiChainHdWallet(seed);
-    await this.persistAllWallets(password);
-    this.updateUnlocked();
+    await this.persistAllWallets(this.password);
+    this.updateMemStoreWallets();
+
+    this.emit('newAccount', wallet.getAccounts()[0]);
+
     this.fullUpdate();
+
+    return wallet;
   }
 
-  createNewPrivateKeyAccount(chain: KeyringChainId) {
-    this.createSimpleWallet(chain);
-  }
-
-  importPrivateKeyAccount(chain: KeyringChainId, privateKey: string) {
-    this.createSimpleWallet(chain, privateKey);
-  }
-
-  /**
-   * Set Locked
-   * This method deallocates all secrets, and locks the Vault
-   */
-  async setLocked () {
+  logout () {
     this.password = null;
     this.memStore.updateState({ isUnlocked: false });
     this.wallets = [];
-    await this.updateMemStoreWallets();
+    this.updateMemStoreWallets();
     this.emit('lock');
-    return this.fullUpdate();
+    this.fullUpdate();
   }
 
   async login (password: string) {
@@ -130,20 +164,34 @@ export class KeyringManager extends SafeEventEmitter  {
     this.fullUpdate();
   }
 
-  async verifyPassword (password) {
-    const encryptedVault = this.store.getState().vault;
-    if (!encryptedVault) {
-      throw new Error('Cannot unlock without a previous vault.')
-    }
-    await this.encryptor.decrypt(password, encryptedVault)
+  setPassword (password) {
+    this.password = password;
   }
+
+  checkPassword (password) {
+    return this.password === password;
+  }
+
+  // async verifyPassword (password) {
+  //   const encryptedVault = this.store.getState().vault;
+  //   if (!encryptedVault) {
+  //     throw new Error('Cannot unlock without a previous vault.')
+  //   }
+  //   await this.encryptor.decrypt(password, encryptedVault)
+  // }
 
   removeEmptyWallets () {
     this.wallets = this.wallets.filter(keyring => keyring.getAccounts().length > 0);
   }
   
-  exportAccount (address: string) {
+  exportAccountPrivateKey (address: string) {
     return this.findAccount(address).getPrivateKey()
+  }
+
+  exportWalletSecretKeyOrPhrase (walletId: string) {
+    const wallet = this.wallets.find(w => w.id === walletId);
+
+    return wallet.exportSecretKey();
   }
   
   async removeAccount (address) {
@@ -171,13 +219,13 @@ export class KeyringManager extends SafeEventEmitter  {
   }
 
   private async unlockWallets (password: string) {
-    const encryptedVault = this.store.getState().vault
+    const encryptedVault = this.storage.get('vault');
     if (!encryptedVault) {
       throw new Error('Cannot unlock without a previous vault.')
     }
 
     await this.clearWallets()
-    const vault: VaultState = await this.encryptor.decrypt(password, encryptedVault)
+    const vault: VaultSerialized = await this.encryptor.decrypt(password, encryptedVault)
     this.password = password
     vault.wallets.map(w => this._restoreWallet(w))
     await this.updateMemStoreWallets()
@@ -185,8 +233,15 @@ export class KeyringManager extends SafeEventEmitter  {
   }
 
   getAccounts () {
-    const wallets = this.wallets || []
-    return wallets.reduce<IKeyringAccount[]>((res, kr) => res.concat(kr.getAccounts()), []);
+    return this.wallets.reduce<IKeyringAccount[]>((res, kr) => res.concat(kr.getAccounts()), []);
+  }
+
+  getWallets (filterByType?: KeyringWalletType) {
+    if (filterByType) {
+      return this.wallets.filter(w => w.type === filterByType);
+    }
+
+    return this.wallets;
   }
 
   getWalletForAccount (address: string) {
@@ -206,16 +261,6 @@ export class KeyringManager extends SafeEventEmitter  {
     return this.getWalletForAccount(address).getAccountByAddress(address);
   }
 
-  /**
-   * Adds a healthy buffer of gas to an initial gas estimate.
-   */
-  // addGasBuffer (gas: string) {
-  //   const gasBuffer = new BN('100000', 10)
-  //   const bnGas = new BN(ethUtil.stripHexPrefix(gas), 16)
-  //   const correct = bnGas.add(gasBuffer)
-  //   return ethUtil.addHexPrefix(correct.toString(16))
-  // }
-
   private async persistAllWallets (password = this.password) {
 
     if (typeof password !== 'string') {
@@ -224,42 +269,27 @@ export class KeyringManager extends SafeEventEmitter  {
 
     this.password = password;
 
-    const sWallets = this.wallets.map((keyring) => {
-      return {
-        type: keyring.type,
-        data: keyring.serialize(),
-      }
-    })
+    const sWallets = this.wallets.map(w => w.serialize());
 
     const encryptedString = await this.encryptor.encrypt(this.password, { wallets: sWallets })
 
-    this.store.updateState({ vault: encryptedString });
+    this.storage.set('vault', encryptedString);
   }
 
-  // async restoreWallet (serialized: VaultState) {
-  //   const keyring = await this._restoreWallet(serialized);
-  //   await this.updateMemStoreWallets();
-  //   return keyring;
-  // }
+  private async _restoreWallet (wData: KeyringWalletSerialized) {
 
-  /**
-   * Attempts to initialize a new keyring from the provided serialized payload.
-   * On success, returns the resulting keyring instance.
-   */
-  private async _restoreWallet ({ type, data }) {
+    let chainWallet: IKeyringWallet;
 
-    let chainWallet: IKeyringChainWallet;
-
-    if (type === KeyringChainWalletId.MultiChainWallet) {
+    if (wData.type === KeyringWalletType.MultiChainWallet) {
       const wallet = chainWallet =new MultiChainWallet();
-      wallet.deserialize(data);
+      wallet.deserialize(wData);
     }
-    else if (type === KeyringChainWalletId.SimpleChainWallet) {
-      const wallet = chainWallet = new SimpleChainWallet();
-      wallet.deserialize(data);
+    else if (wData.type === KeyringWalletType.SimpleAccountWallet) {
+      const wallet = chainWallet = new SingleAccountWallet();
+      wallet.deserialize(wData);
     }
     else {
-      throw new Error('Unknown Wallet type - ' + type + ', support types are [' + KeyringChainWalletId.MultiChainWallet +',' + KeyringChainWalletId.SimpleChainWallet + ']');
+      throw new Error('Unknown Wallet type - ' + wData.type + ', support types are [' + KeyringWalletType.MultiChainWallet +',' + KeyringWalletType.SimpleAccountWallet + ']');
     }
 
     this.wallets.push(chainWallet)
@@ -280,15 +310,8 @@ export class KeyringManager extends SafeEventEmitter  {
   }
 
   private updateMemStoreWallets () {
-    const wallets = this.wallets.map(w => this.serializeWallet(w));
+    const wallets = this.wallets.map(w => w.getState());
     return this.memStore.updateState({ wallets })
-  }
-
-  private serializeWallet (wallet: IKeyringChainWallet) {
-    return {
-      type: wallet.type,
-      data: wallet.getAccounts()
-    }
   }
 
 

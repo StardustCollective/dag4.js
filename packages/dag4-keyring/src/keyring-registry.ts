@@ -1,5 +1,4 @@
-import {IKeyringAccount} from './keyring-account';
-import {KeyringChainId} from './kcs';
+import {IKeyringAccount, KeyringNetwork} from './kcs';
 
 type Constructor<T> = new () => T;
 
@@ -7,11 +6,11 @@ class KeyringRegistry {
 
   registry = new Map<string,Constructor<IKeyringAccount>>();
 
-  registerAccountClass (id: KeyringChainId, clazz: Constructor<IKeyringAccount>) {
+  registerAccountClass (id: KeyringNetwork, clazz: Constructor<IKeyringAccount>) {
     this.registry.set(id, clazz);
   }
 
-  createAccount (id: KeyringChainId) {
+  createAccount (id: KeyringNetwork) {
     const clazz = this.registry.get(id);
 
     return new clazz();

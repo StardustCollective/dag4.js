@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-keyring",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A wallet management tool for multi-chain accounts.",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -12,19 +12,24 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "tsc && tsc -p tsconfig.cjs.json",
+    "build-cjs": "tsc -p tsconfig.cjs.json",
     "rollup": "rollup -c ../../scripts/config/rollup.config.js",
-    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/**/set*-tests.ts",
-    "prerelease": "npm run build",
+    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/**/sto*-tests.ts",
+    "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
     "release:preflight": "npm pack ./dist --dry-run"
   },
   "dependencies": {
     "@metamask/obs-store": "^6.0.2",
+    "@stardust-collective/dag4-core": "^1.0.3",
     "bn.js": "^4.12.0",
+    "bs58": "^4.0.1",
     "buffer": "^5.6.0",
     "eth-sig-util": "^3.0.1",
-    "ethereumjs-util": "^7.0.10"
+    "ethereumjs-util": "^7.0.10",
+    "ethereumjs-wallet": "^1.0.1",
+    "js-sha256": "^0.9.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",

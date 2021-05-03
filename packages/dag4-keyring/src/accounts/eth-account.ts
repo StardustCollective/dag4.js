@@ -2,17 +2,26 @@ import * as ethSign from 'ethereumjs-util/dist/signature';
 import {isValidAddress} from 'ethereumjs-util/dist/account';
 import {Buffer} from 'buffer';
 import * as sigUtil from 'eth-sig-util';
-import {IKeyringAccount} from '../keyring-account';
-import {keyringRegistry} from '../keyring-registry';
-import {KeyringChainId} from '../kcs';
+import {IKeyringAccount, KeyringAssetType} from '../kcs';
 import {EcdsaAccount} from './ecdsa-account';
-import {stripHexPrefix} from 'ethjs-util';
 
 export class EthAccount extends EcdsaAccount implements IKeyringAccount {
+
+  supportAssets = [KeyringAssetType.ETH,KeyringAssetType.ERC20];
 
   validateAddress (address: string) {
     return isValidAddress(address);
   }
+
+  /**
+   * Adds a healthy buffer of gas to an initial gas estimate.
+   */
+  // addGasBuffer (gas: string) {
+  //   const gasBuffer = new BN('100000', 10)
+  //   const bnGas = new BN(ethUtil.stripHexPrefix(gas), 16)
+  //   const correct = bnGas.add(gasBuffer)
+  //   return ethUtil.addHexPrefix(correct.toString(16))
+  // }
 
   // tx is an instance of the (ethereumjs-tx).Transaction class.
   signTransaction (tx) {
@@ -98,4 +107,4 @@ export class EthAccount extends EcdsaAccount implements IKeyringAccount {
 
 }
 
-keyringRegistry.registerAccountClass(KeyringChainId.Ethereum, EthAccount);
+
