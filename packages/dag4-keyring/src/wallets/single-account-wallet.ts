@@ -8,28 +8,28 @@ export class SingleAccountWallet implements IKeyringWallet {
 
   readonly type = KeyringWalletType.SimpleAccountWallet;
   readonly id = this.type + (++SID);
-  readonly supportAssets = [];
+  readonly supportedAssets = [];
 
   private keyring: SimpleKeyring;
   private network: KeyringNetwork;
   private label: string;
 
-  constructor () {
-
-  }
-
   create (network: KeyringNetwork, privateKey: string, label: string) {
     this.label = label;
     this.network = network;
-    this.keyring = SimpleKeyring.createForNetwork(network, privateKey, label);
+    this.keyring = SimpleKeyring.createForNetwork(network, privateKey);
 
     if (network === KeyringNetwork.Ethereum) {
-      this.supportAssets.push(KeyringAssetType.ETH);
-      this.supportAssets.push(KeyringAssetType.ERC20);
+      this.supportedAssets.push(KeyringAssetType.ETH);
+      this.supportedAssets.push(KeyringAssetType.ERC20);
     }
     else if (network === KeyringNetwork.Constellation) {
-      this.supportAssets.push(KeyringAssetType.DAG);
+      this.supportedAssets.push(KeyringAssetType.DAG);
     }
+  }
+
+  setLabel(val: string) {
+    this.label = val;
   }
 
   getState () {
@@ -37,8 +37,8 @@ export class SingleAccountWallet implements IKeyringWallet {
       id: this.id,
       type: this.type,
       label: this.label,
-      supportAssets: this.supportAssets,
-      accounts: this.getAccounts().map(a => a.getState())
+      supportedAssets: this.supportedAssets,
+      assets: this.keyring.getAssetList()
     }
   }
 
@@ -53,7 +53,7 @@ export class SingleAccountWallet implements IKeyringWallet {
 
   deserialize (data: KeyringWalletSerialized) {
     this.keyring = new SimpleKeyring();
-    this.keyring.deserialize({accountType: data.network, account: { privateKey: data.secret, label: data.label }});
+    this.keyring.deserialize({accountType: data.network, account: { privateKey: data.secret }});
   }
 
   addKeyring (hdPath: string) {

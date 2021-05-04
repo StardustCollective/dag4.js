@@ -24,6 +24,8 @@ import * as dag4 from '@stardust-collective/dag4-core';
 //   salt: string, iv: string, vault: string
 // }
 
+//TODO - migration support for persisted state
+
 type VaultSerialized = {
   wallets: KeyringWalletSerialized[]
 }
@@ -63,17 +65,15 @@ export class KeyringManager extends SafeEventEmitter  {
     return HdKeyring.generateMnemonic();
   }
 
-  fullUpdate () {
-    this.emit('update', this.memStore.getState())
+  private async fullUpdate () {
+    await this.persistAllWallets(this.password);
+    this.updateMemStoreWallets();
+    this.updateUnlocked();
+    this.notifyUpdate();
   }
 
-  // - creates a single wallet with multiple chains, each with their own account.
-  createMultiChainHdWallet(label: string, seed?: string) {
-    const wallet = new MultiChainWallet();
-    label = label || 'Wallet #' + (this.wallets.length+1);
-    wallet.create(label, seed);
-    this.wallets.push(wallet);
-    return wallet;
+  notifyUpdate () {
+    this.emit('update', this.memStore.getState())
   }
 
   // - creates a single wallet with one chain, creates first account by default.
@@ -86,13 +86,9 @@ export class KeyringManager extends SafeEventEmitter  {
 
   }
 
-  // - creates a single wallet with one chain, creates first account by default, one per chain.
-  private createSingleAccountWallet(label: string, network: KeyringNetwork, privateKey?: string) {
-    const wallet = new SingleAccountWallet();
-    label = label || network + ' #' + (this.wallets.length+1);
-    wallet.create(network, privateKey, label);
-    this.wallets.push(wallet);
-    return wallet;
+  setWalletLabel(walletId: string, label: string) {
+    this.getWalletById(walletId).setLabel(label);
+    this.fullUpdate();
   }
 
   async removeWalletById (id: string) {
@@ -100,16 +96,13 @@ export class KeyringManager extends SafeEventEmitter  {
 
     if (keep.length < this.wallets.length) {
       this.wallets = keep;
-      await this.persistAllWallets();
-      this.updateMemStoreWallets();
-      this.fullUpdate();
+      await this.fullUpdate();
     }
     else {
       throw new Error('Unable to find Wallet');
     }
   }
 
-  
   async createOrRestoreVault (label: string, seed?: string, password?: string) {
 
     if (password) {
@@ -126,26 +119,45 @@ export class KeyringManager extends SafeEventEmitter  {
       new Error('Seed phrase is invalid.')
     }
 
-    this.clearWallets()
-    const wallet = this.createMultiChainHdWallet(label, seed);
-    await this.persistAllWallets(this.password);
-    this.updateMemStoreWallets();
-    this.updateUnlocked();
-    this.fullUpdate();
+    this.clearWallets();
+    const wallet = this.newMultiChainHdWallet(label, seed);
+    await this.fullUpdate();
 
     return wallet;
   }
 
-  async createNewPrivateKeyWallet(label: string, chain: KeyringNetwork, privateKey?: string) {
-    const wallet = this.createSingleAccountWallet(label, chain, privateKey);
+  // - creates a single wallet with multiple chains, each with their own account.
+  async createMultiChainHdWallet(label: string, seed?: string) {
+    const wallet = this.newMultiChainHdWallet(label, seed);
 
-    await this.persistAllWallets(this.password);
-    this.updateMemStoreWallets();
+    //this.emit('newWallet', wallet);
 
-    this.emit('newAccount', wallet.getAccounts()[0]);
+    await this.fullUpdate();
 
-    this.fullUpdate();
+    return wallet;
+  }
 
+  // - creates a single wallet with one chain, creates first account by default, one per chain.
+  async createSingleAccountWallet(label: string, network: KeyringNetwork, privateKey?: string) {
+
+    const wallet = new SingleAccountWallet();
+    label = label || network + ' #' + (this.wallets.length+1);
+    wallet.create(network, privateKey, label);
+    this.wallets.push(wallet);
+
+    //this.emit('newAccount', wallet.getAccounts()[0]);
+
+    await this.fullUpdate();
+
+    return wallet;
+  }
+
+
+  private newMultiChainHdWallet(label: string, seed?: string) {
+    const wallet = new MultiChainWallet();
+    label = label || 'Wallet #' + (this.wallets.length+1);
+    wallet.create(label, seed);
+    this.wallets.push(wallet);
     return wallet;
   }
 
@@ -155,13 +167,13 @@ export class KeyringManager extends SafeEventEmitter  {
     this.wallets = [];
     this.updateMemStoreWallets();
     this.emit('lock');
-    this.fullUpdate();
+    this.notifyUpdate();
   }
 
   async login (password: string) {
     this.wallets = await this.unlockWallets(password);
     this.updateUnlocked();
-    this.fullUpdate();
+    this.notifyUpdate();
   }
 
   setPassword (password) {
@@ -207,7 +219,7 @@ export class KeyringManager extends SafeEventEmitter  {
 
     await this.persistAllWallets();
     this.updateMemStoreWallets();
-    this.fullUpdate();
+    this.notifyUpdate();
   }
 
   signTransaction (tx, fromAddress: string, opts = {}) {
@@ -242,6 +254,14 @@ export class KeyringManager extends SafeEventEmitter  {
     }
 
     return this.wallets;
+  }
+
+  getWalletById (id: string) {
+    const wallet = this.wallets.find(w => w.id === id);
+    if (wallet) {
+      return wallet;
+    }
+    throw new Error('No wallet found with the id: ' + id);
   }
 
   getWalletForAccount (address: string) {

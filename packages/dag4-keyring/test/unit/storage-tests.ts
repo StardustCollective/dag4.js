@@ -43,7 +43,7 @@ describe('KeyringController', () => {
 
   it('setup-single-account', async () => {
 
-    const wallet = await keyringManager.createNewPrivateKeyWallet('', KeyringNetwork.Ethereum, testData.PRIVATE_KEY);
+    const wallet = await keyringManager.createSingleAccountWallet('', KeyringNetwork.Ethereum, testData.PRIVATE_KEY);
 
     const account = wallet.getAccounts()[0];
 
@@ -53,7 +53,9 @@ describe('KeyringController', () => {
 
     const vault = await encryptor.decrypt('password', encryptedVault)
 
+
     console.log(JSON.stringify(vault, null, 2));
+    console.log(encryptedVault);
 
   });
 

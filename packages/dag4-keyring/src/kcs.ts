@@ -19,30 +19,40 @@ export type KeyringWalletSerialized = {
   type: string,
   label: string,
   secret: string,
-  network?: KeyringNetwork
+  network?: KeyringNetwork,
+  accounts?: { network: string, tokens?: string[] }[]
 }
 
 export type KeyringWalletState = {
   id: string;
-  type: string,
   label: string,
-  supportAssets: KeyringAssetType[],
-  accounts: KeyringAccountState[]
+  type: KeyringWalletType,
+  supportedAssets: KeyringAssetType[],
+  assets: KeyringAssetInfo[]
 }
 
 export type KeyringAccountSerialized = {
-  label: string;
   privateKey?: string;
+  tokens?: string[]
 }
 
 export type KeyringAccountState = {
-  label: string;
   address: string;
-  supportAssets: KeyringAssetType[]
+  tokens?: KeyringAssetInfo[];
+  supportedAssets: KeyringAssetType[];
+}
+
+export type KeyringAssetInfo = {
+  label: string;
+  symbol: string;
+  decimals: number;
+  native?: true;
+  network?: string;
+  address?: string;
 }
 
 export interface IKeyringAccount {
-  create (privateKey: string, label: string): IKeyringAccount;
+  create (privateKey: string): IKeyringAccount;
   serialize (): KeyringAccountSerialized;
   deserialize (data: KeyringAccountSerialized): IKeyringAccount;
   signTransaction (address: string, tx, opts?: any);
@@ -54,14 +64,16 @@ export interface IKeyringAccount {
   getPrivateKey (): string;
   getAddress (): string;
   validateAddress (address: string);
-
+  saveTokenInfo (token: KeyringAssetInfo): void;
+  getAssetTypes(): string[];
+  getAssetList(): KeyringAssetInfo[];
   getState (): KeyringAccountState;
 }
 
 export interface IKeyringWallet {
   readonly type: KeyringWalletType;
   readonly id:string;
-  readonly supportAssets: KeyringAssetType[];
+  readonly supportedAssets: KeyringAssetType[];
   serialize (): KeyringWalletSerialized;
   deserialize (data: KeyringWalletSerialized);
   addKeyring(hdPath: string);
@@ -70,13 +82,16 @@ export interface IKeyringWallet {
   getAccountByAddress (address: string): IKeyringAccount;
   exportSecretKey(): string;
   getState (): KeyringWalletState;
+  setLabel (label: string): void;
 }
 
 export interface IKeyring {
-  serialize (): any;
+  // serialize (): any;
   deserialize (data: any);
   addAccounts(n: number);
   getAccounts(): IKeyringAccount[];
+  getAssetTypes(): string[];
+  getAssetList(): KeyringAssetInfo[];
   removeAccount (account: IKeyringAccount);
   //exportAccount (account: IKeyringAccount): string;
   getAccountByAddress (address: string): IKeyringAccount;

@@ -16,10 +16,10 @@ export class SimpleKeyring implements IKeyring {
     // super()
   }
 
-  static createForNetwork (network: KeyringNetwork, privateKey: string, label: string) {
+  static createForNetwork (network: KeyringNetwork, privateKey: string) {
     const inst = new SimpleKeyring();
     inst.accountType = network;
-    inst.account = keyringRegistry.createAccount(network).create(privateKey, label);
+    inst.account = keyringRegistry.createAccount(network).create(privateKey);
     return inst;
   }
 
@@ -30,16 +30,24 @@ export class SimpleKeyring implements IKeyring {
     };
   }
 
-  serialize (): SimpleKeyringState {
-    return {
-      accountType: this.accountType,
-      account: this.account.serialize()
-    };
+  getAssetTypes () {
+    return this.account.getAssetTypes();
   }
+
+  getAssetList () {
+    return this.account.getAssetList();
+  }
+
+  // serialize (): SimpleKeyringState {
+  //   return {
+  //     accountType: this.accountType,
+  //     account: this.account.serialize()
+  //   };
+  // }
 
   deserialize ({accountType, account}: SimpleKeyringState) {
     this.accountType = accountType;
-    this.account = keyringRegistry.createAccount(accountType).deserialize({ label: accountType, ...account});
+    this.account = keyringRegistry.createAccount(accountType).deserialize(account);
   }
 
   addAccounts (n = 1) {

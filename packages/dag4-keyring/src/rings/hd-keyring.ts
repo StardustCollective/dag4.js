@@ -1,17 +1,14 @@
 import {hdkey} from 'ethereumjs-wallet'
 import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
-
 import * as bip39 from 'ethereum-cryptography/bip39';
 import { wordlist } from 'ethereum-cryptography/bip39/wordlists/english';
-import {EventEmitter} from 'events';
 import {keyringRegistry} from '../keyring-registry';
-import {KeyringNetwork, IKeyring, IKeyringAccount} from '../kcs';
+import {KeyringNetwork, IKeyring, IKeyringAccount, KeyringAssetInfo} from '../kcs';
 
 export type HdKeyringSerializedData = {
   network: KeyringNetwork, accountLabelPrefix?: string, hdPath: string, mnemonic: string, numberOfAccounts: number
 }
 
-// extends EventEmitter
 export class HdKeyring implements IKeyring {
 
   private accounts: IKeyringAccount[] = [];
@@ -20,7 +17,6 @@ export class HdKeyring implements IKeyring {
   private mnemonic: string;
   private rootKey: EthereumHDKey;
   private network: KeyringNetwork;
-  private accountLabelPrefix: string;
 
   static generateMnemonic() {
     return bip39.generateMnemonic(wordlist);
@@ -30,27 +26,44 @@ export class HdKeyring implements IKeyring {
     return bip39.validateMnemonic(phrase, wordlist);
   }
 
-  static createFromSeed(mnemonic: string, hdPath: string, network: KeyringNetwork, numberOfAccounts = 1, accountLabelPrefix = '') {
+  static createFromSeed(mnemonic: string, hdPath: string, network: KeyringNetwork, numberOfAccounts = 1) {
     const inst = new HdKeyring();
-    inst.deserialize({network, hdPath, mnemonic, numberOfAccounts, accountLabelPrefix});
+    inst.deserialize({network, hdPath, mnemonic, numberOfAccounts});
     return inst;
   }
 
-  serialize (): HdKeyringSerializedData {
-    return {
-      mnemonic: this.mnemonic,
-      network: this.network,
-      numberOfAccounts: this.accounts.length,
-      hdPath: this.hdPath,
-    }
+  getNetwork () {
+    return this.network;
   }
+
+  getAssetTypes () {
+    if (this.accounts.length === 1) {
+      return this.accounts[0].getAssetTypes();
+    }
+    return null;
+  }
+
+  getAssetList () {
+    if (this.accounts.length === 1) {
+      return this.accounts[0].getAssetList();
+    }
+    return null;
+  }
+
+  // serialize (): HdKeyringSerializedData {
+  //   return {
+  //     mnemonic: this.mnemonic,
+  //     network: this.network,
+  //     numberOfAccounts: this.accounts.length,
+  //     hdPath: this.hdPath,
+  //   }
+  // }
 
   deserialize (data: HdKeyringSerializedData) {
     if (data) {
       this.accounts = []
       this.hdPath = data.hdPath;
       this.network = data.network;
-      this.accountLabelPrefix = data.accountLabelPrefix;
       this._initFromMnemonic(data.mnemonic);
       this.addAccounts(data.numberOfAccounts);
     }
@@ -72,6 +85,10 @@ export class HdKeyring implements IKeyring {
     //return newAccounts.map((w) => w.getAddressString());
   }
 
+  getAssets () {
+    this.accounts.reduce<KeyringAssetInfo[]>((res, a) => res.concat(a.getAssetList()), []);
+  }
+
   getAccounts() {
     return this.accounts;
   }
@@ -79,9 +96,9 @@ export class HdKeyring implements IKeyring {
   /* PRIVATE METHODS */
 
   private newAccount (privateKey: string) {
-    const prefix = (this.accountLabelPrefix || 'Account') + ' #';
-    const label = prefix + (this.accounts.length + 1);
-    return keyringRegistry.createAccount(this.network).deserialize({ label, privateKey });
+    // const prefix = (this.accountLabelPrefix || 'Account') + ' #';
+    // const label = prefix + (this.accounts.length + 1);
+    return keyringRegistry.createAccount(this.network).deserialize({ privateKey });
   }
 
   private _initFromMnemonic (mnemonic) {
