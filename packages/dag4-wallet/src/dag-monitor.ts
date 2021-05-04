@@ -1,4 +1,4 @@
-import {crossPlatformDi, arrayUtils} from '@stardust-collective/dag4-core';
+import {crossPlatformDi} from '@stardust-collective/dag4-core';
 import {blockExplorerApi, loadBalancerApi, Transaction} from '@stardust-collective/dag4-network';
 import {Subject} from 'rxjs';
 import {PendingTx} from '@stardust-collective/dag4-network/types';
@@ -32,18 +32,27 @@ export class DagMonitor {
     return this.memPoolChange$;
   }
 
-  addToMemPoolMonitor (value: PendingTx) {
+  addToMemPoolMonitor (value: PendingTx | string) {
 
     const key =  `network-${dagNetwork.getNetwork().id}-mempool`;
 
     const payload: any[] = this.cacheUtils.get(key) || [];
 
-    payload.push(value);
+    let tx = value as PendingTx;
 
-    this.cacheUtils.set(key, payload);
+    if (typeof value === 'string') {
+      tx = { hash: value, timestamp: Date.now() } as PendingTx;
+    }
 
-    this.lastTimer = Date.now();
-    this.pendingTimer = 1000;
+    if (!payload.some(p => p.hash === tx.hash)) {
+
+      payload.push(value);
+
+      this.cacheUtils.set(key, payload);
+
+      this.lastTimer = Date.now();
+      this.pendingTimer = 1000;
+    }
 
     setTimeout(() => this.pollPendingTxs(), 1000);
   }
@@ -53,7 +62,7 @@ export class DagMonitor {
 
     const txs: PendingTx[]  = this.cacheUtils.get(key) || [];
 
-    return txs.filter(tx => tx.receiver === this.walletParent.address || tx.sender === this.walletParent.address);
+    return txs.filter(tx => !this.walletParent.address || tx.receiver === this.walletParent.address || tx.sender === this.walletParent.address);
   }
 
   setToMemPoolMonitor(pool: PendingTx[]) {
@@ -98,6 +107,15 @@ export class DagMonitor {
 
       if (cbTx) {
 
+        if (!pendingTx.sender) {
+          const edge = cbTx.transaction.edge;
+          pendingTx.sender = edge.observationEdge.parents[0].hashReference;
+          pendingTx.receiver = edge.observationEdge.parents[1].hashReference;
+          pendingTx.amount = edge.data.amount;
+          pendingTx.fee = edge.data.fee;
+          pendingTx.ordinal = cbTx.transaction.lastTxRef.ordinal;
+        }
+
         if (cbTx.cbBaseHash) {
           if (pendingTx.status !== 'CHECKPOINT_ACCEPTED') {
             txChanged = true;
@@ -125,6 +143,16 @@ export class DagMonitor {
         } catch(e) {}
 
         if (beTx) {
+
+          //NOTE: not needed as it is already confirmed
+          // if (!pendingTx.sender) {
+          //   pendingTx.sender = beTx.sender;
+          //   pendingTx.receiver = beTx.receiver;
+          //   pendingTx.amount = beTx.amount;
+          //   pendingTx.fee = beTx.fee;
+          //   pendingTx.ordinal = beTx.lastTransactionRef.ordinal;
+          // }
+
           pendingTx.timestamp = new Date(beTx.timestamp).valueOf();
           pendingHasConfirmed = true;
           txChanged = true;
@@ -151,6 +179,11 @@ export class DagMonitor {
             if (pendingTx.status !== 'GLOBAL_STATE_PENDING') {
               pendingTx.status = 'GLOBAL_STATE_PENDING'
               pendingTx.pendingMsg = 'Will confirm shortly...';
+              txChanged = true;
+            }
+            else if (!pendingTx.status) {
+              pendingTx.status = 'UNKNOWN'
+              pendingTx.pendingMsg = 'Transaction not found...';
               txChanged = true;
             }
 
@@ -187,7 +220,7 @@ export class DagMonitor {
   }
 
   private get cacheUtils() {
-    return crossPlatformDi.getKeyValueDbClient();
+    return crossPlatformDi.getStateStorageDb();
   }
 }
 
