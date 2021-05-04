@@ -1,6 +1,6 @@
 import { IHttpClient } from './i-http-client';
 import {IKeyValueDb} from './i-key-value-db';
-import {StateStorageDb} from './clients/state-storage-db';
+import {IStateStorageClient, StateStorageDb} from './clients/state-storage-db';
 import {MemoryStorageClient} from './clients/memory-storage-client';
 
 // Cross Platform Dependency Injection
@@ -29,14 +29,18 @@ class CrossPlatformDi {
   //======================
   //= State Storage =
   //======================
-  private keyValueDb: IKeyValueDb = new StateStorageDb(new MemoryStorageClient());
+  private stateStorageDb: StateStorageDb = new StateStorageDb(new MemoryStorageClient());
 
-  registerKeyValueDbClient (db: IKeyValueDb) {
-    this.keyValueDb = db;
+  useBrowserLocalStorage () {
+    this.stateStorageDb.setClient(null);
   }
 
-  getKeyValueDbClient (): IKeyValueDb {
-    return this.keyValueDb;
+  registerStorageClient (client: IStateStorageClient) {
+    this.stateStorageDb.setClient(client);
+  }
+
+  getStateStorageDb (): IKeyValueDb {
+    return this.stateStorageDb;
   }
 }
 

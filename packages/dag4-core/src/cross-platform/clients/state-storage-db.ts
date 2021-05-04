@@ -1,9 +1,15 @@
+declare let window;
+const defaultStorage = typeof window !== 'undefined' ? window.localStorage.bind(window) : undefined;
 
 export class StateStorageDb {
 
   private keyPrefix = 'dag4-';
 
-  constructor (private storageClient: IStateStorageClient) {}
+  constructor (private storageClient: IStateStorageClient = defaultStorage) {}
+
+  setClient (client: IStateStorageClient) {
+    this.storageClient = client || defaultStorage;
+  }
 
   setPrefix (prefix: string) {
     if (!prefix) {
