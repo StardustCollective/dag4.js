@@ -1,5 +1,5 @@
 declare let window;
-const defaultStorage = typeof window !== 'undefined' ? window.localStorage.bind(window) : undefined;
+const defaultStorage = typeof window !== 'undefined' ? window.localStorage : undefined;
 
 export class StateStorageDb {
 
