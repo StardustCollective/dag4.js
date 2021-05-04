@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@stardust-collective/dag4-core@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-core/-/dag4-core-1.0.2.tgz#2cec7a1295cb3dda76589d2ab435b08c9d85341e"
-  integrity sha512-S9Dnp0wF/fmKGm+sum33140yrFo4OJyGph1tZOQeTFJ4IXf6xIVW//6vu/Cun5h5X24cUfuWY3PnbRXIjlCnqA==
+"@stardust-collective/dag4-core@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-core/-/dag4-core-1.0.3.tgz#5facc1744e3532a48c4a7f8aeed3b8ce842a48e2"
+  integrity sha512-/NwK8Vo9QzkrugT1nZJfQ2gxdmQ9LrmO+1k6RihCz/dqiWY5sktgVCagUYO7BCkVBdpD8lerZ0mp/6mrqDG6fg==
 
 node-fetch@^2.6.1:
   version "2.6.1"

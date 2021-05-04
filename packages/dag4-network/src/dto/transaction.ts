@@ -4,7 +4,7 @@ export type Transaction = {
   receiver : string;
   sender : string;
   fee : number;
-  isDummy : true;
+  isDummy : boolean;
   timeAgo?: string;
   timestamp: string;
   lastTransactionRef : {
