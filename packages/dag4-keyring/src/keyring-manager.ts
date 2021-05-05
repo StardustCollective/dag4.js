@@ -9,11 +9,11 @@ import {
   KeyringWalletState,
   KeyringWalletType
 } from './kcs';
-import {HdKeyring} from './rings';
 import {MultiChainWallet} from './wallets/multi-chain-wallet';
 import {IKeyringAccount} from './kcs';
 import {SingleAccountWallet} from './wallets/single-account-wallet';
 import * as dag4 from '@stardust-collective/dag4-core';
+import {Bip39Helper} from './bip39-helper';
 
 
 // type WalletState = {
@@ -62,7 +62,7 @@ export class KeyringManager extends SafeEventEmitter  {
   }
 
   generateSeedPhrase () {
-    return HdKeyring.generateMnemonic();
+    return Bip39Helper.generateMnemonic();
   }
 
   private async fullUpdate () {
@@ -115,7 +115,7 @@ export class KeyringManager extends SafeEventEmitter  {
       new Error('A password is required to create or restore a Vault')
     }
 
-    if (seed && !HdKeyring.validateMnemonic(seed)) {
+    if (seed && !Bip39Helper.validateMnemonic(seed)) {
       new Error('Seed phrase is invalid.')
     }
 

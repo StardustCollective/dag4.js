@@ -5,6 +5,7 @@ export enum KeyringNetwork {
 }
 
 export enum KeyringWalletType {
+  TempChainWallet = 'TEMP',
   MultiChainWallet = 'MCW',
   SimpleAccountWallet = 'SAW'
 }
@@ -28,7 +29,11 @@ export type KeyringWalletState = {
   label: string,
   type: KeyringWalletType,
   supportedAssets: KeyringAssetType[],
-  assets: KeyringAssetInfo[]
+  accounts: {
+    address: string,
+    network: KeyringNetwork,
+    assets: KeyringAssetInfo[]
+  }[]
 }
 
 export type KeyringAccountSerialized = {
@@ -43,6 +48,7 @@ export type KeyringAccountState = {
 }
 
 export type KeyringAssetInfo = {
+  id: string;
   label: string;
   symbol: string;
   decimals: number;
@@ -62,6 +68,7 @@ export interface IKeyringAccount {
   //decryptMessage (address: string, data: EthEncryptedData);
   //signTypedData (address: string, typedData: any, opts?: any);
   getPrivateKey (): string;
+  getNetwork (): KeyringNetwork;
   getAddress (): string;
   validateAddress (address: string);
   saveTokenInfo (token: KeyringAssetInfo): void;

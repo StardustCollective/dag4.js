@@ -3,6 +3,7 @@ import {AssetLibrary, AssetMap} from './asset-library';
 
 const DEFAULTS: AssetMap = {
   ETH: {
+    id: 'ethereum',
     label: 'Ethereum',
     symbol: 'ETH',
     network: '*',
@@ -10,6 +11,7 @@ const DEFAULTS: AssetMap = {
     native: true
   },
   LTX: {
+    id: '0xa393473d64d2F9F026B60b6Df7859A689715d092',
     address: '0xa393473d64d2F9F026B60b6Df7859A689715d092',
     label: 'Lattice Token',
     symbol: 'LTX',
@@ -20,7 +22,7 @@ const DEFAULTS: AssetMap = {
 
 class EthAssetLibrary extends AssetLibrary {
   protected defaultAssetsMap = DEFAULTS;
-  protected defaultAssets = ['ETH','LTX'];
+  protected defaultAssets = ['LTX'];
 
 }
 

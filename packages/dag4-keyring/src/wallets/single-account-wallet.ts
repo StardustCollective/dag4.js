@@ -38,7 +38,13 @@ export class SingleAccountWallet implements IKeyringWallet {
       type: this.type,
       label: this.label,
       supportedAssets: this.supportedAssets,
-      assets: this.keyring.getAssetList()
+      accounts: this.getAccounts().map(a => {
+        return {
+          address: a.getAddress(),
+          network: a.getNetwork(),
+          assets: a.getAssetList()
+        }
+      })
     }
   }
 

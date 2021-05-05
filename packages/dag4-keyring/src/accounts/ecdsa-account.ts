@@ -3,7 +3,13 @@ import {Buffer} from 'buffer';
 import * as ethUtil from 'ethereumjs-util';
 import {ECDSASignatureBuffer} from 'ethereumjs-util/dist/signature';
 import * as sigUtil from 'eth-sig-util';
-import {KeyringAccountSerialized, KeyringAccountState, KeyringAssetType, KeyringAssetInfo} from '../kcs';
+import {
+  KeyringAccountSerialized,
+  KeyringAccountState,
+  KeyringAssetType,
+  KeyringAssetInfo,
+  KeyringNetwork
+} from '../kcs';
 import {Asset} from './asset';
 
 //https://coders-errand.com/ecrecover-signature-verification-ethereum/
@@ -17,6 +23,7 @@ export abstract class EcdsaAccount {
   protected assets: Asset[];
   protected tokens: string[];
 
+  abstract network: KeyringNetwork;
   abstract hasTokenSupport: boolean;
   abstract supportedAssets: KeyringAssetType[];
 
@@ -32,10 +39,13 @@ export abstract class EcdsaAccount {
     }
   }
 
+  getNetwork (): KeyringNetwork {
+    return this.network;
+  }
+
   getAssetTypes (): string[] {
     return this.tokens;
   }
-
 
   serialize (): KeyringAccountSerialized {
     const tokens = this.tokens ? { tokens: this.tokens } : {}

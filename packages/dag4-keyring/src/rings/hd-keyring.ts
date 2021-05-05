@@ -1,9 +1,9 @@
 import {hdkey} from 'ethereumjs-wallet'
 import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
-import * as bip39 from 'ethereum-cryptography/bip39';
-import { wordlist } from 'ethereum-cryptography/bip39/wordlists/english';
+
 import {keyringRegistry} from '../keyring-registry';
 import {KeyringNetwork, IKeyring, IKeyringAccount, KeyringAssetInfo} from '../kcs';
+import {Bip39Helper} from '../bip39-helper';
 
 export type HdKeyringSerializedData = {
   network: KeyringNetwork, accountLabelPrefix?: string, hdPath: string, mnemonic: string, numberOfAccounts: number
@@ -17,14 +17,6 @@ export class HdKeyring implements IKeyring {
   private mnemonic: string;
   private rootKey: EthereumHDKey;
   private network: KeyringNetwork;
-
-  static generateMnemonic() {
-    return bip39.generateMnemonic(wordlist);
-  }
-
-  static validateMnemonic (phrase: string) {
-    return bip39.validateMnemonic(phrase, wordlist);
-  }
 
   static createFromSeed(mnemonic: string, hdPath: string, network: KeyringNetwork, numberOfAccounts = 1) {
     const inst = new HdKeyring();
@@ -71,7 +63,7 @@ export class HdKeyring implements IKeyring {
 
   addAccounts (numberOfAccounts = 1) {
     if (!this.rootKey) {
-      this._initFromMnemonic(bip39.generateMnemonic(wordlist))
+      this._initFromMnemonic(Bip39Helper.generateMnemonic())
     }
 
     const oldLen = this.accounts.length
@@ -103,7 +95,7 @@ export class HdKeyring implements IKeyring {
 
   private _initFromMnemonic (mnemonic) {
     this.mnemonic = mnemonic
-    const seedBytes = bip39.mnemonicToSeedSync(mnemonic)
+    const seedBytes = Bip39Helper.mnemonicToSeedSync(mnemonic)
     const hdWallet = hdkey.fromMasterSeed(seedBytes)
     this.rootKey = hdWallet.derivePath(this.hdPath)
   }

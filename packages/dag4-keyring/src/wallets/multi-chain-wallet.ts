@@ -7,6 +7,7 @@ import {
   KeyringWalletSerialized,
   KeyringWalletType, KeyringAssetInfo
 } from '../kcs';
+import {Bip39Helper} from '../bip39-helper';
 
 const CONSTELLATION_COIN = 1137;
 const ETH_WALLET_PATH = 60;
@@ -39,7 +40,7 @@ export class MultiChainWallet implements IKeyringWallet {
   }
 
   create (label: string, mnemonic: string) {
-    mnemonic = mnemonic || HdKeyring.generateMnemonic();
+    mnemonic = mnemonic || Bip39Helper.generateMnemonic();
     this.deserialize({ secret: mnemonic, type: this.type, label })
   }
 
@@ -53,7 +54,13 @@ export class MultiChainWallet implements IKeyringWallet {
       type: this.type,
       label: this.label,
       supportedAssets: this.supportedAssets,
-      assets: this.getAssets()
+      accounts: this.getAccounts().map(a => {
+        return {
+          address: a.getAddress(),
+          network: a.getNetwork(),
+          assets: a.getAssetList()
+        }
+      })
     }
   }
 

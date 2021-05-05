@@ -1,30 +1,26 @@
-import * as ethUtil from 'ethereumjs-util';
-import {ECDSASignatureBuffer} from 'ethereumjs-util/dist/signature';
+
 import {Buffer} from 'buffer';
-import * as sigUtil from 'eth-sig-util';
 import * as bs58 from 'bs58';
 import * as jsSha256 from "js-sha256";
-import {keyringRegistry} from '../keyring-registry';
 import {IKeyringAccount, KeyringAssetInfo, KeyringAssetType, KeyringNetwork} from '../kcs';
 import {EcdsaAccount} from './ecdsa-account';
-import {dagAssetLibrary} from './dag-asset-library';
-import {ethAssetLibrary} from './eth-asset-library';
 
 const BASE58_ALPHABET = /['123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+/;
 const PKCS_PREFIX = '3056301006072a8648ce3d020106052b8104000a034200';
 
 export class DagAccount extends EcdsaAccount implements IKeyringAccount {
 
+  network = KeyringNetwork.Constellation;
   hasTokenSupport = false;
   supportedAssets = [KeyringAssetType.DAG];
-  tokens = dagAssetLibrary.getDefaultAssets();
+  tokens = null;//dagAssetLibrary.getDefaultAssets();
 
   saveTokenInfo (token: KeyringAssetInfo) {
     //Constellation does not currently support tokens
   }
 
   getAssetList() {
-    return this.tokens.map(symbol => dagAssetLibrary.getAssetBySymbol(symbol));
+    return null;//this.tokens.map(symbol => dagAssetLibrary.getAssetBySymbol(symbol));
   }
 
   signTransaction (tx) {
@@ -78,5 +74,3 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
   }
 
 }
-
-keyringRegistry.registerAccountClass(KeyringNetwork.Constellation, DagAccount);
