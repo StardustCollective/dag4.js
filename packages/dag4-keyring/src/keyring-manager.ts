@@ -3,7 +3,7 @@ import SafeEventEmitter from '@metamask/safe-event-emitter';
 import {Encryptor} from './encryptor'
 
 import {
-  IKeyringWallet,
+  IKeyringWallet, KeyringAssetInfo,
   KeyringNetwork,
   KeyringWalletSerialized,
   KeyringWalletState,
@@ -68,7 +68,6 @@ export class KeyringManager extends SafeEventEmitter  {
   private async fullUpdate () {
     await this.persistAllWallets(this.password);
     this.updateMemStoreWallets();
-    this.updateUnlocked();
     this.notifyUpdate();
   }
 
@@ -152,6 +151,12 @@ export class KeyringManager extends SafeEventEmitter  {
     return wallet;
   }
 
+  addTokenToAccount(walletId: string, accountAddress: string, address: string) {
+    const account = this.getWalletById(walletId).getAccountByAddress(accountAddress);
+    account.saveTokenInfo(address);
+    this.fullUpdate();
+    return account.getState();
+  }
 
   private newMultiChainHdWallet(label: string, seed?: string) {
     const wallet = new MultiChainWallet();
@@ -236,12 +241,12 @@ export class KeyringManager extends SafeEventEmitter  {
       throw new Error('Cannot unlock without a previous vault.')
     }
 
-    await this.clearWallets()
-    const vault: VaultSerialized = await this.encryptor.decrypt(password, encryptedVault)
-    this.password = password
-    vault.wallets.map(w => this._restoreWallet(w))
-    await this.updateMemStoreWallets()
-    return this.wallets
+    await this.clearWallets();
+    const vault: VaultSerialized = await this.encryptor.decrypt(password, encryptedVault);
+    this.password = password;
+    vault.wallets.map(w => this._restoreWallet(w));
+    await this.updateMemStoreWallets();
+    return this.wallets;
   }
 
   getAccounts () {

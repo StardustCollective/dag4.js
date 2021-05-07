@@ -21,7 +21,7 @@ export type KeyringWalletSerialized = {
   label: string,
   secret: string,
   network?: KeyringNetwork,
-  accounts?: { network: string, tokens?: string[] }[]
+  rings?: KeyringRingSerialized[]
 }
 
 export type KeyringWalletState = {
@@ -29,11 +29,18 @@ export type KeyringWalletState = {
   label: string,
   type: KeyringWalletType,
   supportedAssets: KeyringAssetType[],
-  accounts: {
-    address: string,
-    network: KeyringNetwork,
-    assets: KeyringAssetInfo[]
-  }[]
+  accounts: KeyringWalletAccountState[]
+}
+
+export type KeyringWalletAccountState = {
+  address: string,
+  network: KeyringNetwork,
+  tokens: string[]
+}
+
+export type KeyringRingSerialized = {
+  network: KeyringNetwork;
+  accounts: KeyringAccountSerialized[]
 }
 
 export type KeyringAccountSerialized = {
@@ -43,7 +50,7 @@ export type KeyringAccountSerialized = {
 
 export type KeyringAccountState = {
   address: string;
-  tokens?: KeyringAssetInfo[];
+  tokens?: string[];
   supportedAssets: KeyringAssetType[];
 }
 
@@ -70,10 +77,10 @@ export interface IKeyringAccount {
   getPrivateKey (): string;
   getNetwork (): KeyringNetwork;
   getAddress (): string;
+  getTokens (): string[];
+  setTokens (tokens: string[]);
   validateAddress (address: string);
-  saveTokenInfo (token: KeyringAssetInfo): void;
-  getAssetTypes(): string[];
-  getAssetList(): KeyringAssetInfo[];
+  saveTokenInfo (address: string): void;
   getState (): KeyringAccountState;
 }
 
@@ -93,12 +100,10 @@ export interface IKeyringWallet {
 }
 
 export interface IKeyring {
-  // serialize (): any;
-  deserialize (data: any);
+  serialize (): KeyringRingSerialized;
+  deserialize (data: KeyringRingSerialized);
   addAccounts(n: number);
   getAccounts(): IKeyringAccount[];
-  getAssetTypes(): string[];
-  getAssetList(): KeyringAssetInfo[];
   removeAccount (account: IKeyringAccount);
   //exportAccount (account: IKeyringAccount): string;
   getAccountByAddress (address: string): IKeyringAccount;

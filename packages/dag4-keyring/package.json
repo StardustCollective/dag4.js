@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-keyring",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A wallet management tool for multi-chain accounts.",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",

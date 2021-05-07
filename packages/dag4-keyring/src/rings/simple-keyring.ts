@@ -1,16 +1,16 @@
 
 import {keyringRegistry} from '../keyring-registry';
-import {KeyringNetwork, IKeyring, IKeyringAccount, KeyringAccountSerialized} from '../kcs';
+import {KeyringNetwork, IKeyring, IKeyringAccount, KeyringAccountSerialized, KeyringRingSerialized} from '../kcs';
 
-export type SimpleKeyringState = {
-  accountType: KeyringNetwork, account?: KeyringAccountSerialized
-}
+// export type SimpleKeyringState = {
+//   accountType: KeyringNetwork, account?: KeyringAccountSerialized
+// }
 
 //extends EventEmitter
 export class SimpleKeyring implements IKeyring {
 
   private account: IKeyringAccount;
-  private accountType: KeyringNetwork;
+  private network: KeyringNetwork;
 
   constructor () {
     // super()
@@ -18,36 +18,28 @@ export class SimpleKeyring implements IKeyring {
 
   static createForNetwork (network: KeyringNetwork, privateKey: string) {
     const inst = new SimpleKeyring();
-    inst.accountType = network;
+    inst.network = network;
     inst.account = keyringRegistry.createAccount(network).create(privateKey);
     return inst;
   }
 
   getState () {
     return {
-      accountType: this.accountType,
+      network: this.network,
       account: this.account.serialize()
     };
   }
 
-  getAssetTypes () {
-    return this.account.getAssetTypes();
+  serialize (): KeyringRingSerialized {
+    return {
+      network: this.network,
+      accounts: [this.account.serialize()]
+    };
   }
 
-  getAssetList () {
-    return this.account.getAssetList();
-  }
-
-  // serialize (): SimpleKeyringState {
-  //   return {
-  //     accountType: this.accountType,
-  //     account: this.account.serialize()
-  //   };
-  // }
-
-  deserialize ({accountType, account}: SimpleKeyringState) {
-    this.accountType = accountType;
-    this.account = keyringRegistry.createAccount(accountType).deserialize(account);
+  deserialize ({network, accounts}: KeyringRingSerialized) {
+    this.network = network;
+    this.account = keyringRegistry.createAccount(network).deserialize(accounts[0]);
   }
 
   addAccounts (n = 1) {

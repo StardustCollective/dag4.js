@@ -42,7 +42,7 @@ export class SingleAccountWallet implements IKeyringWallet {
         return {
           address: a.getAddress(),
           network: a.getNetwork(),
-          assets: a.getAssetList()
+          tokens: a.getTokens()
         }
       })
     }
@@ -59,7 +59,7 @@ export class SingleAccountWallet implements IKeyringWallet {
 
   deserialize (data: KeyringWalletSerialized) {
     this.keyring = new SimpleKeyring();
-    this.keyring.deserialize({accountType: data.network, account: { privateKey: data.secret }});
+    this.keyring.deserialize({network: data.network, accounts: [{ privateKey: data.secret }]});
   }
 
   addKeyring (hdPath: string) {

@@ -1,9 +1,8 @@
 import * as ethSign from 'ethereumjs-util/dist/signature';
 import {isValidAddress} from 'ethereumjs-util/dist/account';
-import {IKeyringAccount, KeyringAssetInfo, KeyringAssetType, KeyringNetwork} from '../kcs';
+import {IKeyringAccount, KeyringAssetType, KeyringNetwork} from '../kcs';
 import {EcdsaAccount} from './ecdsa-account';
 import * as sigUtil from 'eth-sig-util';
-import {ethAssetLibrary} from './eth-asset-library';
 import {Buffer} from 'buffer';
 
 export class EthAccount extends EcdsaAccount implements IKeyringAccount {
@@ -11,16 +10,12 @@ export class EthAccount extends EcdsaAccount implements IKeyringAccount {
   network = KeyringNetwork.Ethereum;
   hasTokenSupport = true;
   supportedAssets = [KeyringAssetType.ETH,KeyringAssetType.ERC20];
-  tokens = ethAssetLibrary.getDefaultAssets();
+  tokens = ['0xa393473d64d2F9F026B60b6Df7859A689715d092'];
 
-  saveTokenInfo (token: KeyringAssetInfo) {
-    if(ethAssetLibrary.importToken(token)) {
-      this.tokens.push(token.symbol)
+  saveTokenInfo (address: string) {
+    if(this.tokens.indexOf(address) < 0) {
+      this.tokens.push(address)
     }
-  }
-
-  getAssetList() {
-    return this.tokens.map(symbol => ethAssetLibrary.getAssetBySymbol(symbol))
   }
 
   validateAddress (address: string) {

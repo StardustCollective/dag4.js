@@ -19,9 +19,10 @@ import {Asset} from './asset';
 //https://github.com/ethereumjs/ethereumjs-monorepo/tree/master/packages/tx
 export abstract class EcdsaAccount {
 
+  tokens: string[];
+
   protected wallet: Wallet;// = Wallet.generate();
   protected assets: Asset[];
-  protected tokens: string[];
 
   abstract network: KeyringNetwork;
   abstract hasTokenSupport: boolean;
@@ -30,6 +31,20 @@ export abstract class EcdsaAccount {
   create (privateKey: string) {
     this.wallet = privateKey ? Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex')) : Wallet.generate();
     return this;
+  }
+
+  saveTokenInfo (address: string) {
+
+  }
+
+  getTokens (): string[] {
+    return this.tokens && this.tokens.concat();
+  }
+
+  setTokens (tokens: string[]) {
+    if (tokens) {
+      this.tokens = tokens.concat();
+    }
   }
 
   getState (): KeyringAccountState {
@@ -43,12 +58,8 @@ export abstract class EcdsaAccount {
     return this.network;
   }
 
-  getAssetTypes (): string[] {
-    return this.tokens;
-  }
-
   serialize (): KeyringAccountSerialized {
-    const tokens = this.tokens ? { tokens: this.tokens } : {}
+    const tokens = this.tokens ? { tokens: this.tokens.concat() } : {}
     return {
       privateKey: this.getPrivateKey(),
       ...tokens

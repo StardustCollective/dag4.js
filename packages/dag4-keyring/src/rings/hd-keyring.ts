@@ -2,13 +2,22 @@ import {hdkey} from 'ethereumjs-wallet'
 import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
 
 import {keyringRegistry} from '../keyring-registry';
-import {KeyringNetwork, IKeyring, IKeyringAccount, KeyringAssetInfo} from '../kcs';
+import {
+  KeyringNetwork,
+  IKeyring,
+  IKeyringAccount,
+  KeyringAssetInfo,
+  KeyringWalletSerialized,
+  KeyringAccountSerialized, KeyringRingSerialized
+} from '../kcs';
 import {Bip39Helper} from '../bip39-helper';
 
-export type HdKeyringSerializedData = {
-  network: KeyringNetwork, accountLabelPrefix?: string, hdPath: string, mnemonic: string, numberOfAccounts: number
-}
+// export type HdKeyringSerializedData = {
+//   network: KeyringNetwork, accounts: { tokens: string[] }[]
+// }
 
+//NOTE: Ring determines the secret implementation: seed or privateKey
+//Hd Ring creates accounts based on Hierarchical Deterministics
 export class HdKeyring implements IKeyring {
 
   private accounts: IKeyringAccount[] = [];
@@ -18,9 +27,13 @@ export class HdKeyring implements IKeyring {
   private rootKey: EthereumHDKey;
   private network: KeyringNetwork;
 
-  static createFromSeed(mnemonic: string, hdPath: string, network: KeyringNetwork, numberOfAccounts = 1) {
+  static create(mnemonic: string, hdPath: string, network: KeyringNetwork, numberOfAccounts = 1) {
     const inst = new HdKeyring();
-    inst.deserialize({network, hdPath, mnemonic, numberOfAccounts});
+    inst.mnemonic = mnemonic;
+    inst.hdPath = hdPath;
+    inst.network = network;
+    inst._initFromMnemonic(mnemonic);
+    inst.addAccounts(numberOfAccounts);
     return inst;
   }
 
@@ -28,36 +41,17 @@ export class HdKeyring implements IKeyring {
     return this.network;
   }
 
-  getAssetTypes () {
-    if (this.accounts.length === 1) {
-      return this.accounts[0].getAssetTypes();
+  serialize (): KeyringRingSerialized {
+    return {
+      network: this.network,
+      accounts: this.accounts.map(a => ({ tokens: a.getTokens()}))
     }
-    return null;
   }
 
-  getAssetList () {
-    if (this.accounts.length === 1) {
-      return this.accounts[0].getAssetList();
-    }
-    return null;
-  }
-
-  // serialize (): HdKeyringSerializedData {
-  //   return {
-  //     mnemonic: this.mnemonic,
-  //     network: this.network,
-  //     numberOfAccounts: this.accounts.length,
-  //     hdPath: this.hdPath,
-  //   }
-  // }
-
-  deserialize (data: HdKeyringSerializedData) {
+  deserialize (data: KeyringRingSerialized) {
     if (data) {
-      this.accounts = []
-      this.hdPath = data.hdPath;
       this.network = data.network;
-      this._initFromMnemonic(data.mnemonic);
-      this.addAccounts(data.numberOfAccounts);
+      data.accounts.forEach((d,i) => this.accounts[i].setTokens(d.tokens))
     }
   }
 
@@ -66,19 +60,14 @@ export class HdKeyring implements IKeyring {
       this._initFromMnemonic(Bip39Helper.generateMnemonic())
     }
 
-    const oldLen = this.accounts.length
-    //const newAccounts = []
+    const oldLen = this.accounts.length;
     for (let i = oldLen; i < numberOfAccounts + oldLen; i++) {
-      const child = this.rootKey.deriveChild(i)
-      const wallet = child.getWallet()
-      //newAccounts.push(wallet)
-      this.accounts.push(this.newAccount(wallet.getPrivateKey().toString('hex')))
+      const child = this.rootKey.deriveChild(i);
+      const wallet = child.getWallet();
+      const privateKey = wallet.getPrivateKey().toString('hex');
+      const account = keyringRegistry.createAccount(this.network).deserialize({ privateKey });
+      this.accounts[i] = account;
     }
-    //return newAccounts.map((w) => w.getAddressString());
-  }
-
-  getAssets () {
-    this.accounts.reduce<KeyringAssetInfo[]>((res, a) => res.concat(a.getAssetList()), []);
   }
 
   getAccounts() {
@@ -86,12 +75,6 @@ export class HdKeyring implements IKeyring {
   }
 
   /* PRIVATE METHODS */
-
-  private newAccount (privateKey: string) {
-    // const prefix = (this.accountLabelPrefix || 'Account') + ' #';
-    // const label = prefix + (this.accounts.length + 1);
-    return keyringRegistry.createAccount(this.network).deserialize({ privateKey });
-  }
 
   private _initFromMnemonic (mnemonic) {
     this.mnemonic = mnemonic

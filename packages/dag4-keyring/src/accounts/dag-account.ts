@@ -2,7 +2,7 @@
 import {Buffer} from 'buffer';
 import * as bs58 from 'bs58';
 import * as jsSha256 from "js-sha256";
-import {IKeyringAccount, KeyringAssetInfo, KeyringAssetType, KeyringNetwork} from '../kcs';
+import {IKeyringAccount, KeyringAssetType, KeyringNetwork} from '../kcs';
 import {EcdsaAccount} from './ecdsa-account';
 
 const BASE58_ALPHABET = /['123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+/;
@@ -14,14 +14,6 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
   hasTokenSupport = false;
   supportedAssets = [KeyringAssetType.DAG];
   tokens = null;//dagAssetLibrary.getDefaultAssets();
-
-  saveTokenInfo (token: KeyringAssetInfo) {
-    //Constellation does not currently support tokens
-  }
-
-  getAssetList() {
-    return null;//this.tokens.map(symbol => dagAssetLibrary.getAssetBySymbol(symbol));
-  }
 
   signTransaction (tx) {
 

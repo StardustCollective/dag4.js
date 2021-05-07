@@ -28,7 +28,7 @@ export abstract class AssetLibrary {
 
   importToken (token: KeyringAssetInfo) {
     if (!this.importedAssets[token.symbol]) {
-      this.importedAssets[token.symbol] = token;
+      this.importedAssets[token.symbol] = { ...token };
       return true;
     }
     return false;
