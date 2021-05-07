@@ -81,7 +81,7 @@ export interface IKeyringAccount {
   setTokens (tokens: string[]);
   validateAddress (address: string);
   saveTokenInfo (address: string): void;
-  getState (): KeyringAccountState;
+  //getState (): KeyringAccountState;
 }
 
 export interface IKeyringWallet {

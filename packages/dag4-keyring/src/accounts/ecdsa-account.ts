@@ -50,7 +50,8 @@ export abstract class EcdsaAccount {
   getState (): KeyringAccountState {
     return {
       address: this.getAddress(),
-      supportedAssets: this.supportedAssets
+      supportedAssets: this.supportedAssets,
+      tokens: this.getTokens()
     }
   }
 

@@ -155,7 +155,7 @@ export class KeyringManager extends SafeEventEmitter  {
     const account = this.getWalletById(walletId).getAccountByAddress(accountAddress);
     account.saveTokenInfo(address);
     this.fullUpdate();
-    return account.getState();
+    return account;
   }
 
   private newMultiChainHdWallet(label: string, seed?: string) {
