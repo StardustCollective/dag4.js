@@ -12,17 +12,17 @@ const ethClient = new XChainEthClient({
 
 });
 
-async function testGetKnownTokenBalances() {
-
-    const assets = [
-        { address: '0x7240ac91f01233baaf8b064248e80feaa5912ba3', symbol: 'OCTO', decimals: 18 }
-    ]
-
-    const tokens = await ethClient.getKnownTokenBalances('0xcd4328383abc5399a910b7e01c8047d95b3afa8a', assets);
-
-    console.log(JSON.stringify(tokens, null, 2))
-
-}
+// async function testGetKnownTokenBalances() {
+//
+//     const assets = [
+//         { address: '0x7240ac91f01233baaf8b064248e80feaa5912ba3', symbol: 'OCTO', decimals: 18 }
+//     ]
+//
+//     const tokens = await ethClient.getKnownTokenBalances('0xcd4328383abc5399a910b7e01c8047d95b3afa8a', assets);
+//
+//     console.log(JSON.stringify(tokens, null, 2))
+//
+// }
 
 async function testGetTokenBalance() {
 
@@ -65,4 +65,6 @@ async function testXChainUtils () {
 
 }
 
-testXChainUtils();
+// testXChainUtils();
+testGetTokenBalance();
+testGetTokenInfo()

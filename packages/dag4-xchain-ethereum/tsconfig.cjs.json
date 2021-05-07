@@ -5,7 +5,11 @@
     "declarationDir": "dist/types",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "lib": [
+      "esNext",
+      "dom"
+    ]
   },
   "include": [
     "src"

@@ -1,8 +1,10 @@
 import {ethers} from 'ethers';
 import { Contract, Signer } from 'ethers';
 
-import BalanceCheckerABI from './abis/BalanceChecker.abi.json';
-import ERC20_ABI from './abis/erc20.abi.json';
+import SINGLE_CALL_BALANCES_ABI from 'single-call-balance-checker-abi';
+import ERC_20_ABI from 'erc-20-abi';
+// import BALANCER_CHECKER_ABI from './abis/BalanceChecker.abi.json';
+// import ERC20_ABI from './abis/erc20.abi.json';
 import BigNumber from 'bignumber.js';
 
 type Provider = ethers.providers.Provider;
@@ -46,7 +48,7 @@ export class TokenContractService {
 
     const contract = new Contract(
       NETWORK_TO_CONTRACT_MAP[chainId],
-      BalanceCheckerABI as any,
+      SINGLE_CALL_BALANCES_ABI,
       provider
     );
 
@@ -59,7 +61,7 @@ export class TokenContractService {
 
     const contract = new Contract(
       NETWORK_TO_CONTRACT_MAP[chainId],
-      BalanceCheckerABI as any,
+      SINGLE_CALL_BALANCES_ABI,
       provider
     );
 
@@ -76,7 +78,7 @@ export class TokenContractService {
 
     let name = '', decimals, symbol;
 
-    const contract = new Contract(tokenContractAddress, ERC20_ABI as any, provider);
+    const contract = new Contract(tokenContractAddress, ERC_20_ABI as any, provider);
 
     try {
       decimals = await contract.decimals();
