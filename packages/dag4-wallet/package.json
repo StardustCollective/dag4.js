@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-wallet",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -21,7 +21,7 @@
   "dependencies": {
     "@stardust-collective/dag4-core": "^1.0.5",
     "@stardust-collective/dag4-keystore": "^1.0.7",
-    "@stardust-collective/dag4-network": "^1.0.7",
+    "@stardust-collective/dag4-network": "^1.0.8",
     "bignumber.js": "^9.0.1"
   },
   "devDependencies": {

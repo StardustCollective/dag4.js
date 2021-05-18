@@ -31,10 +31,10 @@
     stream-browserify "^3.0.0"
     uuid "^3.4.0"
 
-"@stardust-collective/dag4-network@^1.0.7":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.7.tgz#43661c4cac8c9756b2ed048ff5ffbcdc24e316f4"
-  integrity sha512-GjuwVRU3qzqBL+Y6yjQ4SppYDBchEMd8n2jEUimsz2Z0UCb5VFckWpaF3DqKwHtzbpUk3oF4k1SRin8ymAdw0A==
+"@stardust-collective/dag4-network@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.8.tgz#c4643f77e4522bffae780e77ecd7a9f44d374f16"
+  integrity sha512-1hlPTybCo/MqdwIAq7RYAmgkLA3+gYyggmB9LR/TVgSjro374dTzm3U7nbR/wNyig/YtpjzVsV1nqA7r1Bqrug==
   dependencies:
     "@stardust-collective/dag4-core" "^1.0.5"
     rxjs "^6.6.3"
