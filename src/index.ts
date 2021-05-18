@@ -10,6 +10,7 @@ import {dagNetwork, Snapshot as _Snapshot, Transaction as _Transaction} from '@s
 import {keyStore, HDKey as _HDKey, DERIVATION_PATH as _DERIVATION_PATH} from '@stardust-collective/dag4-keystore';
 import {PendingTx as _PendingTx, NetworkInfo as _NetworkInfo} from '@stardust-collective/dag4-network/types';
 import {DagAccount, DagMonitor} from '@stardust-collective/dag4-wallet';
+import {globalDagNetwork} from '@stardust-collective/dag4-network';
 
 
 export namespace Dag4Types {
@@ -70,10 +71,10 @@ export const dag4 = {
     return dag4Packages.createOrGetGlobalMonitor();
   },
   config: (config: Dag4Config) => {
-    dagDi.getKeyValueDbClient().setPrefix(config.appId);
+    dagDi.getStateStorageDb().setPrefix(config.appId);
     dagNetwork.config(config.network);
   },
-  network: dagNetwork,
+  network: globalDagNetwork,
   arrayUtils
 }
 

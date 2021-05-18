@@ -3,6 +3,7 @@ import sourceMaps from 'rollup-plugin-sourcemaps'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import nodeGlobals from 'rollup-plugin-node-globals'
 import nodeBuiltins from 'rollup-plugin-node-builtins'
+//import nodePolyfills from 'rollup-plugin-node-polyfills';
 import json from '@rollup/plugin-json'
 import commonjs from '@rollup/plugin-commonjs'
 import replace from '@rollup/plugin-replace'
@@ -57,6 +58,7 @@ const plugins = /** @type {Plugin[]} */ ([
 
   nodeGlobals(),
   nodeBuiltins(),
+  //nodePolyfills(),
 
   // Allow node_modules resolution, so you can use 'external' to control
   // which external modules to include in the bundle
