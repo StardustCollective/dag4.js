@@ -15,6 +15,12 @@ async function test () {
 
     const network = new DagNetwork();
 
+    network.config({
+        id: 'ceres',
+        beUrl: 'https://api-be.exchanges.constellationnetwork.io',
+        lbUrl: 'http://lb.exchanges.constellationnetwork.io:9000'
+    })
+
     const results = await network.blockExplorerApi.getTransactionsByAddress('DAG3buDiD1WVT1Z8q3hDGMiWJYbnJEZv8WCeSmHc', 1);//0, "2020-12-24T01:57:00Z")
 
     console.log(JSON.stringify(results,null,' '));

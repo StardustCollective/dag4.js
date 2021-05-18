@@ -49,5 +49,3 @@ export class DagNetwork {
 
 }
 
-export const dagNetwork = new DagNetwork();
-
