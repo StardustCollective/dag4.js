@@ -1,18 +1,19 @@
 import {keyStore, KeyTrio} from '@stardust-collective/dag4-keystore';
-import {Subject} from 'rxjs';
+import {globalDagNetwork} from '@stardust-collective/dag4-network';
 
-import {loadBalancerApi, blockExplorerApi} from '@stardust-collective/dag4-network';
+import {DagNetwork} from '@stardust-collective/dag4-network';
 import {PendingTx} from '@stardust-collective/dag4-network/types';
 import {BigNumber} from 'bignumber.js';
+import {Subject} from 'rxjs';
 
 export class DagAccount {
 
   private m_keyTrio: KeyTrio;
-
   private sessionChange$ = new Subject<boolean>();
+  private network: DagNetwork = globalDagNetwork;
 
-  constructor() {
-
+  connect(network: DagNetwork) {
+    this.network = network;
   }
 
   get address () {
@@ -61,7 +62,7 @@ export class DagAccount {
   }
 
   getTransactions (limit?: number, searchAfter?: string) {
-    return blockExplorerApi.getTransactionsByAddress(this.address, limit, searchAfter);
+    return this.network.blockExplorerApi.getTransactionsByAddress(this.address, limit, searchAfter);
   }
 
   validateDagAddress (address: string) {
@@ -72,7 +73,7 @@ export class DagAccount {
 
     let result: number = undefined;
 
-    const addressObj = await loadBalancerApi.getAddressBalance(this.address);
+    const addressObj = await this.network.loadBalancerApi.getAddressBalance(this.address);
 
     if (addressObj && !isNaN(addressObj.balance)) {
       result = new  BigNumber(addressObj.balance).dividedBy(1e8).toNumber();
@@ -84,13 +85,13 @@ export class DagAccount {
   async getFeeRecommendation () {
 
     //Get last tx ref
-    const lastRef = await loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
     if (!lastRef.prevHash) {
       return 0;
     }
 
     //Check for pending TX
-    const lastTx = await loadBalancerApi.getTransaction(lastRef.prevHash);
+    const lastTx = await this.network.loadBalancerApi.getTransaction(lastRef.prevHash);
     if (!lastTx) {
       return 0;
     }
@@ -99,7 +100,7 @@ export class DagAccount {
   }
 
   async generateSignedTransaction (toAddress: string, amount: number, fee = 0) {
-    const lastRef = await loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
     const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef);
 
     return tx;
@@ -108,14 +109,14 @@ export class DagAccount {
   async transferDag (toAddress: string, amount: number, fee = 0, autoEstimateFee = false): Promise<PendingTx> {
 
     let normalizedAmount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
-    const lastRef = await loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
 
     if (fee === 0 && autoEstimateFee) {
-      const tx = await loadBalancerApi.getTransaction(lastRef.prevHash);
+      const tx = await this.network.loadBalancerApi.getTransaction(lastRef.prevHash);
 
       if (tx) {
 
-        const addressObj = await loadBalancerApi.getAddressBalance(this.address);
+        const addressObj = await this.network.loadBalancerApi.getAddressBalance(this.address);
 
         //Check to see if sending max amount
         if (addressObj.balance === normalizedAmount) {
@@ -128,7 +129,7 @@ export class DagAccount {
     }
 
     const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
-    const txHash = await loadBalancerApi.postTransaction(tx);
+    const txHash = await this.network.loadBalancerApi.postTransaction(tx);
 
     if (txHash) {
       //this.memPool.addToMemPoolMonitor({ timestamp: Date.now(), hash: txHash, amount: amount * 1e8, receiver: toAddress, sender: this.address });
@@ -142,7 +143,7 @@ export class DagAccount {
 
     for (let i = 1; ; i++) {
 
-      const result = await loadBalancerApi.checkTransactionStatus(hash);
+      const result = await this.network.loadBalancerApi.checkTransactionStatus(hash);
 
       if (result) {
         if (result.accepted) {
