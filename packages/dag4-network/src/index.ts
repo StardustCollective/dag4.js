@@ -1,3 +1,4 @@
+export * from './global-dag-network'
 export * from './dag-network'
 export * from './api'
 export * from './dto'

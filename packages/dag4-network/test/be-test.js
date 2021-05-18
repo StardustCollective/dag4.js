@@ -1,4 +1,5 @@
-const {blockExplorerApi} = require("../dist/cjs/api/block-explorer-api");
+const {DagNetwork} = require("../dist/cjs");
+
 const {dagDi} = require("@stardust-collective/dag4-core");
 const fetch = require('node-fetch');
 
@@ -12,7 +13,9 @@ async function test () {
     console.log(d);
     console.log(d.toLocaleTimeString());
 
-    const results = await blockExplorerApi.getTransactionsByAddress('DAG3buDiD1WVT1Z8q3hDGMiWJYbnJEZv8WCeSmHc', 2);//0, "2020-12-24T01:57:00Z")
+    const network = new DagNetwork();
+
+    const results = await network.blockExplorerApi.getTransactionsByAddress('DAG3buDiD1WVT1Z8q3hDGMiWJYbnJEZv8WCeSmHc', 1);//0, "2020-12-24T01:57:00Z")
 
     console.log(JSON.stringify(results,null,' '));
 

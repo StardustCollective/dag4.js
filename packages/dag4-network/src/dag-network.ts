@@ -1,8 +1,7 @@
 import {Subject} from 'rxjs';
 import {NetworkInfo} from './types/network-info';
-import {BlockExplorerApi, blockExplorerApi} from './api/block-explorer-api';
-import {LoadBalancerApi, loadBalancerApi} from './api/load-balancer-api';
-import {PeerNodeApi} from './api';
+import {BlockExplorerApi} from './api/block-explorer-api';
+import {LoadBalancerApi} from './api/load-balancer-api';
 
 export class DagNetwork {
 
@@ -10,8 +9,14 @@ export class DagNetwork {
 
   private networkChange$ = new Subject<NetworkInfo>();
 
-  loadBalancerApi = loadBalancerApi;
-  blockExplorerApi = blockExplorerApi;
+  loadBalancerApi = new LoadBalancerApi();
+  blockExplorerApi = new BlockExplorerApi();
+
+  constructor(netInfo?: NetworkInfo) {
+    if (netInfo) {
+      this.setNetwork(netInfo);
+    }
+  }
 
   config(netInfo?: NetworkInfo) {
     if (netInfo) {
@@ -26,25 +31,13 @@ export class DagNetwork {
     return this.networkChange$;
   }
 
-  validatorNode (host: string) {
-    return new PeerNodeApi(host);
-  }
-
-  blockExplorer (host: string) {
-    return new BlockExplorerApi(host);
-  }
-
-  loadBalancer (host: string) {
-    return new LoadBalancerApi(host);
-  }
-
   //Configure the network of the global instances: blockExplorerApi and loadBalancerApi
   setNetwork(netInfo: NetworkInfo) {
     if (this.connectedNetwork !== netInfo) {
       this.connectedNetwork = netInfo;
 
-      blockExplorerApi.config().baseUrl(netInfo.beUrl);
-      loadBalancerApi.config().baseUrl(netInfo.lbUrl);
+      this.blockExplorerApi.config().baseUrl(netInfo.beUrl);
+      this.loadBalancerApi.config().baseUrl(netInfo.lbUrl);
 
       this.networkChange$.next(netInfo);
     }
