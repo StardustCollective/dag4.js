@@ -1,7 +1,7 @@
 import {keyStore, KeyTrio} from '@stardust-collective/dag4-keystore';
 import {globalDagNetwork} from '@stardust-collective/dag4-network';
 
-import {DagNetwork} from '@stardust-collective/dag4-network';
+import {DagNetwork, NetworkInfo} from '@stardust-collective/dag4-network';
 import {PendingTx} from '@stardust-collective/dag4-network/types';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
@@ -12,8 +12,8 @@ export class DagAccount {
   private sessionChange$ = new Subject<boolean>();
   private network: DagNetwork = globalDagNetwork;
 
-  connect(network: DagNetwork) {
-    this.network = network;
+  connect(networkInfo: NetworkInfo) {
+    this.network = new DagNetwork(networkInfo);
   }
 
   get address () {
