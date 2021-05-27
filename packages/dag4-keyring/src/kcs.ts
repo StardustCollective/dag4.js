@@ -1,4 +1,5 @@
 
+
 export enum KeyringNetwork {
   Constellation = 'Constellation',
   Ethereum = 'Ethereum'
@@ -45,6 +46,7 @@ export type KeyringRingSerialized = {
 
 export type KeyringAccountSerialized = {
   privateKey?: string;
+  publicKey?: string;
   tokens?: string[]
 }
 
@@ -68,6 +70,8 @@ export interface IKeyringAccount {
   create (privateKey: string): IKeyringAccount;
   serialize (): KeyringAccountSerialized;
   deserialize (data: KeyringAccountSerialized): IKeyringAccount;
+  signMessage(msg: string): string;
+  verifyMessage(msg: string, signature: string, saysAddress: string): boolean;
   signTransaction (address: string, tx, opts?: any);
   signMessage (address: string, data: string, opts?: any);
   //signPersonalMessage (address: string, msgHex: string, opts?: any);

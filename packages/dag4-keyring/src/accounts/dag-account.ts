@@ -36,20 +36,29 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
     return this.getAddressFromPublicKey(this.getPublicKey());
   }
 
+  verifyMessage(msg: string, signature: string, saysAddress: string) {
+
+    const publicKey = this.recoverSignedMsgPublicKey(msg, signature);
+
+    const actualAddress = this.getAddressFromPublicKey('04' + publicKey);
+
+    return saysAddress === actualAddress;
+  }
+
   private sha256 (hash: string | Buffer) {
     return jsSha256.sha256(hash);
   }
 
   private getAddressFromPublicKey (publicKeyHex: string) {
 
-    const encoding = publicKeyHex.substring(0,2);
-
-    if (encoding !== '04') {
-      if (encoding === '02' || encoding === '03') {
-        throw new Error('Compress public key currently not supported')
-      }
-      publicKeyHex = '04' + publicKeyHex;
-    }
+    // const encoding = publicKeyHex.substring(0,2);
+    //
+    // if (encoding !== '04') {
+    //   if (encoding === '02' || encoding === '03') {
+    //     throw new Error('Compress public key currently not supported')
+    //   }
+    //   publicKeyHex = '04' + publicKeyHex;
+    // }
 
     publicKeyHex = PKCS_PREFIX + publicKeyHex;
 

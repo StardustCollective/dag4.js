@@ -30,6 +30,7 @@ describe('encryptor', () => {
     encryptor.encrypt(password, data)
       .then(function (encryptedStr) {
         expect(typeof encryptedStr).to.equal('string', 'returns a string')
+        console.log(encryptedStr)
         return encryptor.decrypt(password, encryptedStr)
       })
       .then(function (decryptedObj) {

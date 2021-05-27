@@ -4,7 +4,6 @@
     "rootDir": "src",
     "baseUrl": "src",
     "outDir": "dist/esm",
-    "declarationDir": "dist/types",
     "allowSyntheticDefaultImports": true
   },
   "include": [

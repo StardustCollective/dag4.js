@@ -1,4 +1,4 @@
-import {HdKeyring} from '../rings';
+import {BIP_44_PATHS, HdKeyring} from '../rings';
 import {
   IKeyringWallet,
   IKeyringAccount,
@@ -9,14 +9,7 @@ import {
 } from '../kcs';
 import {Bip39Helper} from '../bip39-helper';
 
-const CONSTELLATION_COIN = 1137;
-const ETH_WALLET_PATH = 60;
 
-const CONSTANTS = {
-  BIP_44_DAG_PATH: `m/44'/${CONSTELLATION_COIN}'/0'/0`,
-  BIP_44_ETH_PATH: `m/44'/${ETH_WALLET_PATH}'/0'/0`,            //MetaMask and Trezor
-  BIP_44_ETH_PATH_LEDGER: `m/44'/${ETH_WALLET_PATH}'`,          //Ledger Live
-}
 
 //Wallet : multiple networks, 1 seed
 //  Ring : 1 network, multiple accounts
@@ -83,8 +76,8 @@ export class MultiChainWallet implements IKeyringWallet {
     this.label = data.label;
     this.mnemonic = data.secret;
     this.keyrings = [
-      HdKeyring.create(this.mnemonic, CONSTANTS.BIP_44_DAG_PATH, KeyringNetwork.Constellation, 1),
-      HdKeyring.create(this.mnemonic, CONSTANTS.BIP_44_ETH_PATH, KeyringNetwork.Ethereum, 1)
+      HdKeyring.create(this.mnemonic, BIP_44_PATHS.CONSTELLATION_PATH, KeyringNetwork.Constellation, 1),
+      HdKeyring.create(this.mnemonic, BIP_44_PATHS.ETH_WALLET_PATH, KeyringNetwork.Ethereum, 1)
     ];
     if (data.rings) {
       data.rings.forEach((r,i) => this.keyrings[i].deserialize(r))

@@ -169,8 +169,6 @@ export class KeyringManager extends SafeEventEmitter  {
   logout () {
     this.password = null;
     this.memStore.updateState({ isUnlocked: false });
-    this.wallets = [];
-    this.updateMemStoreWallets();
     this.emit('lock');
     this.notifyUpdate();
   }
@@ -200,7 +198,7 @@ export class KeyringManager extends SafeEventEmitter  {
   removeEmptyWallets () {
     this.wallets = this.wallets.filter(keyring => keyring.getAccounts().length > 0);
   }
-  
+
   exportAccountPrivateKey (address: string) {
     return this.findAccount(address).getPrivateKey()
   }
@@ -210,7 +208,7 @@ export class KeyringManager extends SafeEventEmitter  {
 
     return wallet.exportSecretKey();
   }
-  
+
   async removeAccount (address) {
     const walletForAccount = this.getWalletForAccount(address)
 

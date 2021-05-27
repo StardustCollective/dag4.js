@@ -12,6 +12,10 @@ type Payload = {
 
 export class Encryptor<T> {
 
+  static create<T>() {
+    return new Encryptor<T>();
+  }
+
   encrypt (password: string, data: T): Promise<string> {
     const salt = this.generateSalt();
 

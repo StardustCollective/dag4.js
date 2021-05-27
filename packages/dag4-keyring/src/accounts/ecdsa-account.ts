@@ -28,6 +28,8 @@ export abstract class EcdsaAccount {
   abstract hasTokenSupport: boolean;
   abstract supportedAssets: KeyringAssetType[];
 
+  abstract verifyMessage(msg: string, signature: string, saysAddress: string): boolean;
+
   create (privateKey: string) {
     this.wallet = privateKey ? Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex')) : Wallet.generate();
     return this;
@@ -67,24 +69,48 @@ export abstract class EcdsaAccount {
     }
   }
 
-  deserialize ({privateKey, tokens}: KeyringAccountSerialized) {
-    this.wallet = Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex'));
+  deserialize ({privateKey, publicKey, tokens}: KeyringAccountSerialized) {
+
+    if (privateKey) {
+      this.wallet = Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex'));
+    }
+    else {
+      this.wallet = Wallet.fromPublicKey(Buffer.from(publicKey, 'hex'));
+    }
+
     this.tokens = tokens || this.tokens;
     return this;
   }
 
-  signMessage (msg: string) {
-    const message = ethUtil.stripHexPrefix(msg)
-    const privKey = this.getPrivateKeyBuffer()
-    const msgSig: ECDSASignatureBuffer = ethUtil.ecsign(Buffer.from(message, 'hex'), privKey) as any;
-    if (!ethUtil.isValidSignature(msgSig.v, msgSig.r, msgSig.s)) {
+  signMessage(msg: string) {
+    const privateKey = this.getPrivateKeyBuffer();
+    const msgHash = ethUtil.hashPersonalMessage(Buffer.from(msg));
+
+    const { v, r, s } = ethUtil.ecsign(msgHash, privateKey);
+
+    if (!ethUtil.isValidSignature(v, r, s)) {
       throw new Error('Sign-Verify failed');
     }
-    return sigUtil.concatSig(msgSig.v, msgSig.r, msgSig.s)
+
+    return ethUtil.stripHexPrefix(ethUtil.toRpcSig(v, r, s));
+  }
+
+  recoverSignedMsgPublicKey(msg: string, signature: string) {
+
+    const msgHash = ethUtil.hashPersonalMessage(Buffer.from(msg));
+    const signatureParams = ethUtil.fromRpcSig('0x' + signature);
+    const publicKeyBuffer = ethUtil.ecrecover(
+      msgHash,
+      signatureParams.v,
+      signatureParams.r,
+      signatureParams.s
+    );
+
+    return publicKeyBuffer.toString('hex');
   }
 
   getAddress (): string {
-    return this.wallet.getAddressString();
+    return this.wallet.getChecksumAddressString();
   }
 
   getPublicKey () {

@@ -37,6 +37,7 @@ describe('KeyringController', () => {
 
     const vault = await encryptor.decrypt('password', encryptedVault)
 
+    console.log(encryptedVault);
     console.log(JSON.stringify(vault, null, 2));
 
   });
