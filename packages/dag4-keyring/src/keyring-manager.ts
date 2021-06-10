@@ -304,7 +304,7 @@ export class KeyringManager extends SafeEventEmitter  {
     let chainWallet: IKeyringWallet;
 
     if (wData.type === KeyringWalletType.MultiChainWallet) {
-      const wallet = chainWallet =new MultiChainWallet();
+      const wallet = chainWallet = new MultiChainWallet();
       wallet.deserialize(wData);
     }
     else if (wData.type === KeyringWalletType.SimpleAccountWallet) {

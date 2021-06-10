@@ -1,13 +1,12 @@
 {
   "name": "@stardust-collective/dag4-keyring",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A wallet management tool for multi-chain accounts.",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
   "license": "MIT",
   "main": "cjs/index.js",
   "module": "esm/index.js",
-  "typings": "types/index.d.ts",
   "homepage": "https://github.com/StardustCollective/dag4.js/packages/dag4-keyring/#readme",
   "scripts": {
     "prebuild": "rimraf dist/",

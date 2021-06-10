@@ -33,7 +33,7 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
   }
 
   getAddress (): string {
-    return this.getAddressFromPublicKey(this.getPublicKey());
+    return this.getAddressFromPublicKey('04' + this.getPublicKey());
   }
 
   verifyMessage(msg: string, signature: string, saysAddress: string) {
@@ -49,6 +49,7 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
     return jsSha256.sha256(hash);
   }
 
+  //PKCS standard expects a prefix '04' for an uncompressed Public Key
   private getAddressFromPublicKey (publicKeyHex: string) {
 
     // const encoding = publicKeyHex.substring(0,2);
