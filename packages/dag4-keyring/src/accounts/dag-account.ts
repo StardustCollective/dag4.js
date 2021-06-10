@@ -33,14 +33,14 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
   }
 
   getAddress (): string {
-    return this.getAddressFromPublicKey('04' + this.getPublicKey());
+    return this.getAddressFromPublicKey(this.getPublicKey());
   }
 
   verifyMessage(msg: string, signature: string, saysAddress: string) {
 
     const publicKey = this.recoverSignedMsgPublicKey(msg, signature);
 
-    const actualAddress = this.getAddressFromPublicKey('04' + publicKey);
+    const actualAddress = this.getAddressFromPublicKey(publicKey);
 
     return saysAddress === actualAddress;
   }
@@ -49,17 +49,14 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
     return jsSha256.sha256(hash);
   }
 
-  //PKCS standard expects a prefix '04' for an uncompressed Public Key
   private getAddressFromPublicKey (publicKeyHex: string) {
 
-    // const encoding = publicKeyHex.substring(0,2);
-    //
-    // if (encoding !== '04') {
-    //   if (encoding === '02' || encoding === '03') {
-    //     throw new Error('Compress public key currently not supported')
-    //   }
-    //   publicKeyHex = '04' + publicKeyHex;
-    // }
+    //PKCS standard requires a prefix '04' for an uncompressed Public Key
+    // An uncompressed public key is a 64-byte number; in hex this gives a string length of 128
+    // Check to see if prefix is missing
+    if (publicKeyHex.length === 128) {
+      publicKeyHex = '04' + publicKeyHex;
+    }
 
     publicKeyHex = PKCS_PREFIX + publicKeyHex;
 
