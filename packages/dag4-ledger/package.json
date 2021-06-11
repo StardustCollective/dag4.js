@@ -1,0 +1,23 @@
+{
+  "name": "@stardust-collective/dag4-ledger",
+  "version": "0.0.1",
+  "description": "Ledger hardware integration for signing DAG transactions",
+  "author": "Frank Fox",
+  "email": "ffox77@gmail.com",
+  "license": "MIT",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
+  "homepage": "https://github.com/StardustCollective/dag4.js#readme",
+  "scripts": {
+    "prebuild": "rimraf dist/",
+    "build": "tsc && tsc -p tsconfig.cjs.json",
+    "rollup": "rollup -c ../../scripts/config/rollup.config.js",
+    "prerelease": "npm run build && npm version patch",
+    "release": "node ../../scripts/package/copy && npm run release:npm",
+    "release:npm": "npm publish ./dist -access public",
+    "release:preflight": "npm pack ./dist --dry-run"
+  },
+  "dependencies": {
+    "bignumber.js": "^9.0.1"
+  }
+}
