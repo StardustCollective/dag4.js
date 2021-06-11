@@ -28,7 +28,7 @@ async function testFee () {
 }
 
 async function testLocalStorage () {
-    const storage = dagDi.getKeyValueDbClient();
+    const storage = dagDi.getStateStorageDb();
 
     //storage.set('hello', 'world');
 
@@ -59,6 +59,13 @@ async function testFaucet () {
     });
 }
 
+/*
+export type DagWalletMonitorUpdate = {
+  pendingHasConfirmed: boolean;
+  transTxs: PendingTx[];
+  txChanged: boolean;
+}
+ */
 async function monitorTx () {
     login();
 
@@ -67,7 +74,7 @@ async function monitorTx () {
             txChanged: monitorUpdate.txChanged,
             pendingHasConfirmed: monitorUpdate.pendingHasConfirmed,
             tx:{
-                pendingMsg: monitorUpdate.transTxs[0].pendingMsg, pending: monitorUpdate.transTxs[0].pending
+                pendingMsg: monitorUpdate.transTxs[0]?.pendingMsg, pending: monitorUpdate.transTxs[0]?.pending
             }
         }
         console.log(JSON.stringify(status,null,2));

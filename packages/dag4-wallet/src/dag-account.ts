@@ -14,6 +14,7 @@ export class DagAccount {
 
   connect(networkInfo: NetworkInfo) {
     this.network = new DagNetwork(networkInfo);
+    return this;
   }
 
   get address () {
@@ -41,6 +42,12 @@ export class DagAccount {
     const address = keyStore.getDagAddressFromPublicKey(publicKey);
 
     this.setKeysAndAddress(privateKey, publicKey, address);
+  }
+
+  loginPublicKey (publicKey: string) {
+    const address = keyStore.getDagAddressFromPublicKey(publicKey);
+
+    this.setKeysAndAddress('', publicKey, address);
   }
 
   isActive () {
@@ -100,7 +107,9 @@ export class DagAccount {
   }
 
   async generateSignedTransaction (toAddress: string, amount: number, fee = 0) {
+
     const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+
     const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef);
 
     return tx;
