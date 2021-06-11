@@ -6,37 +6,37 @@ describe('Key Store', () => {
 
   it('IsValid DAG address', async () => {
 
-    const result = dag.keyStore.validateDagAddress(testData.DAG_ADDRESS);
+    const result = dag4.keyStore.validateDagAddress(testData.DAG_ADDRESS);
 
     chai.expect(result).to.equal(true);
   });
 
   it('Public key from Private', () => {
 
-    const result = dag.keyStore.getPublicKeyFromPrivate(testData.PRIVATE_KEY);
+    const result = dag4.keyStore.getPublicKeyFromPrivate(testData.PRIVATE_KEY);
     chai.expect(result).to.equal(testData.PUBLIC_KEY);
 
   });
 
   it('Compact Public key from Private', () => {
 
-    const result = dag.keyStore.getPublicKeyFromPrivate(testData.PRIVATE_KEY, true);
+    const result = dag4.keyStore.getPublicKeyFromPrivate(testData.PRIVATE_KEY, true);
     chai.expect(result).to.equal(testData.COMPACT_PUBLIC_KEY);
 
   });
 
   it('DAG address from Public',  () => {
 
-    const result = dag.keyStore.getDagAddressFromPublicKey(testData.PUBLIC_KEY);
+    const result = dag4.keyStore.getDagAddressFromPublicKey(testData.PUBLIC_KEY);
     chai.expect(result).to.equal(testData.DAG_ADDRESS);
   });
 
   it('Private Key from Mnemonic Seed Phrase',  () => {
 
-    const result = dag.keyStore.getPrivateKeyFromMnemonic(testData.SEED_PHRASE);
+    const result = dag4.keyStore.getPrivateKeyFromMnemonic(testData.SEED_PHRASE);
     chai.expect(result).to.equal(testData.SEED_PRIVATE_KEY);
 
-    // console.log(dag.keyStore.generateSeedPhrase());
+    // console.log(dag4.keyStore.generateSeedPhrase());
   });
   
 });

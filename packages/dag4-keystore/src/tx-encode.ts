@@ -21,52 +21,50 @@ class TxEncode {
     return '0' + unpadded;
   };
 
-  buildTx (amount: number, toAddress: string, fromAddress: string, publicKey: string, lastRef: AddressLastRef) {
+  buildTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef): PostTransaction {
 
     const salt = MIN_SALT + parseInt(randomBytes(6).toString('hex'), 16);
 
     return {
-      tx: {
-        'edge': {
-          'observationEdge': {
-            'parents': [{
-              'hashReference': fromAddress,
-              'hashType': 'AddressHash',
-            }, {
-              'hashReference': toAddress,
-              'hashType': 'AddressHash',
-            }],
-            'data': {
-              'hashType': 'TransactionDataHash',
-            },
-          },
-          'signedObservationEdge': {
-            'signatureBatch': {
-              'hash': '',
-              'signatures': [],
-            },
-          },
+      'edge': {
+        'observationEdge': {
+          'parents': [{
+            'hashReference': fromAddress,
+            'hashType': 'AddressHash',
+          }, {
+            'hashReference': toAddress,
+            'hashType': 'AddressHash',
+          }],
           'data': {
-            'amount': amount,
-            'lastTxRef': {
-              'prevHash': lastRef.prevHash,
-              'ordinal': lastRef.ordinal,
-            },
-            'salt': salt,
+            'hashType': 'TransactionDataHash',
+            'hashReference': ''
           },
         },
-        'lastTxRef': {
-          'prevHash': lastRef.prevHash,
-          'ordinal': lastRef.ordinal,
+        'signedObservationEdge': {
+          'signatureBatch': {
+            'hash': '',
+            'signatures': [],
+          },
         },
-        'isDummy': false,
-        'isTest': false,
-      }
+        'data': {
+          'amount': amount,
+          'lastTxRef': {
+            'prevHash': lastRef.prevHash,
+            'ordinal': lastRef.ordinal,
+          },
+          'salt': salt,
+        },
+      },
+      'lastTxRef': {
+        'prevHash': lastRef.prevHash,
+        'ordinal': lastRef.ordinal,
+      },
+      'isDummy': false,
+      'isTest': false
     };
-
   }
 
-  encodeTx (tx, hashReference) {
+  encodeTx (tx: PostTransaction, hashReference: boolean) {
 
     let parentsTx = '';
 
@@ -172,4 +170,40 @@ export const txEncode = new TxEncode();
 type AddressLastRef ={
   prevHash: string,
   ordinal: number
+}
+
+export type PostTransaction = {
+  edge: {
+    observationEdge: {
+      parents: {
+        hashReference: string,
+        hashType: 'AddressHash',
+      }[],
+      data: {
+        hashType: 'TransactionDataHash',
+        hashReference: string
+      },
+    },
+    signedObservationEdge: {
+      signatureBatch: {
+        hash: string,
+        signatures: string[],
+      },
+    },
+    data: {
+      fee?: number;
+      amount: number,
+      lastTxRef: {
+        prevHash: string,
+        ordinal: number,
+      },
+      salt: number,
+    },
+  },
+  lastTxRef: {
+    prevHash: string,
+    ordinal: number,
+  },
+  isDummy: boolean,
+  isTest: boolean,
 }

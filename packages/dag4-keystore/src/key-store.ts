@@ -26,10 +26,10 @@ const BASE58_ALPHABET = /['123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstu
 
 //NOTE: During recover account from seed phrase, detect ETH accounts - inform user of derivation path and compatibility?  ETH (reuse ETH accounts) or DAG (ledger support)
 const CONSTANTS = {
-  BIP_44_DAG_PATH: `m/44'/${CONSTELLATION_COIN}'/0'/0/`,
-  BIP_44_ETH_PATH: `m/44'/${ETH_WALLET_PATH}'/0'/0/`,            //MetaMask and Trezor
-  //BIP_44_ETH_PATH_LEGACY: `m/44'/${ETH_WALLET_PATH}'/0'/`,             //MEW, Legacy
-  BIP_44_ETH_PATH_LEDGER: `m/44'/${ETH_WALLET_PATH}'/`,                //Ledger Live
+  BIP_44_DAG_PATH: `m/44'/${CONSTELLATION_COIN}'/0'/0`,
+  BIP_44_ETH_PATH: `m/44'/${ETH_WALLET_PATH}'/0'/0`,            //MetaMask and Trezor
+  //BIP_44_ETH_PATH_LEGACY: `m/44'/${ETH_WALLET_PATH}'/0'`,             //MEW, Legacy
+  BIP_44_ETH_PATH_LEDGER: `m/44'/${ETH_WALLET_PATH}'`,                //Ledger Live
   PKCS_PREFIX: '3056301006072a8648ce3d020106052b8104000a034200' //Removed last 2 digits. 04 is part of Public Key.
 }
 
@@ -125,22 +125,22 @@ export class KeyStore {
       const seedBytes = bip39.mnemonicToSeedSync(mnemonic);
 
       const rootKey = hdkey.fromMasterSeed(seedBytes);
-      const hardenedKey = rootKey.derivePath(DERIVATION_PATH_MAP[derivationPath] + 0);
+      const hardenedKey = rootKey.derivePath(DERIVATION_PATH_MAP[derivationPath]).deriveChild(0);
 
       return hardenedKey.getWallet().getPrivateKey().toString("hex")
     }
   }
 
-  getMasterKeyFromMnemonic (mnemonic: string): HDKey {
+  getMasterKeyFromMnemonic (mnemonic: string, derivationPath: DERIVATION_PATH = DERIVATION_PATH.DAG): HDKey {
     if (bip39.validateMnemonic(mnemonic)) {
       const seedBytes = bip39.mnemonicToSeedSync(mnemonic);
       const masterKey = hdkey.fromMasterSeed(seedBytes);
-      return masterKey;
+      return masterKey.derivePath(DERIVATION_PATH_MAP[derivationPath])
     }
   }
 
-  deriveAccountFromMaster (masterKey: hdkey, index: number, derivationPath: DERIVATION_PATH = DERIVATION_PATH.DAG) {
-    const accountKey = masterKey.derivePath(DERIVATION_PATH_MAP[derivationPath] + index);
+  deriveAccountFromMaster (masterKey: hdkey, index: number) {
+    const accountKey = masterKey.deriveChild(index);
     const wallet = accountKey.getWallet();
     return wallet.getPrivateKey().toString("hex")
   }
@@ -194,17 +194,12 @@ export class KeyStore {
     return wallet.getAddressString();
   }
 
-  //publicKeyHex should start with { 02, 03 } compressed or { 04 } uncompressed
-  //  where 02 or 03 represent a compressed point (x only)
-  //  while 04 represents a complete point (x,y)
   getDagAddressFromPublicKey (publicKeyHex: string) {
 
-    const encoding = publicKeyHex.substring(0,2);
-
-    if (encoding !== '04') {
-      if (encoding === '02' || encoding === '03') {
-        throw new Error('Compress public key currently not supported')
-      }
+    //PKCS standard requires a prefix '04' for an uncompressed Public Key
+    // An uncompressed public key consists of a 64-byte number; 2 bytes per number in HEX is 128
+    // Check to see if prefix is missing
+    if (publicKeyHex.length === 128) {
       publicKeyHex = '04' + publicKeyHex;
     }
 
@@ -224,45 +219,23 @@ export class KeyStore {
 
   async generateTransaction (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
 
-    if (toAddress === keyTrio.address) {
-      throw new Error('KeyStore :: An address cannot send a transaction to itself');
-    }
-
-    //Normalize to integer and only preserve 8 decimals of precision
-    amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
-    fee = Math.floor(new BigNumber(fee).multipliedBy(1e8).toNumber());
-
-    if (amount < 1) {
-      throw new Error('KeyStore :: Amount must be greater than 1e-8');
-    }
-
-    if (fee < 0) {
-      throw new Error('KeyStore :: Fee must be greater or equal to zero');
-    }
-
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 
-    const lastRefResponse: any = txEncode.buildTx(amount, toAddress, fromAddress, publicKey, lastRef);
-
-    if (fee > 0) {
-      lastRefResponse.tx.edge.data.fee = fee;
+    if (!privateKey) {
+      throw new Error('No private key set');
     }
 
-    const hashReference = txEncode.encodeTx(lastRefResponse.tx, true);
+    if (!publicKey) {
+      throw new Error('No public key set');
+    }
 
-    lastRefResponse.tx.edge.observationEdge.data.hashReference = hashReference;
-
-    const encodedTx = txEncode.encodeTx(lastRefResponse.tx, false);
-
-    const serializedTx = txEncode.kryoSerialize(encodedTx);
-
-    const hash = await this.sha256(Buffer.from(serializedTx, 'hex'));
-
-    lastRefResponse.tx.edge.signedObservationEdge.signatureBatch.hash = hash;
+    const { tx, hash } = this.prepareTx(amount, toAddress, fromAddress, lastRef, fee);
 
     const signature = this.sign(privateKey, hash);
 
-    const success = this.verify(publicKey, hash, signature);
+    const uncompressedPublicKey = publicKey.length === 128 ? '04' + publicKey : publicKey;
+
+    const success = this.verify(uncompressedPublicKey, hash, signature);
 
     if (!success) {
       throw new Error('Sign-Verify failed');
@@ -271,10 +244,49 @@ export class KeyStore {
     const signatureElt: any = {};
     signatureElt.signature = signature;
     signatureElt.id = {};
-    signatureElt.id.hex = publicKey.substring(2); //Remove 04 prefix
-    lastRefResponse.tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
+    signatureElt.id.hex = uncompressedPublicKey.substring(2); //Remove 04 prefix
+    tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
 
-    return lastRefResponse.tx;
+    return tx;
+  }
+
+  prepareTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef, fee = 0) {
+
+    if (toAddress === fromAddress) {
+      throw new Error('KeyStore :: An address cannot send a transaction to itself');
+    }
+
+    //Normalize to integer and only preserve 8 decimals of precision
+    amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
+    fee = Math.floor(new BigNumber(fee).multipliedBy(1e8).toNumber());
+
+    if (amount < 0) {
+      throw new Error('KeyStore :: Send amount must be greater than 1e-8');
+    }
+
+    if (fee < 0) {
+      throw new Error('KeyStore :: Send fee must be greater or equal to zero');
+    }
+
+    const tx = txEncode.buildTx(amount, toAddress, fromAddress, lastRef);
+
+    if (fee > 0) {
+      tx.edge.data.fee = fee;
+    }
+
+    const hashReference = txEncode.encodeTx(tx, true);
+
+    tx.edge.observationEdge.data.hashReference = hashReference;
+
+    const encodedTx = txEncode.encodeTx(tx, false);
+
+    const serializedTx = txEncode.kryoSerialize(encodedTx);
+
+    const hash = this.sha256(Buffer.from(serializedTx, 'hex'));
+
+    tx.edge.signedObservationEdge.signatureBatch.hash = hash;
+
+    return { tx, hash, rle: encodedTx };
   }
 
 }

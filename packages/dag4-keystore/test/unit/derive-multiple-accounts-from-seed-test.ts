@@ -1,5 +1,6 @@
 import {expect} from 'chai';
-import {keyStore} from '../../dist';
+import {keyStore} from '../../src/key-store';
+import Wallet from 'ethereumjs-wallet';
 
 const phrase = "solution rookie cake shine hand attack claw awful harsh level case vocal";
 const testExpect = {
@@ -20,11 +21,18 @@ describe('derive multiple accounts from seed', () => {
     for (let i=0; i < 10; i++) {
       const key = keyStore.deriveAccountFromMaster(hdkey, i);
 
+      const pKey = keyStore.getPublicKeyFromPrivate(key);
+
+      const pKey2 = new Wallet(Buffer.from(key, 'hex')).getPublicKey().toString('hex')
+
       const dagAddress = keyStore.getDagAddressFromPrivateKey(key);
+
+      const dagAddress2 = keyStore.getDagAddressFromPublicKey(pKey2);
 
       const ethAddress = keyStore.getEthAddressFromPrivateKey(key);
 
-      //console.log(i, ':', key, dagAddress, ethAddress);
+      console.log(i, ':', key, dagAddress, dagAddress2, ethAddress);
+      console.log('   ', pKey, pKey2);
 
       results.push({key, dagAddress, ethAddress})
     }

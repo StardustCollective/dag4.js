@@ -137,6 +137,7 @@ export interface V3Keystore<T=KDFParamsPrivateKey> {
     mac: string;
   };
   id: string;
+  address?: string;
   version: number;
 }
 

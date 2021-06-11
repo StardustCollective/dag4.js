@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {keyStore} from '../../dist';
+import {keyStore} from '../../src';
 
 describe('V3 Keystore', () => {
 

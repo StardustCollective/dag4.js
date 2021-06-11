@@ -1,6 +1,7 @@
 import {expect} from 'chai';
 import {keyStore} from '../../src/key-store';
 import {BitHash} from '../../src/bip32/bit-hash';
+import * as ethUtil from 'ethereumjs-util';
 
 const testData = require('../resources/test-data.json');
 
@@ -102,6 +103,10 @@ describe('Key Store', () => {
   it('ETH address from Public', () => {
 
     const result = ethFromPublicKey(testData.PUBLIC_KEY);
+    const result2 = getAddressFromPublicKey(testData.PUBLIC_KEY.slice(2));
+
+    console.log(result, result2);
+
     expect(result).to.equal(testData.ETH_ADDRESS);
 
   });
@@ -163,3 +168,7 @@ function ethFromPublicKey (publicKey) {
   return address;
 }
 
+function getAddressFromPublicKey (publicKey) {
+  const address = '0x' + ethUtil.publicToAddress(Buffer.from(publicKey, 'hex')).toString('hex');
+  return ethUtil.toChecksumAddress(address);
+}
