@@ -18,6 +18,7 @@
     "release:preflight": "npm pack ./dist --dry-run"
   },
   "dependencies": {
+    "@stardust-collective/dag4": "^1.1.7",
     "bignumber.js": "^9.0.1"
   }
 }

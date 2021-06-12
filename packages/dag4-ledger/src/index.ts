@@ -1,112 +1,94 @@
 // max length in bytes.
-const MAX_SIGNED_TX_LEN = 512;
+import {dag4} from '@stardust-collective/dag4';
+import {DagAccount} from '@stardust-collective/dag4-wallet';
 
-const debug = false;
+const MAX_SIGNED_TX_LEN = 512;
 
 const DEVICE_ID = '8004000000';
 
-////////////////////
-// Interfaces
-////////////////////
-
-interface Message {
-  enabled: boolean;
-  error: boolean;
-  message: String;
+export type LedgerAccount = {
+  publicKey: string;
+  address: string;
+  balance: string;
 }
 
-////////////////////
-// Class
-////////////////////
+interface LedgerTransport {
+  list(): Promise<string[]>;
+  open (string: string): Promise<any>;
+  isSupported(): Promise<boolean>;
+}
 
-export class LedgerLink {
+export class LedgerBridge {
 
-  ////////////////////
-  // Properties
-  ////////////////////
+  constructor(private transport: LedgerTransport) {}
 
-  transport: any;
+  // async buildTx (publicKey: string, fromAddress: string, toAddress: string) {
+  //
+  //   const lastRef = await dag4.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(fromAddress);
+  //
+  //   const { tx, rle } = dag4.keyStore.prepareTx(1e-7, toAddress, fromAddress, publicKey, lastRef, 0);
+  //
+  //   const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
+  //
+  //   console.log(rle);
+  //   console.log(hash);
+  //
+  //   const hashReference = txHashEncodeUtil.encodeTxHash(tx, true);
+  //   tx.edge.observationEdge.data.hashReference = hashReference;
+  //
+  //   console.log('amount', tx.edge.data.amount);
+  //
+  //   const encodedTx = txTranscodeUtil.encodeTx(tx, false, false);
+  //
+  //   console.log(hashReference);
+  //   console.log(encodedTx);
+  //
+  //   this.signTransaction(publicKey, hashReference, encodedTx);
+  // }
 
-  ////////////////////
-  // Constructor
-  ////////////////////
+  /**
+   * Returns a signed transaction ready to be posted to the network.
+   */
+  async signTransaction(publicKey: string, bip44Index: number, hash: string, rle: string) {
+    const results = await this.sign(rle, bip44Index);
 
-  constructor (transport: any) {
-    this.transport = transport;
+    console.log('signTransaction\n' + results.signature);
+
+    const success = dag4.keyStore.verify(publicKey, hash, results.signature);
+
+
+    console.log('verify: ', success);
   }
 
-  ////////////////////
-  // Private
-  ////////////////////
+  /**
+   * Takes a signed transaction and posts it to the network.
+   */
+  postTransaction() {}
 
-  private createBipPathFromAccount (index: number) {
-    console.log('createBipPathFromAccount', index);
+  public async getAccountInfoForPublicKeys (ledgerAccounts: { publicKey: string}[]) {
 
-    const bip44Path =
-      '8000002C' +
-      '80000471' +
-      '80000000' +
-      '00000000' +
-      `0000000${index}`;
-
-    return bip44Path;
-
-    // return `8000002C80000471${account}0000000000000000`;
-  }
-
-
-  private async getLedgerInfo () {
-    const supported = await this.transport.isSupported();
-    if (!supported) {
-      throw new Error('Your computer does not support the ledger device.');
-    }
-    const paths: string[] = await this.transport.list();
-    if (paths.length === 0) {
-      throw new Error('No USB device found.');
+    if (ledgerAccounts.length > 0) {
+      let responseArray = [];
+      for (let i = 0; i < ledgerAccounts.length; i++) {
+        const publicKey = ledgerAccounts[i].publicKey;
+        dag4.account.loginPublicKey(publicKey);
+        const address = dag4.account.address;
+        console.log('public', publicKey, address);
+        const balance = (await dag4.account.getBalance() || 0);
+        const response = {
+          address,
+          publicKey,
+          balance: balance
+        };
+        responseArray.push(response);
+      }
+      return responseArray;
     } else {
-      return this.transport.open(paths[0]);
+      throw new Error('No accounts found');
     }
   }
 
-  private sendExchangeMessage (bip44Path: String, device: any): Promise<LedgerMessageResponse> {
-    return  new Promise((resolve, reject) => {
-      const message = Buffer.from(DEVICE_ID + bip44Path, 'hex');
-      device.exchange(message).then((response: Buffer) => {
-        const responseStr = response.toString('hex').toUpperCase();
-        let success = false;
-        let message = '';
-        let publicKey = '';
-        if (responseStr.endsWith('9000')) {
-          success = true;
-          message = responseStr;
-          publicKey = responseStr.substring(0, 130);
-        } else {
-          if (responseStr == '6E01') {
-            message = '6E01 App Not Open On Ledger Device';
-            throw new Error(message);
-          } else {
-            message = responseStr + ' Unknown Error';
-          }
-        }
-        resolve({
-          success: success,
-          message: message,
-          publicKey: publicKey,
-        });
-      }).catch((error: Error) => {
-        reject({
-          success: false,
-          message: error.message,
-        });
-      });
-    })
-  }
-
-  ///////////////////////
-  // Public Methods
-  ///////////////////////
-
-  public async getPublicKeys (numberOfAccounts: number, progressUpdateCallback?: (progress: number) => void) {
+  public async getPublicKeys (numberOfAccounts = 8, progressUpdateCallback?: (progress: number) => void) {
     if (!this.transport) {
       throw new Error('Error: A transport must be set via the constructor before calling this method');
     }
@@ -137,19 +119,16 @@ export class LedgerLink {
   }
 
 
-  async sign (rle: string) {
+  private async sign (rle: string, bip44Index: number) {
 
-    const bip44Path =
-      '8000002C' +
-      '80000471' +
-      '80000000' +
-      '00000000' +
-      '00000000';
+    const bip44Path = this.createBipPathFromAccount(bip44Index);
+
+    console.log('bip44Path', bip44Path);
 
     const transactionByteLength = Math.ceil(rle.length / 2);
 
     if (transactionByteLength > MAX_SIGNED_TX_LEN) {
-        throw new Error(`Transaction length of ${transactionByteLength} bytes exceeds max length of ${MAX_SIGNED_TX_LEN} bytes.`)
+      throw new Error(`Transaction length of ${transactionByteLength} bytes exceeds max length of ${MAX_SIGNED_TX_LEN} bytes.`)
     }
 
     const ledgerMessage = rle + bip44Path;
@@ -198,6 +177,72 @@ export class LedgerLink {
     };
   }
 
+  private createBipPathFromAccount (index: number) {
+
+    const childIndex = index.toString(16).padStart(8,'0');
+
+    console.log('createBipPathFromAccount', index, childIndex);
+
+    //`m/44'/1137'/0'/0/${index}`
+
+    const bip44Path =
+      '8000002C' +
+      '80000471' +
+      '80000000' +
+      '00000000' +
+      childIndex
+
+    return bip44Path;
+  }
+
+
+  private async getLedgerInfo () {
+    const supported = await this.transport.isSupported();
+    if (!supported) {
+      throw new Error('Your computer does not support the ledger device.');
+    }
+    const paths = await this.transport.list();
+    if (paths.length === 0) {
+      throw new Error('No USB device found.');
+    } else {
+      return this.transport.open(paths[0]);
+    }
+  }
+
+  private sendExchangeMessage (bip44Path: String, device: any): Promise<LedgerMessageResponse> {
+    return  new Promise((resolve, reject) => {
+      const message = Buffer.from(DEVICE_ID + bip44Path, 'hex');
+      device.exchange(message).then((response: Buffer) => {
+        const responseStr = response.toString('hex').toUpperCase();
+        let success = false;
+        let message = '';
+        let publicKey = '';
+        if (responseStr.endsWith('9000')) {
+          success = true;
+          message = responseStr;
+          publicKey = responseStr.substring(0, 130);
+        } else {
+          if (responseStr == '6E01') {
+            message = '6E01 App Not Open On Ledger Device';
+            throw new Error(message);
+          } else {
+            message = responseStr + ' Unknown Error';
+          }
+        }
+        resolve({
+          success: success,
+          message: message,
+          publicKey: publicKey,
+        });
+      }).catch((error: Error) => {
+        reject({
+          success: false,
+          message: error.message,
+        });
+      });
+    })
+  }
+
   private splitMessageIntoChunks (ledgerMessage: string) {
     const messages = [];
     const bufferSize = 255 * 2;
@@ -231,23 +276,6 @@ export class LedgerLink {
   }
 
   private decodeSignature (response: string) {
-    /**
-     * https://stackoverflow.com/questions/25829939/specification-defining-ecdsa-signature-data
-     * <br>
-     * the signature is TLV encoded.
-     * the first byte is 30, the "signature" type<br>
-     * the second byte is the length (always 44)<br>
-     * the third byte is 02, the "number: type<br>
-     * the fourth byte is the length of R (always 20)<br>
-     * the byte after the encoded number is 02, the "number: type<br>
-     * the byte after is the length of S (always 20)<br>
-     * <p>
-     * eg:
-     * 304402200262675396fbcc768bf505c9dc05728fd98fd977810c547d1a10c7dd58d18802022069c9c4a38ee95b4f394e31a3dd6a63054f8265ff9fd2baf68a9c4c3aa8c5d47e9000
-     * is
-     * 30LL0220RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR0220SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-     */
-
     const rLenHex = response.substring(6, 8);
     const rLen = parseInt(rLenHex, 16) * 2;
     const rStart = 8;
