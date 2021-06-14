@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-core/-/dag4-core-1.0.5.tgz#af167dd7997105eec93a1ce30641f1b341e33b1f"
   integrity sha512-fjtHmVQXnATH6R136yasGbrKJPDRfuAw8Uh8mHJVyU0kIAfBHudYDb6W23n+eorP86aycBMQXEsOk/kSX5PdAg==
 
-"@stardust-collective/dag4-keystore@^1.0.7":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.7.tgz#5ee14e131d16fe6fb26f42818d085c292267f327"
-  integrity sha512-dSUmgvIE//MPQN0bwws+PmcMosZOlt4pZiWF5brhcBtZd3noHKuYZ+yKB9FqeA06yThzYExjRp4ZdJIh/aynpg==
+"@stardust-collective/dag4-keystore@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.8.tgz#38a2fe054f6dc94e84a20ca350ee3bcd74b2cff3"
+  integrity sha512-DdYZJSQmMY+0nVJdIRWhRaKRaaC39H/vAcg4NbcdkPmme0HXyjsaFKnyywZK2K2bYg2CGq27ViFCjxT2eWVWKQ==
   dependencies:
     bignumber.js "^9.0.1"
     bip39 "^3.0.2"

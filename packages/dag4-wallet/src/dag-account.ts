@@ -1,4 +1,4 @@
-import {keyStore, KeyTrio} from '@stardust-collective/dag4-keystore';
+import {keyStore, KeyTrio, PostTransaction} from '@stardust-collective/dag4-keystore';
 import {globalDagNetwork} from '@stardust-collective/dag4-network';
 
 import {DagNetwork, NetworkInfo} from '@stardust-collective/dag4-network';
@@ -106,11 +106,11 @@ export class DagAccount {
     return 1 / 1e8;
   }
 
-  async generateSignedTransaction (toAddress: string, amount: number, fee = 0) {
+  async generateSignedTransaction (toAddress: string, amount: number, fee = 0): Promise<PostTransaction>  {
 
     const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
 
-    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef);
+    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
 
     return tx;
   }
