@@ -1,5 +1,5 @@
 // max length in bytes.
-import {dag} from '@stardust-collective/dag4';
+import {dag4} from '@stardust-collective/dag4';
 import {DagAccount} from '@stardust-collective/dag4-wallet';
 
 const MAX_SIGNED_TX_LEN = 512;
@@ -24,9 +24,9 @@ export class LedgerBridge {
 
   // async buildTx (publicKey: string, fromAddress: string, toAddress: string) {
   //
-  //   const lastRef = await dag.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(fromAddress);
+  //   const lastRef = await dag4.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(fromAddress);
   //
-  //   const { tx, rle } = dag.keyStore.prepareTx(1e-7, toAddress, fromAddress, publicKey, lastRef, 0);
+  //   const { tx, rle } = dag4.keyStore.prepareTx(1e-7, toAddress, fromAddress, publicKey, lastRef, 0);
   //
   //   const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
   //
@@ -54,7 +54,7 @@ export class LedgerBridge {
 
     console.log('signTransaction\n' + results.signature);
 
-    const success = dag.keyStore.verify(publicKey, hash, results.signature);
+    const success = dag4.keyStore.verify(publicKey, hash, results.signature);
 
 
     console.log('verify: ', success);
@@ -71,10 +71,10 @@ export class LedgerBridge {
       let responseArray = [];
       for (let i = 0; i < ledgerAccounts.length; i++) {
         const publicKey = ledgerAccounts[i].publicKey;
-        dag.account.loginPublicKey(publicKey);
-        const address = dag.account.address;
+        dag4.account.loginPublicKey(publicKey);
+        const address = dag4.account.address;
         console.log('public', publicKey, address);
-        const balance = (await dag.account.getBalance() || 0);
+        const balance = (await dag4.account.getBalance() || 0);
         const response = {
           address,
           publicKey,
