@@ -36,11 +36,6 @@ export class XChainEthClient extends Client {
     return ethers.utils.isAddress(address);
   }
 
-  getTokenInfo (tokenContractAddress: string, chainId = 1) {
-    const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
-    return tokenContractService.getTokenInfo(infuraProvider, tokenContractAddress);
-  }
-
   getTransactionCount(address: string, chainId = 1) {
     const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
 
@@ -58,6 +53,33 @@ export class XChainEthClient extends Client {
     const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
 
     return infuraProvider.waitForTransaction(hash);
+  }
+
+  async getTokenInfo (address: string, chainId = 1) {
+    if (this.isValidEthereumAddress(address)) {
+      const infuraProvider = new InfuraProvider(chainId, this.infuraProjectId);
+      try {
+        const result = await tokenContractService.getTokenInfo(infuraProvider, address);
+        console.log('getTokenInfo');
+        return result;
+      }
+      catch(e) {
+        console.log('getTokenInfo.ERROR -', e.message);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  async isContractAddress(address: string, chainId = 1) {
+    if (this.isValidEthereumAddress(address)) {
+      const provider = new InfuraProvider(chainId, this.infuraProjectId);
+      const code = await provider.getCode(address);
+      console.log('isContractAddress');
+      console.log(code);
+      return code !== '0x';
+    }
+    return false;
   }
 
 }

@@ -1,3 +1,4 @@
+const {txEncode} = require("../../dist/cjs/tx-encode");
 
 
 const dag = require("../../dist/cjs/key-store");
@@ -68,4 +69,9 @@ async function testSameAddress () {
 
 }
 
-testGenerateTx()
+async function testKryo () {
+    const rle = "240DAG3UTHtK5949n4tTySopeihy5iWMdaxDQQWA3WV40DAG1XspY2W52DZU1hExreJck9rdTFtAjrKjummPq75f5e1006476e6b3243f766a5f650c2bec2d3d09b3b9da017a3a6a78ec686c4e25c80497563212118e28b74fd";
+    txEncode.kryoSerialize(rle);
+}
+
+testKryo()

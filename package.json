@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4",
-  "version": "1.1.6",
+  "version": "1.1.9",
   "description": "Constellation HyperGraph Network JavaScript API",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -29,9 +29,9 @@
   },
   "dependencies": {
     "@stardust-collective/dag4-core": "^1.0.5",
-    "@stardust-collective/dag4-keystore": "^1.0.7",
+    "@stardust-collective/dag4-keystore": "^1.0.8",
     "@stardust-collective/dag4-network": "^1.0.8",
-    "@stardust-collective/dag4-wallet": "^1.0.15"
+    "@stardust-collective/dag4-wallet": "^1.0.18"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",

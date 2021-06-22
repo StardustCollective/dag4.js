@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-xchain-ethereum",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Cross chain communication with Ethereum",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -27,9 +27,10 @@
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "erc-20-abi": "^1.0.0",
+    "single-call-balance-checker-abi": "^1.0.0",
     "ethers": "^5.0.32",
     "rxjs": "^7.0.0",
-    "single-call-balance-checker-abi": "^1.0.0"
+
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",

@@ -1,6 +1,6 @@
 import {ethers} from 'ethers';
 import {tokenContractService} from './token-contract-service';
-import {fromEvent} from 'rxjs';
+import {fromEvent, Subscription} from 'rxjs';
 import {debounceTime, distinctUntilChanged} from 'rxjs/operators';
 
 export class AccountTracker {
@@ -13,6 +13,7 @@ export class AccountTracker {
   private callback: (e: number, t:TokenBalances) => void;
   private ethAddress: string;
   private debounceTimeSec: number;
+  private subscription: Subscription;
 
   constructor ({infuraCreds}) {
     if (infuraCreds.projectId) {
@@ -46,12 +47,12 @@ export class AccountTracker {
 
   private start () {
     if (this.provider) {
-      this.provider.off('block');
+      this.subscription.unsubscribe();
     }
 
     this.provider = new ethers.providers.InfuraProvider(this.chainId, this.infuraProjectId);
 
-    fromEvent(this.provider, 'block')
+    this.subscription = fromEvent(this.provider, 'block')
       .pipe(
         // @ts-ignore
         debounceTime(this.debounceTimeSec * 1000),
@@ -74,12 +75,15 @@ export class AccountTracker {
   }
 
   private stop () {
-    this.provider.off('block');
+    // this.provider.off('block');
+    this.subscription.unsubscribe();
+    this.subscription = null;
     this.isRunning = false;
     this.provider = null;
   }
 
   private async getTokenBalances () {
+    // if (!this.provider) return;
 
     const ethBalance = await this.provider.getBalance(this.ethAddress);
 
