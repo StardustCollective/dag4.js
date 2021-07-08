@@ -1,6 +1,7 @@
 // max length in bytes.
 import {dag4} from '@stardust-collective/dag4';
-import {DagAccount} from '@stardust-collective/dag4-wallet';
+import * as txHashEncodeUtil from './lib/tx-hash-encode'
+import * as txTranscodeUtil from './lib/tx-transcode'
 
 const MAX_SIGNED_TX_LEN = 512;
 
@@ -22,29 +23,37 @@ export class LedgerBridge {
 
   constructor(private transport: LedgerTransport) {}
 
-  // async buildTx (publicKey: string, fromAddress: string, toAddress: string) {
-  //
-  //   const lastRef = await dag4.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(fromAddress);
-  //
-  //   const { tx, rle } = dag4.keyStore.prepareTx(1e-7, toAddress, fromAddress, publicKey, lastRef, 0);
-  //
-  //   const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
-  //
-  //   console.log(rle);
-  //   console.log(hash);
-  //
-  //   const hashReference = txHashEncodeUtil.encodeTxHash(tx, true);
-  //   tx.edge.observationEdge.data.hashReference = hashReference;
-  //
-  //   console.log('amount', tx.edge.data.amount);
-  //
-  //   const encodedTx = txTranscodeUtil.encodeTx(tx, false, false);
-  //
-  //   console.log(hashReference);
-  //   console.log(encodedTx);
-  //
-  //   this.signTransaction(publicKey, hashReference, encodedTx);
-  // }
+  async buildTx (amount: number, publicKey: string, bip44Index: number, fromAddress: string, toAddress: string) {
+
+    const lastRef = await dag4.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(fromAddress);
+
+    const { tx, rle } = dag4.keyStore.prepareTx(amount, toAddress, fromAddress, lastRef, 0);
+
+    // const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
+
+    // console.log(rle);
+    // console.log(hash);
+
+    const hashReference = txHashEncodeUtil.encodeTxHash(tx, true);
+    tx.edge.observationEdge.data.hashReference = hashReference;
+
+    console.log('amount', tx.edge.data.amount);
+
+    const encodedTx = txTranscodeUtil.encodeTx(tx, false, false);
+
+    // console.log(hashReference);
+    // console.log(encodedTx);
+
+    const signature = await this.signTransaction(publicKey, bip44Index, hashReference, encodedTx);
+
+    const signatureElt: any = {};
+    signatureElt.signature = signature;
+    signatureElt.id = {};
+    signatureElt.id.hex = publicKey.substring(2); //Remove 04 prefix
+    tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
+
+    return tx;
+  }
 
   /**
    * Returns a signed transaction ready to be posted to the network.
@@ -56,8 +65,9 @@ export class LedgerBridge {
 
     const success = dag4.keyStore.verify(publicKey, hash, results.signature);
 
-
     console.log('verify: ', success);
+
+    return results.signature;
   }
 
   /**
@@ -88,7 +98,7 @@ export class LedgerBridge {
     }
   }
 
-  public async getPublicKeys (numberOfAccounts = 8, progressUpdateCallback?: (progress: number) => void) {
+  public async getPublicKeys (startIndex = 0, numberOfAccounts = 8, progressUpdateCallback?: (progress: number) => void) {
     if (!this.transport) {
       throw new Error('Error: A transport must be set via the constructor before calling this method');
     }
@@ -97,11 +107,12 @@ export class LedgerBridge {
     }
 
     const device = await this.getLedgerInfo();
+    const maxIndex = startIndex + numberOfAccounts;
 
     let results = [];
 
     // Get the public key for each account
-    for (let i = 0; i < numberOfAccounts; i++) {
+    for (let i = startIndex; i < maxIndex; i++) {
 
       const bip44Path = this.createBipPathFromAccount(i);
       const result = await this.sendExchangeMessage(bip44Path, device)
@@ -109,11 +120,9 @@ export class LedgerBridge {
       results.push(result);
 
       if(progressUpdateCallback) {
-        progressUpdateCallback((i+1) / numberOfAccounts)
+        progressUpdateCallback((i - startIndex + 1) / numberOfAccounts)
       }
     }
-
-    device.close();
 
     return results;
   }
@@ -123,7 +132,7 @@ export class LedgerBridge {
 
     const bip44Path = this.createBipPathFromAccount(bip44Index);
 
-    console.log('bip44Path', bip44Path);
+    //console.log('bip44Path', bip44Path);
 
     const transactionByteLength = Math.ceil(rle.length / 2);
 
@@ -138,17 +147,16 @@ export class LedgerBridge {
     const device = await this.getLedgerInfo();
 
     let lastResponse = undefined;
-    console.log('splitMessageIntoChunks', messages);
+    // console.log('splitMessageIntoChunks', messages);
     for (let ix = 0; ix < messages.length; ix++) {
       const request = messages[ix];
       const message = Buffer.from(request, 'hex');
       const response = await device.exchange(message);
       const responseStr = response.toString('hex').toUpperCase();
-      console.log('exchange', 'request', request);
-      console.log('exchange', 'response', responseStr);
+      // console.log('exchange', 'request', request);
+      // console.log('exchange', 'response', responseStr);
       lastResponse = responseStr;
     }
-    device.close();
 
     let signature = '';
     let success = false;
@@ -181,7 +189,7 @@ export class LedgerBridge {
 
     const childIndex = index.toString(16).padStart(8,'0');
 
-    console.log('createBipPathFromAccount', index, childIndex);
+    // console.log('createBipPathFromAccount', index, childIndex);
 
     //`m/44'/1137'/0'/0/${index}`
 

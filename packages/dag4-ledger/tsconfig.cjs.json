@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist/cjs",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowJs": true
   },
   "include": [
     "src"

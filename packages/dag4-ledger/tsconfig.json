@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "src",
     "baseUrl": "src",
-    "outDir": "dist/esm"
+    "outDir": "dist/esm",
+    "allowJs": true
   },
   "include": [
     "src"
