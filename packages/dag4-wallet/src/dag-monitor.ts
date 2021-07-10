@@ -35,7 +35,7 @@ export class DagMonitor {
 
     const key =  `network-${globalDagNetwork.getNetwork().id}-mempool`;
 
-    const payload: any[] = this.cacheUtils.get(key) || [];
+    const payload: PendingTx[] = this.cacheUtils.get(key) || [];
 
     let tx = value as PendingTx;
 
@@ -45,7 +45,7 @@ export class DagMonitor {
 
     if (!payload.some(p => p.hash === tx.hash)) {
 
-      payload.push(value);
+      payload.push(tx);
 
       this.cacheUtils.set(key, payload);
 
@@ -61,7 +61,7 @@ export class DagMonitor {
 
     const txs: PendingTx[]  = this.cacheUtils.get(key) || [];
 
-    return txs.filter(tx => !this.walletParent.address || tx.receiver === this.walletParent.address || tx.sender === this.walletParent.address);
+    return txs.filter(tx => !this.walletParent.address || !tx.receiver || tx.receiver === this.walletParent.address || tx.sender === this.walletParent.address);
   }
 
   setToMemPoolMonitor(pool: PendingTx[]) {
