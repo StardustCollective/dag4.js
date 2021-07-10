@@ -29,22 +29,25 @@ export class LedgerBridge {
 
     const { tx, rle } = dag4.keyStore.prepareTx(amount, toAddress, fromAddress, lastRef, 0);
 
-    // const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
+    const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
 
-    // console.log(rle);
-    // console.log(hash);
+    //console.log('rle', rle);
+    //console.log('hash', hash);
 
     const hashReference = txHashEncodeUtil.encodeTxHash(tx, true);
-    tx.edge.observationEdge.data.hashReference = hashReference;
+    //tx.edge.observationEdge.data.hashReference = hashReference;
 
-    console.log('amount', tx.edge.data.amount);
+    //console.log('hashReference');
+    //console.log(tx.edge.observationEdge.data.hashReference);
+    //console.log(hashReference);
 
-    const encodedTx = txTranscodeUtil.encodeTx(tx, false, false);
+    //console.log('amount', tx.edge.data.amount);
 
-    // console.log(hashReference);
-    // console.log(encodedTx);
+    const ledgerEncodedTx = txTranscodeUtil.encodeTx(tx, false, false);
 
-    const signature = await this.signTransaction(publicKey, bip44Index, hashReference, encodedTx);
+    //console.log(ledgerEncodedTx);
+
+    const signature = await this.signTransaction(publicKey, bip44Index, hash, ledgerEncodedTx);
 
     const signatureElt: any = {};
     signatureElt.signature = signature;
@@ -58,14 +61,14 @@ export class LedgerBridge {
   /**
    * Returns a signed transaction ready to be posted to the network.
    */
-  async signTransaction(publicKey: string, bip44Index: number, hash: string, rle: string) {
-    const results = await this.sign(rle, bip44Index);
+  async signTransaction(publicKey: string, bip44Index: number, hash: string, ledgerEncodedTx: string) {
+    const results = await this.sign(ledgerEncodedTx, bip44Index);
 
-    console.log('signTransaction\n' + results.signature);
+    //console.log('signTransaction\n' + results.signature);
 
-    const success = dag4.keyStore.verify(publicKey, hash, results.signature);
+    //const success = dag4.keyStore.verify(publicKey, hash, results.signature);
 
-    console.log('verify: ', success);
+    //console.log('verify: ', success);
 
     return results.signature;
   }
@@ -128,19 +131,19 @@ export class LedgerBridge {
   }
 
 
-  private async sign (rle: string, bip44Index: number) {
+  private async sign (ledgerEncodedTx: string, bip44Index: number) {
 
     const bip44Path = this.createBipPathFromAccount(bip44Index);
 
     //console.log('bip44Path', bip44Path);
 
-    const transactionByteLength = Math.ceil(rle.length / 2);
+    const transactionByteLength = Math.ceil(ledgerEncodedTx.length / 2);
 
     if (transactionByteLength > MAX_SIGNED_TX_LEN) {
       throw new Error(`Transaction length of ${transactionByteLength} bytes exceeds max length of ${MAX_SIGNED_TX_LEN} bytes.`)
     }
 
-    const ledgerMessage = rle + bip44Path;
+    const ledgerMessage = ledgerEncodedTx + bip44Path;
 
     const messages = this.splitMessageIntoChunks(ledgerMessage);
 
