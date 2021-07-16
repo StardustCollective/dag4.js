@@ -29,8 +29,7 @@
     "erc-20-abi": "^1.0.0",
     "single-call-balance-checker-abi": "^1.0.0",
     "ethers": "^5.0.32",
-    "rxjs": "^7.0.0",
-
+    "rxjs": "^7.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",

@@ -89,14 +89,14 @@ export class AccountTracker {
 
     const ethBalanceNum = Number(ethers.utils.formatUnits(ethBalance, 18)) || 0;
 
-    const tokenAddresses = this.accounts.map(t => t.address);
+    const tokenAddresses = this.accounts.map(t => t.contractAddress);
 
     const rawTokenBalances = await tokenContractService.getAddressBalances(this.provider, this.ethAddress, tokenAddresses, this.chainId);
 
     const tokenBalances: TokenBalances = { }
 
     this.accounts.forEach(t => {
-      tokenBalances[t.address] = Number(ethers.utils.formatUnits(rawTokenBalances[t.address], t.decimals)) || 0;
+      tokenBalances[t.contractAddress] = Number(ethers.utils.formatUnits(rawTokenBalances[t.contractAddress], t.decimals)) || 0;
     })
 
     this.callback(ethBalanceNum, tokenBalances);
@@ -108,7 +108,7 @@ type TokenBalances = {
 }
 
 type TokenInfo = {
-  "address": string,
+  "contractAddress": string,
   "decimals": number,
   "balance"?: string
 }
