@@ -307,12 +307,12 @@ export class KeyringManager extends SafeEventEmitter  {
       const wallet = chainWallet = new MultiChainWallet();
       wallet.deserialize(wData);
     }
-    else if (wData.type === KeyringWalletType.SimpleAccountWallet) {
+    else if (wData.type === KeyringWalletType.SingleAccountWallet) {
       const wallet = chainWallet = new SingleAccountWallet();
       wallet.deserialize(wData);
     }
     else {
-      throw new Error('Unknown Wallet type - ' + wData.type + ', support types are [' + KeyringWalletType.MultiChainWallet +',' + KeyringWalletType.SimpleAccountWallet + ']');
+      throw new Error('Unknown Wallet type - ' + wData.type + ', support types are [' + KeyringWalletType.MultiChainWallet +',' + KeyringWalletType.SingleAccountWallet + ']');
     }
 
     this.wallets.push(chainWallet)

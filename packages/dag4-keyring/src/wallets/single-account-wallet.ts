@@ -6,7 +6,7 @@ let SID = 0;
 
 export class SingleAccountWallet implements IKeyringWallet {
 
-  readonly type = KeyringWalletType.SimpleAccountWallet;
+  readonly type = KeyringWalletType.SingleAccountWallet;
   readonly id = this.type + (++SID);
   readonly supportedAssets = [];
 
@@ -15,17 +15,7 @@ export class SingleAccountWallet implements IKeyringWallet {
   private label: string;
 
   create (network: KeyringNetwork, privateKey: string, label: string) {
-    this.label = label;
-    this.network = network;
-    this.keyring = SimpleKeyring.createForNetwork(network, privateKey);
-
-    if (network === KeyringNetwork.Ethereum) {
-      this.supportedAssets.push(KeyringAssetType.ETH);
-      this.supportedAssets.push(KeyringAssetType.ERC20);
-    }
-    else if (network === KeyringNetwork.Constellation) {
-      this.supportedAssets.push(KeyringAssetType.DAG);
-    }
+    this.deserialize({ type: this.type, label, network, secret: privateKey });
   }
 
   setLabel(val: string) {
@@ -58,8 +48,20 @@ export class SingleAccountWallet implements IKeyringWallet {
   }
 
   deserialize (data: KeyringWalletSerialized) {
+
+    this.label = data.label;
+    this.network = data.network;
     this.keyring = new SimpleKeyring();
+
     this.keyring.deserialize({network: data.network, accounts: [{ privateKey: data.secret }]});
+
+    if (this.network === KeyringNetwork.Ethereum) {
+      this.supportedAssets.push(KeyringAssetType.ETH);
+      this.supportedAssets.push(KeyringAssetType.ERC20);
+    }
+    else if (this.network === KeyringNetwork.Constellation) {
+      this.supportedAssets.push(KeyringAssetType.DAG);
+    }
   }
 
   addKeyring (hdPath: string) {

@@ -13,7 +13,7 @@
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "build-cjs": "tsc -p tsconfig.cjs.json",
     "rollup": "rollup -c ../../scripts/config/rollup.config.js",
-    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/**/hd*-tests.ts",
+    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/**/en*-tests.ts",
     "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",

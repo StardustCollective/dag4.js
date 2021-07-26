@@ -6,9 +6,10 @@ export enum KeyringNetwork {
 }
 
 export enum KeyringWalletType {
-  TempChainWallet = 'TEMP',
   MultiChainWallet = 'MCW',
-  SimpleAccountWallet = 'SAW'
+  CrossChainWallet = 'CCW',
+  MultiAccountWallet = 'MAW',
+  SingleAccountWallet = 'SAW'
 }
 
 export enum KeyringAssetType {
