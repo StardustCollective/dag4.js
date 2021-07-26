@@ -31,10 +31,8 @@ export class AccountTracker {
 
     if (accounts && accounts.length) {
       if (this.isRunning) {
-        if (changeNetwork) {
-          this.stop();
-          this.start();
-        }
+        this.stop();
+        this.start();
       }
       else {
         this.start();
@@ -87,7 +85,7 @@ export class AccountTracker {
 
     const ethBalance = await this.provider.getBalance(this.ethAddress);
 
-    const ethBalanceNum = Number(ethers.utils.formatUnits(ethBalance, 18)) || 0;
+    const ethBalanceNum = Number(ethers.utils.formatEther(ethBalance)) || 0;
 
     const tokenAddresses = this.accounts.map(t => t.contractAddress);
 
