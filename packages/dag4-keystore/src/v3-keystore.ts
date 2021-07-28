@@ -125,7 +125,7 @@ export class V3Keystore {
 
 }
 
-export interface V3Keystore<T=KDFParamsPrivateKey> {
+export interface V3Keystore<T=KDFParamsPrivateKey|KDFParamsPhrase> {
   crypto: {
     cipher: string;
     cipherparams: {

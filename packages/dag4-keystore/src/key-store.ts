@@ -5,7 +5,7 @@ import {Buffer} from 'buffer';
 import {KeyTrio} from './key-trio';
 import {txEncode} from './tx-encode';
 import {bip39} from './bip39/bip39';
-import {KDFParamsPhrase, V3Keystore} from './v3-keystore';
+import {KDFParamsPhrase, KDFParamsPrivateKey, V3Keystore} from './v3-keystore';
 import Wallet from 'ethereumjs-wallet'
 import {hdkey} from 'ethereumjs-wallet'
 
@@ -45,7 +45,7 @@ const DERIVATION_PATH_MAP = {
   [DERIVATION_PATH.ETH_LEDGER]: CONSTANTS.BIP_44_ETH_PATH_LEDGER
 }
 
-const typeCheckJKey = (key: V3Keystore) => {
+const typeCheckJKey = (key: V3Keystore<KDFParamsPrivateKey>) => {
 
   const params = (key && key.crypto && key.crypto.kdfparams);
 
@@ -88,7 +88,7 @@ export class KeyStore {
     return result;
   }
 
-  async decryptPrivateKey (jKey: V3Keystore, password) {
+  async decryptPrivateKey (jKey: V3Keystore<KDFParamsPrivateKey>, password) {
 
     if(this.isValidJsonPrivateKey(jKey)) {
       const wallet = await Wallet.fromV3(jKey, password);
@@ -99,7 +99,7 @@ export class KeyStore {
     throw new Error('Invalid JSON Private Key format');
   }
 
-  isValidJsonPrivateKey (jKey: V3Keystore) {
+  isValidJsonPrivateKey (jKey: V3Keystore<KDFParamsPrivateKey>) {
 
     const params = (jKey && jKey.crypto && jKey.crypto.kdfparams);
 
