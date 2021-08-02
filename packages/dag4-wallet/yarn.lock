@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-core/-/dag4-core-1.0.5.tgz#af167dd7997105eec93a1ce30641f1b341e33b1f"
   integrity sha512-fjtHmVQXnATH6R136yasGbrKJPDRfuAw8Uh8mHJVyU0kIAfBHudYDb6W23n+eorP86aycBMQXEsOk/kSX5PdAg==
 
-"@stardust-collective/dag4-keystore@^1.0.8":
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.8.tgz#38a2fe054f6dc94e84a20ca350ee3bcd74b2cff3"
-  integrity sha512-DdYZJSQmMY+0nVJdIRWhRaKRaaC39H/vAcg4NbcdkPmme0HXyjsaFKnyywZK2K2bYg2CGq27ViFCjxT2eWVWKQ==
+"@stardust-collective/dag4-keystore@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-keystore/-/dag4-keystore-1.0.11.tgz#6a2977e8cfd43995ce4aac64a837356329b762de"
+  integrity sha512-JCJ7eTeW5DnM/IaGE6UV6xcbewAx1tpbRdzEMeVTc3Hsl4DEjKMsvcj3emUwFiP/CZy4LtWFEGQPMkXySu6rPA==
   dependencies:
     bignumber.js "^9.0.1"
     bip39 "^3.0.2"
@@ -31,10 +31,10 @@
     stream-browserify "^3.0.0"
     uuid "^3.4.0"
 
-"@stardust-collective/dag4-network@^1.0.8":
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.8.tgz#c4643f77e4522bffae780e77ecd7a9f44d374f16"
-  integrity sha512-1hlPTybCo/MqdwIAq7RYAmgkLA3+gYyggmB9LR/TVgSjro374dTzm3U7nbR/wNyig/YtpjzVsV1nqA7r1Bqrug==
+"@stardust-collective/dag4-network@^1.0.9":
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.9.tgz#1c1d9c0e42f5f3588b3194e96d187d943c05bd98"
+  integrity sha512-KCJ/2CTz5VH6eEGddITLlDiZMR0kdc0jHkPB0WZ7+F65yrTXNqsLkH3IC4f4X8OkgAHu/wRYgWxvYswEgl3a3g==
   dependencies:
     "@stardust-collective/dag4-core" "^1.0.5"
     rxjs "^6.6.3"

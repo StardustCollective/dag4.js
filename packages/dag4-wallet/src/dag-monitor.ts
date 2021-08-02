@@ -54,14 +54,24 @@ export class DagMonitor {
     }
 
     setTimeout(() => this.pollPendingTxs(), 1000);
+
+    return this.transformPendingToTransaction(tx);
   }
 
-  getMemPoolFromMonitor(): PendingTx[] {
-    const key =  `network-${globalDagNetwork.getNetwork().id}-mempool`;
+  async getLatestTransactions (address: string, limit?: number, searchAfter?: string): Promise<Transaction[]> {
+    const cTxs = await globalDagNetwork.blockExplorerApi.getTransactionsByAddress(address, limit, searchAfter);
 
-    const txs: PendingTx[]  = this.cacheUtils.get(key) || [];
+    const { pendingTxs } = await this.processPendingTxs();
 
-    return txs.filter(tx => !this.walletParent.address || !tx.receiver || tx.receiver === this.walletParent.address || tx.sender === this.walletParent.address);
+    return pendingTxs.map(pending => this.transformPendingToTransaction(pending)).concat(cTxs);
+  }
+
+  getMemPoolFromMonitor(address?: string): PendingTx[] {
+    address = address || this.walletParent.address;
+
+    const txs: PendingTx[]  = this.cacheUtils.get(`network-${globalDagNetwork.getNetwork().id}-mempool`) || [];
+
+    return txs.filter(tx => !address || !tx.receiver || tx.receiver === address || tx.sender === address);
   }
 
   setToMemPoolMonitor(pool: PendingTx[]) {
@@ -80,6 +90,20 @@ export class DagMonitor {
     return this.waitForMap[hash].promise;
   }
 
+  startMonitor () {
+    this.pollPendingTxs();
+  }
+
+  private transformPendingToTransaction (pending: PendingTx) {
+    const { hash, amount, receiver, sender, timestamp, ordinal, fee, status } =  pending;
+    return { hash, amount, receiver, sender, fee, status, isDummy: false,
+      timestamp: new Date(timestamp).toISOString(),
+      lastTransactionRef: { ordinal, prevHash: '' },
+      snapshotHash: '',
+      checkpointBlock: '',
+    } as Transaction;
+  }
+
   private async pollPendingTxs () {
 
     if (Date.now() - this.lastTimer + 1000 < this.pendingTimer) {
@@ -87,6 +111,26 @@ export class DagMonitor {
       return; //ignore any repeat timers that happen before the min timer
     }
 
+    const { pendingTxs, txChanged, transTxs, pendingHasConfirmed, poolCount } = await this.processPendingTxs();
+
+    //Has any memPollTxs pending
+    if (pendingTxs.length) {
+      this.setToMemPoolMonitor(pendingTxs);
+      this.pendingTimer = 10000;
+      this.lastTimer = Date.now();
+      setTimeout(() => this.pollPendingTxs(), 10000);
+    } else if (poolCount > 0) {
+      //NOTE: All tx in persisted pool have completed
+      this.setToMemPoolMonitor([]);
+    }
+
+    this.memPoolChange$.next({
+      txChanged, transTxs, pendingHasConfirmed
+    });
+
+  }
+
+  private async processPendingTxs () {
     const pool = this.getMemPoolFromMonitor();
     const transTxs: PendingTx[] = [];
     const nextPool: PendingTx[] = [];
@@ -195,27 +239,7 @@ export class DagMonitor {
       transTxs.push(pendingTx);
     }
 
-    //Has any memPollTxs pending
-    if (nextPool.length) {
-
-      this.setToMemPoolMonitor(nextPool);
-      this.pendingTimer = 10000;
-      this.lastTimer = Date.now();
-      setTimeout(() => this.pollPendingTxs(), 10000);
-    }
-    else if (pool.length > 0) {
-      //NOTE: All tx in persisted pool have completed
-      this.setToMemPoolMonitor([]);
-    }
-
-    this.memPoolChange$.next( {
-      txChanged, transTxs, pendingHasConfirmed
-    });
-
-  }
-
-  startMonitor () {
-    this.pollPendingTxs();
+    return { pendingTxs: nextPool, txChanged, transTxs, pendingHasConfirmed, poolCount: pool.length }
   }
 
   private get cacheUtils() {

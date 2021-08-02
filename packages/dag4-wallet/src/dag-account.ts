@@ -77,10 +77,14 @@ export class DagAccount {
   }
 
   async getBalance () {
+    return this.getBalanceFor(this.address);
+  }
+
+  async getBalanceFor (address: string) {
 
     let result: number = undefined;
 
-    const addressObj = await this.network.loadBalancerApi.getAddressBalance(this.address);
+    const addressObj = await this.network.loadBalancerApi.getAddressBalance(address);
 
     if (addressObj && !isNaN(addressObj.balance)) {
       result = new  BigNumber(addressObj.balance).dividedBy(1e8).toNumber();
