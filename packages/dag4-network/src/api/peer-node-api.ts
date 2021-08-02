@@ -17,6 +17,7 @@ export class PeerNodeApi {
 
   async getMetrics (): Promise<PeerMetrics> {
     const startTime = Date.now();
+    //, null, { retry: 1 }
     return this.service.$get<PeerMetricsResponse>('metrics').then(rawData => PeerMetrics.parse(rawData.metrics, Date.now() - startTime));
   }
 

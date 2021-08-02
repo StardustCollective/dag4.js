@@ -6,6 +6,7 @@ export type Transaction = {
   fee : number;
   isDummy : boolean;
   timeAgo?: string;
+  status?: string;
   timestamp: string;
   lastTransactionRef : {
     prevHash : string;
