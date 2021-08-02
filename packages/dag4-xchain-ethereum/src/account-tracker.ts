@@ -10,7 +10,7 @@ export class AccountTracker {
   private isRunning = false;
   private accounts: TokenInfo[];
   private provider: ethers.providers.InfuraProvider;
-  private callback: (e: number, t:TokenBalances) => void;
+  private callback: (e: string, t:TokenBalances) => void;
   private ethAddress: string;
   private debounceTimeSec: number;
   private subscription: Subscription;
@@ -21,7 +21,7 @@ export class AccountTracker {
     }
   }
 
-  config (ethAddress: string, accounts: TokenInfo[], chainId = 1, callback: (e: number, t:TokenBalances) => void, debounceTimeSec = 1) {
+  config (ethAddress: string, accounts: TokenInfo[], chainId = 1, callback: (e: string, t:TokenBalances) => void, debounceTimeSec = 1) {
     const changeNetwork = this.chainId !== chainId;
     this.ethAddress = ethAddress;
     this.accounts = accounts;
@@ -85,16 +85,16 @@ export class AccountTracker {
 
     const ethBalance = await this.provider.getBalance(this.ethAddress);
 
-    const ethBalanceNum = Number(ethers.utils.formatEther(ethBalance)) || 0;
+    const ethBalanceNum = ethers.utils.formatEther(ethBalance) || '0';
 
     const tokenAddresses = this.accounts.map(t => t.contractAddress);
 
     const rawTokenBalances = await tokenContractService.getAddressBalances(this.provider, this.ethAddress, tokenAddresses, this.chainId);
 
-    const tokenBalances: TokenBalances = { }
+    const tokenBalances: TokenBalances = {};
 
     this.accounts.forEach(t => {
-      tokenBalances[t.contractAddress] = Number(ethers.utils.formatUnits(rawTokenBalances[t.contractAddress], t.decimals)) || 0;
+      tokenBalances[t.contractAddress] = ethers.utils.formatUnits(rawTokenBalances[t.contractAddress], t.decimals) || '0';
     })
 
     this.callback(ethBalanceNum, tokenBalances);
@@ -102,7 +102,7 @@ export class AccountTracker {
 }
 
 type TokenBalances = {
-  [address: string]: number;
+  [address: string]: string;
 }
 
 type TokenInfo = {

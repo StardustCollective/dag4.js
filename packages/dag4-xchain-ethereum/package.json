@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-xchain-ethereum",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Cross chain communication with Ethereum",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",

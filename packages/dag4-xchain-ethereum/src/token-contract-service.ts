@@ -3,9 +3,6 @@ import { Contract, Signer } from 'ethers';
 
 import SINGLE_CALL_BALANCES_ABI from 'single-call-balance-checker-abi';
 import ERC_20_ABI from 'erc-20-abi';
-// import BALANCER_CHECKER_ABI from './abis/BalanceChecker.abi.json';
-// import ERC20_ABI from './abis/erc20.abi.json';
-import BigNumber from 'bignumber.js';
 
 type Provider = ethers.providers.Provider;
 
@@ -21,7 +18,7 @@ type AddressBalanceMap = {
   [address: string]: BalanceMap;
 }
 
-const TOKEN_BALANCE_CONTRACT = '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39';
+// const TOKEN_BALANCE_CONTRACT = '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39';
 
 const NETWORK_TO_CONTRACT_MAP = {
   1: '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39',
@@ -31,13 +28,13 @@ const NETWORK_TO_CONTRACT_MAP = {
 
 export class TokenContractService {
 
-  formatAddressBalances<T> (values: T[], addresses: string[], tokens: string[]) {
+  formatAddressBalances (values: string[], addresses: string[], tokens: string[]) {
     const balances: AddressBalanceMap = {};
     addresses.forEach((addr, addrIdx) => {
       balances[addr] = {};
       tokens.forEach((tokenAddr, tokenIdx) => {
         const balance = values[addrIdx * tokens.length + tokenIdx];
-        balances[addr][tokenAddr] = balance.toString();
+        balances[addr][tokenAddr] = balance;
       });
     });
     return balances;
@@ -54,7 +51,7 @@ export class TokenContractService {
 
     const balances = await contract.balances([ethAddress], tokenContractAddress);
 
-    return this.formatAddressBalances<BigNumber>(balances, [ethAddress], tokenContractAddress)[ethAddress];
+    return this.formatAddressBalances(balances, [ethAddress], tokenContractAddress)[ethAddress];
   }
 
   async getTokenBalance(provider: Provider | Signer, ethAddress: string, tokenContractAddress: string, chainId = 1) {
@@ -67,7 +64,7 @@ export class TokenContractService {
 
     const balances = await contract.balances([ethAddress], [tokenContractAddress]);
 
-    return this.formatAddressBalances<BigNumber>(balances, [ethAddress], [tokenContractAddress])[ethAddress];
+    return this.formatAddressBalances(balances, [ethAddress], [tokenContractAddress])[ethAddress];
   }
 
 
