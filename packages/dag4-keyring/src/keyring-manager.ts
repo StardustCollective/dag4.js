@@ -236,7 +236,9 @@ export class KeyringManager extends SafeEventEmitter  {
   private async unlockWallets (password: string) {
     const encryptedVault = this.storage.get('vault');
     if (!encryptedVault) {
-      throw new Error('Cannot unlock without a previous vault.')
+      //Support recovering wallets from migration
+      this.password = password;
+      return [];
     }
 
     await this.clearWallets();
