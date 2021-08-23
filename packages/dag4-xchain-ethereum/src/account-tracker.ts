@@ -1,7 +1,5 @@
 import {ethers} from 'ethers';
 import {tokenContractService} from './token-contract-service';
-import {fromEvent, Subscription} from 'rxjs';
-import {debounceTime, distinctUntilChanged} from 'rxjs/operators';
 
 export class AccountTracker {
 
@@ -13,7 +11,9 @@ export class AccountTracker {
   private callback: (e: string, t:TokenBalances) => void;
   private ethAddress: string;
   private debounceTimeSec: number;
-  private subscription: Subscription;
+  // private subscription: Subscription;
+  private timeoutId: any;
+  private lastBlock: number;
 
   constructor ({infuraCreds}) {
     if (infuraCreds.projectId) {
@@ -29,14 +29,10 @@ export class AccountTracker {
     this.callback = callback;
     this.debounceTimeSec = debounceTimeSec > 0.1 ? debounceTimeSec : 1
 
+    //console.log('ethTracker.config: ', JSON.stringify(arguments));
+
     if (accounts && accounts.length) {
-      if (this.isRunning) {
-        this.stop();
-        this.start();
-      }
-      else {
-        this.start();
-      }
+      this.start();
     }
     else if (this.isRunning) {
       this.stop();
@@ -44,24 +40,28 @@ export class AccountTracker {
   }
 
   private start () {
-    if (this.provider) {
-      this.subscription.unsubscribe();
+    if (this.isRunning) {
+      this.stop();
     }
 
     this.provider = new ethers.providers.InfuraProvider(this.chainId, this.infuraProjectId);
 
-    this.subscription = fromEvent(this.provider, 'block')
-      .pipe(
-        // @ts-ignore
-        debounceTime(this.debounceTimeSec * 1000),
-        distinctUntilChanged()
-      )
-      .subscribe(num => {
-        console.log('New Block: ' + num);
-        this.getTokenBalances();
-      });
+    this.isRunning = true;
 
-    this.getTokenBalances();
+    this.runInterval();
+
+    // this.subscription = fromEvent(this.provider, 'block')
+    //   .pipe(
+    //     // @ts-ignore
+    //     debounceTime(this.debounceTimeSec * 1000),
+    //     distinctUntilChanged()
+    //   )
+    //   .subscribe(num => {
+    //     console.log('New Block: ' + num);
+    //     this.getTokenBalances();
+    //   });
+    //
+    // this.getTokenBalances();
 
     // this.provider.on('block', blockNumber => {
     //   console.log('New Block: ' + blockNumber);
@@ -69,13 +69,32 @@ export class AccountTracker {
     //   this.getTokenBalances();
     // });
 
-    this.isRunning = true;
+  }
+
+  private async runInterval () {
+    try {
+      const block = await this.provider.getBlockNumber();
+
+      if (this.lastBlock !== block) {
+
+        await this.getTokenBalances();
+
+        this.lastBlock = block;
+      }
+
+      this.timeoutId = setTimeout(() => this.runInterval(), this.debounceTimeSec * 1000);
+    }
+    catch (e) {
+      //Wait 30 seconds
+      this.timeoutId = setTimeout(() => this.runInterval(), 30 * 1000);
+    }
   }
 
   private stop () {
     // this.provider.off('block');
-    this.subscription.unsubscribe();
-    this.subscription = null;
+    // this.subscription.unsubscribe();
+    // this.subscription = null;
+    clearTimeout(this.timeoutId);
     this.isRunning = false;
     this.provider = null;
   }
