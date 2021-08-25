@@ -26,14 +26,14 @@ export class SimpleKeyring implements IKeyring {
   getState () {
     return {
       network: this.network,
-      account: this.account.serialize()
+      account: this.account.serialize(false)
     };
   }
 
   serialize (): KeyringRingSerialized {
     return {
       network: this.network,
-      accounts: [this.account.serialize()]
+      accounts: [this.account.serialize(true)]
     };
   }
 
@@ -42,7 +42,7 @@ export class SimpleKeyring implements IKeyring {
     this.account = keyringRegistry.createAccount(network).deserialize(accounts[0]);
   }
 
-  addAccounts (n = 1) {
+  addAccountAt (index?: number) {
     //throw error
   }
 

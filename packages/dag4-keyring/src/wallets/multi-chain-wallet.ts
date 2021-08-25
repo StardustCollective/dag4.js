@@ -5,26 +5,10 @@ import {
   KeyringAssetType,
   KeyringNetwork,
   KeyringWalletSerialized,
-  KeyringWalletType, KeyringAssetInfo
+  KeyringWalletType
 } from '../kcs';
+
 import {Bip39Helper} from '../bip39-helper';
-
-
-
-//Wallet : multiple networks, 1 seed
-//  Ring : 1 network, multiple accounts
-//    Account : 1 account, multiple tokens
-//      Token  : 1 token      Lattice Token
-
-//Wallet
-//    rings: { network, accounts[] }[]
-//      accounts: { address, tokens[] }[]
-//        tokens: { address }[]
-
-// MCW: { rings[N].accounts[1].tokens } - Trust, Ring and network are hard-coded on ring-level
-// SCW: { rings[1].accounts[N].tokens } - MetaMask, network is configured on wallet and same for all accounts
-//NOTE: Therefore we can collapse rings:accounts -> accounts and let each strategy determine how to deserialize accounts[]
-// Ring and network are hard-coded
 
 let SID = 0;
 
@@ -45,6 +29,15 @@ export class MultiChainWallet implements IKeyringWallet {
 
   setLabel(val: string) {
     this.label = val;
+  }
+
+  getLabel(): string {
+    return this.label;
+  }
+
+  getNetwork () {
+    throw new Error('MultiChainWallet does not support this method');
+    return '';
   }
 
   getState () {
@@ -84,8 +77,9 @@ export class MultiChainWallet implements IKeyringWallet {
     }
   }
 
-  addKeyring (hdPath: string) {
-    throw new Error('MultiChainWallet does not allow dynamically adding new keyrings');
+  importAccount (hdPath: string) {
+    throw new Error('MultiChainWallet does not support importAccount');
+    return null;
   }
 
   // getAssets (): string[] {

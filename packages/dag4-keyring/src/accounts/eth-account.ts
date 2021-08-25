@@ -9,7 +9,7 @@ export class EthAccount extends EcdsaAccount implements IKeyringAccount {
   network = KeyringNetwork.Ethereum;
   hasTokenSupport = true;
   supportedAssets = [KeyringAssetType.ETH,KeyringAssetType.ERC20];
-  tokens = ['0xa393473d64d2F9F026B60b6Df7859A689715d092'];
+  tokens = ['0xa393473d64d2F9F026B60b6Df7859A689715d092']; //LTX
 
   saveTokenInfo (address: string) {
     if(this.tokens.indexOf(address) < 0) {

@@ -11,6 +11,7 @@ import {
   KeyringAccountSerialized, KeyringRingSerialized
 } from '../kcs';
 import {Bip39Helper} from '../bip39-helper';
+import {deserialize} from "v8";
 
 const CONSTELLATION_PATH_INDEX = 1137;
 const ETH_WALLET_PATH_INDEX = 60;
@@ -34,27 +35,29 @@ export class HdKeyring implements IKeyring {
   private network: KeyringNetwork;
 
   //Read-only wallet
-  static createFromExtendedKey(extendedKey: string, network: KeyringNetwork, numberOfAccounts = 1) {
+  static createFromExtendedKey(extendedKey: string, network: KeyringNetwork, numberOfAccounts: number) {
     const inst = new HdKeyring();
     inst.extendedKey = extendedKey;
-    inst.network = network;
     inst._initFromExtendedKey(extendedKey);
-    inst.addAccounts(numberOfAccounts);
+    inst.deserialize({ network, accounts: inst.createAccounts(numberOfAccounts) });
     return inst;
   }
 
-  static create(mnemonic: string, hdPath: string, network: KeyringNetwork, numberOfAccounts = 1) {
+  static create(mnemonic: string, hdPath: string, network: KeyringNetwork, numberOfAccounts: number) {
     const inst = new HdKeyring();
     inst.mnemonic = mnemonic;
     inst.hdPath = hdPath;
-    inst.network = network;
     inst._initFromMnemonic(mnemonic);
-    inst.addAccounts(numberOfAccounts);
+    inst.deserialize({ network, accounts: inst.createAccounts(numberOfAccounts) });
     return inst;
   }
 
   getNetwork () {
     return this.network;
+  }
+
+  getHdPath () {
+    return this.hdPath;
   }
 
   getExtendedPublicKey () {
@@ -68,41 +71,57 @@ export class HdKeyring implements IKeyring {
   serialize (): KeyringRingSerialized {
     return {
       network: this.network,
-      accounts: this.accounts.map(a => ({ tokens: a.getTokens()}))
+      accounts: this.accounts.map(a => a.serialize(false))
     }
   }
 
   deserialize (data: KeyringRingSerialized) {
     if (data) {
       this.network = data.network;
-      data.accounts.forEach((d,i) => this.accounts[i].setTokens(d.tokens))
+      this.accounts = [];
+      data.accounts.forEach((d, i) => {
+        this.accounts[i] = this.addAccountAt(d.bip44Index);
+        this.accounts[i].setTokens(d.tokens)
+      })
     }
   }
 
-  addAccounts (numberOfAccounts = 1) {
-    if (!this.rootKey) {
-      this._initFromMnemonic(Bip39Helper.generateMnemonic())
+  //When adding an account (after accounts have been removed), it will add back the ones removed first
+  private createAccounts (numberOfAccounts = 0) {
+
+    const accounts:KeyringAccountSerialized[] = [];
+    for (let i = 0; i < numberOfAccounts; i++) {
+      accounts[i] = { bip44Index: i }
     }
 
-    let account: IKeyringAccount;
-    const oldLen = this.accounts.length;
-    for (let i = oldLen; i < numberOfAccounts + oldLen; i++) {
-      const child = this.rootKey.deriveChild(i);
-      const wallet = child.getWallet();
-      if (this.mnemonic) {
-        const privateKey = wallet.getPrivateKey().toString('hex');
-        account = keyringRegistry.createAccount(this.network).deserialize({privateKey});
-      }
-      else {
-        const publicKey = wallet.getPublicKey().toString('hex');
-        account = keyringRegistry.createAccount(this.network).deserialize({publicKey});
-      }
-      this.accounts[i] = account;
-    }
+    return accounts;
   }
 
   removeLastAddedAccount () {
     this.accounts.pop();
+  }
+
+  addAccountAt (index?: number) {
+    index = index >=0 ? index : this.accounts.length;
+
+    if (this.accounts[index]) {
+      throw new Error('HdKeyring - Trying to add an account to an index already populated')
+    }
+
+    let account: IKeyringAccount;
+    const child = this.rootKey.deriveChild(index);
+    const wallet = child.getWallet();
+    if (this.mnemonic) {
+      const privateKey = wallet.getPrivateKey().toString('hex');
+      account = keyringRegistry.createAccount(this.network).deserialize({privateKey, bip44Index: index});
+    } else {
+      const publicKey = wallet.getPublicKey().toString('hex');
+      account = keyringRegistry.createAccount(this.network).deserialize({publicKey, bip44Index: index});
+    }
+
+    this.accounts[index] = account;
+
+    return account;
   }
 
   getAccounts() {
@@ -128,10 +147,11 @@ export class HdKeyring implements IKeyring {
   }
 
   getAccountByAddress (address: string): IKeyringAccount {
-    return this.accounts.find(a => a.getAddress() === address);
+    return this.accounts.find(a => a.getAddress().toLowerCase() === address.toLowerCase());
   }
 
   removeAccount (account:IKeyringAccount) {
+    this.accounts = this.accounts.filter(a => a === account);
   }
 }
 

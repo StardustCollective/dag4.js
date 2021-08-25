@@ -9,18 +9,21 @@ import {
   KeyringNetwork
 } from '../kcs';
 import {Asset} from './asset';
+import {Web3Provider} from "../web3/Web3Provider";
 
 
 export abstract class EcdsaAccount {
 
-  tokens: string[];
+  protected tokens: string[];
 
   protected wallet: Wallet;// = Wallet.generate();
   protected assets: Asset[];
+  protected bip44Index: number;
 
   abstract network: KeyringNetwork;
   abstract hasTokenSupport: boolean;
   abstract supportedAssets: KeyringAssetType[];
+  private provider: Web3Provider;
 
   abstract verifyMessage(msg: string, signature: string, saysAddress: string): boolean;
 
@@ -33,6 +36,14 @@ export abstract class EcdsaAccount {
 
   }
 
+  getWeb3Provider (): Web3Provider {
+    return this.provider;
+  }
+
+  setWeb3Provider (provider: Web3Provider) {
+    this.provider = provider;
+  }
+
   getTokens (): string[] {
     return this.tokens && this.tokens.concat();
   }
@@ -43,27 +54,34 @@ export abstract class EcdsaAccount {
     }
   }
 
+  getBip44Index (): number {
+    return this.bip44Index;
+  }
+
   getState (): KeyringAccountState {
-    return {
+    const result:KeyringAccountState = {
       address: this.getAddress(),
-      supportedAssets: this.supportedAssets,
-      tokens: this.getTokens()
+      supportedAssets: this.supportedAssets
     }
+    if (this.tokens) {
+      result.tokens = this.tokens;
+    }
+    return result;
   }
 
   getNetwork (): KeyringNetwork {
     return this.network;
   }
 
-  serialize (): KeyringAccountSerialized {
-    const tokens = this.tokens ? { tokens: this.tokens.concat() } : {}
-    return {
-      privateKey: this.getPrivateKey(),
-      ...tokens
-    }
+  serialize (includePrivateKey = true): KeyringAccountSerialized {
+    const result:KeyringAccountSerialized = {}
+    if (includePrivateKey) result.privateKey = this.getPrivateKey();
+    if (this.tokens) result.tokens = this.tokens.concat();
+    if (this.bip44Index >= 0) result.bip44Index = this.bip44Index;
+    return result;
   }
 
-  deserialize ({privateKey, publicKey, tokens}: KeyringAccountSerialized) {
+  deserialize ({privateKey, publicKey, tokens, bip44Index}: KeyringAccountSerialized) {
 
     if (privateKey) {
       this.wallet = Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex'));
@@ -72,6 +90,7 @@ export abstract class EcdsaAccount {
       this.wallet = Wallet.fromPublicKey(Buffer.from(publicKey, 'hex'));
     }
 
+    this.bip44Index = bip44Index;
     this.tokens = tokens || this.tokens;
     return this;
   }

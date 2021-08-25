@@ -1,32 +1,21 @@
+
 import {SimpleKeyring} from '../rings';
-import {
-  IKeyringAccount,
-  IKeyringWallet,
-  KeyringAssetType,
-  KeyringNetwork,
-  KeyringWalletSerialized,
-  KeyringWalletType
-} from '../kcs';
-import Wallet from "ethereumjs-wallet";
+import {IKeyringWallet, IKeyringAccount, KeyringAssetType, KeyringNetwork, KeyringWalletSerialized, KeyringWalletType} from '../kcs';
 
 let SID = 0;
 
-//SingleKeyWallet
-export class SingleAccountWallet implements IKeyringWallet {
+export class MultiKeyWallet implements IKeyringWallet {
 
-  readonly type = KeyringWalletType.SingleAccountWallet;
+  readonly type = KeyringWalletType.MultiKeyWallet;
   readonly id = this.type + (++SID);
   readonly supportedAssets = [];
 
-  private keyring: SimpleKeyring;
+  private keyRings: SimpleKeyring[];
   private network: KeyringNetwork;
   private label: string;
 
-  create (network: KeyringNetwork, privateKey: string, label: string) {
-    if (!privateKey) {
-      privateKey = Wallet.generate().getPrivateKey().toString('hex');
-    }
-    this.deserialize({ type: this.type, label, network, secret: privateKey });
+  create (network: KeyringNetwork, label: string) {
+    this.deserialize({ type: this.type, label, network });
   }
 
   setLabel(val: string) {
@@ -62,17 +51,19 @@ export class SingleAccountWallet implements IKeyringWallet {
       type: this.type,
       label: this.label,
       network: this.network,
-      secret: this.exportSecretKey()
+      secrets: this.keyRings.map(k => k.getAccounts()[0].getPrivateKey())
     }
   }
 
   deserialize (data: KeyringWalletSerialized) {
 
     this.label = data.label;
-    this.network = data.network || KeyringNetwork.Ethereum;
-    this.keyring = new SimpleKeyring();
+    this.network = data.network;
+    this.keyRings = [];
 
-    this.keyring.deserialize({network: this.network, accounts: [{ privateKey: data.secret }]});
+    if (data.secrets && data.secrets.length) {
+      data.secrets.forEach(key => this.importAccount(key));
+    }
 
     if (this.network === KeyringNetwork.Ethereum) {
       this.supportedAssets.push(KeyringAssetType.ETH);
@@ -83,17 +74,21 @@ export class SingleAccountWallet implements IKeyringWallet {
     }
   }
 
-  importAccount (hdPath: string) {
-    throw new Error('SimpleChainWallet does not support importAccount');
-    return null;
+  importAccount (secret: string) {
+    const keyring = new SimpleKeyring();
+    keyring.deserialize({network: this.network, accounts: [{ privateKey: secret }]});
+    this.keyRings.push(keyring);
+    return keyring.getAccounts()[0];
   }
 
   getAccounts (): IKeyringAccount[] {
-    return this.keyring.getAccounts();
+    return this.keyRings.reduce<IKeyringAccount[]>((res, w) => res.concat(w.getAccounts()), []);
   }
 
   getAccountByAddress (address: string): IKeyringAccount {
-    return this.keyring.getAccountByAddress(address);
+    let account: IKeyringAccount;
+    this.keyRings.some(w => account = w.getAccountByAddress(address));
+    return account;
   }
 
   removeAccount (account: IKeyringAccount) {
@@ -101,7 +96,7 @@ export class SingleAccountWallet implements IKeyringWallet {
   }
 
   exportSecretKey(): string {
-    return this.keyring.getAccounts()[0].getPrivateKey();
+    throw new Error('MultiKeyWallet does not allow exportSecretKey');
   }
 
 }

@@ -1,3 +1,4 @@
+import {Web3Provider} from "./web3/Web3Provider";
 
 
 export enum KeyringNetwork {
@@ -8,8 +9,9 @@ export enum KeyringNetwork {
 export enum KeyringWalletType {
   MultiChainWallet = 'MCW',
   CrossChainWallet = 'CCW',
-  MultiAccountWallet = 'MAW',
-  SingleAccountWallet = 'SAW'
+  MultiAccountWallet = 'MAW',   //Single Chain, Multiple seed accounts, MSW
+  SingleAccountWallet = 'SAW',  //Single Chain, Single Key account, SKW
+  MultiKeyWallet = 'MKW'        //Single Chain, Multiple Key accounts, MKW
 }
 
 export enum KeyringAssetType {
@@ -21,7 +23,9 @@ export enum KeyringAssetType {
 export type KeyringWalletSerialized = {
   type: string,
   label: string,
-  secret: string,
+  secret?: string,
+  secrets?: string[],
+  numOfAccounts?: number,
   network?: KeyringNetwork,
   rings?: KeyringRingSerialized[]
 }
@@ -36,8 +40,8 @@ export type KeyringWalletState = {
 
 export type KeyringWalletAccountState = {
   address: string,
-  network: KeyringNetwork,
-  tokens: string[]
+  network?: KeyringNetwork,
+  tokens?: string[]
 }
 
 export type KeyringRingSerialized = {
@@ -48,7 +52,8 @@ export type KeyringRingSerialized = {
 export type KeyringAccountSerialized = {
   privateKey?: string;
   publicKey?: string;
-  tokens?: string[]
+  tokens?: string[];
+  bip44Index?: number;
 }
 
 export type KeyringAccountState = {
@@ -69,7 +74,7 @@ export type KeyringAssetInfo = {
 
 export interface IKeyringAccount {
   create (privateKey: string): IKeyringAccount;
-  serialize (): KeyringAccountSerialized;
+  serialize (includeSecret: boolean): KeyringAccountSerialized;
   deserialize (data: KeyringAccountSerialized): IKeyringAccount;
   signMessage(msg: string): string;
   verifyMessage(msg: string, signature: string, saysAddress: string): boolean;
@@ -79,14 +84,17 @@ export interface IKeyringAccount {
   //getEncryptionPublicKey (address: string, opts?: any);
   //decryptMessage (address: string, data: EthEncryptedData);
   //signTypedData (address: string, typedData: any, opts?: any);
+  getWeb3Provider (): Web3Provider;
+  setWeb3Provider (provider: Web3Provider): void;
   getPrivateKey (): string;
   getNetwork (): KeyringNetwork;
   getAddress (): string;
   getTokens (): string[];
   setTokens (tokens: string[]);
+  getBip44Index (): number;
   validateAddress (address: string);
   saveTokenInfo (address: string): void;
-  //getState (): KeyringAccountState;
+  getState (): KeyringAccountState;
 }
 
 export interface IKeyringWallet {
@@ -95,19 +103,21 @@ export interface IKeyringWallet {
   readonly supportedAssets: KeyringAssetType[];
   serialize (): KeyringWalletSerialized;
   deserialize (data: KeyringWalletSerialized);
-  addKeyring(hdPath: string);
+  importAccount(secret: string): IKeyringAccount;
   getAccounts(): IKeyringAccount[];
   removeAccount (account: IKeyringAccount);
   getAccountByAddress (address: string): IKeyringAccount;
   exportSecretKey(): string;
   getState (): KeyringWalletState;
   setLabel (label: string): void;
+  getLabel(): string;
+  getNetwork(): string;
 }
 
 export interface IKeyring {
   serialize (): KeyringRingSerialized;
   deserialize (data: KeyringRingSerialized);
-  addAccounts(n: number);
+  addAccountAt(index?: number);
   getAccounts(): IKeyringAccount[];
   removeAccount (account: IKeyringAccount);
   //exportAccount (account: IKeyringAccount): string;

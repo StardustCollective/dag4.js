@@ -3,15 +3,14 @@ import SafeEventEmitter from '@metamask/safe-event-emitter';
 import {Encryptor} from './encryptor'
 
 import {
-  IKeyringWallet, KeyringAssetInfo,
+  IKeyringWallet,
   KeyringNetwork,
   KeyringWalletSerialized,
   KeyringWalletState,
   KeyringWalletType
 } from './kcs';
-import {MultiChainWallet} from './wallets/multi-chain-wallet';
+import {MultiChainWallet, SingleAccountWallet, MultiAccountWallet, MultiKeyWallet} from './wallets';
 import {IKeyringAccount} from './kcs';
-import {SingleAccountWallet} from './wallets/single-account-wallet';
 import * as dag4 from '@stardust-collective/dag4-core';
 import {Bip39Helper} from './bip39-helper';
 
@@ -19,7 +18,7 @@ import {Bip39Helper} from './bip39-helper';
 // type WalletState = {
 //   type: KeyringWalletType, data: any
 // }
-//
+
 // type VaultEncrypted = {
 //   salt: string, iv: string, vault: string
 // }
@@ -75,16 +74,6 @@ export class KeyringManager extends SafeEventEmitter  {
     this.emit('update', this.memStore.getState())
   }
 
-  // - creates a single wallet with one chain, creates first account by default.
-  private createSingleChainHdWallet(seed: string, chain: KeyringNetwork) {
-
-  }
-
-  // - creates a single wallet with multiple chains, creates first account by default, one per chain.
-  private createCrossChainHdWallet(seed: string) {
-
-  }
-
   setWalletLabel(walletId: string, label: string) {
     this.getWalletById(walletId).setLabel(label);
     this.fullUpdate();
@@ -120,6 +109,34 @@ export class KeyringManager extends SafeEventEmitter  {
 
     this.clearWallets();
     const wallet = this.newMultiChainHdWallet(label, seed);
+    await this.fullUpdate();
+
+    return wallet;
+  }
+
+  // - creates a single wallet with multiple chains, creates first account by default, one per chain.
+  private createCrossChainHdWallet(seed: string) {
+
+  }
+
+  // - creates a multiple account wallet with one chain, creates first account by default.
+  async createMultiAccountWallet(label: string, seed: string, chain: KeyringNetwork, numOfAccounts = 1) {
+    const wallet = new MultiAccountWallet();
+    label = label || 'Wallet #' + (this.wallets.length+1);
+    wallet.create(chain, seed, label, numOfAccounts);
+    this.wallets.push(wallet);
+
+    await this.fullUpdate();
+
+    return wallet;
+  }
+
+  async createMultiKeyWallet(label: string, chain: KeyringNetwork) {
+    const wallet = new MultiKeyWallet();
+    label = label || 'Wallet #' + (this.wallets.length+1);
+    wallet.create(chain, label);
+    this.wallets.push(wallet);
+
     await this.fullUpdate();
 
     return wallet;
@@ -203,10 +220,23 @@ export class KeyringManager extends SafeEventEmitter  {
     return this.findAccount(address).getPrivateKey()
   }
 
+  async importAccountPrivateKey (walletId: string, secret: string) {
+    const wallet = this.wallets.find(w => w.id === walletId);
+
+    const account = wallet.importAccount(secret);
+
+    await this.persistAllWallets();
+    this.updateMemStoreWallets();
+    this.notifyUpdate();
+
+    return account;
+  }
+
   exportWalletSecretKeyOrPhrase (walletId: string) {
     const wallet = this.wallets.find(w => w.id === walletId);
 
     return wallet.exportSecretKey();
+
   }
 
   async removeAccount (address) {
@@ -303,22 +333,31 @@ export class KeyringManager extends SafeEventEmitter  {
 
   private async _restoreWallet (wData: KeyringWalletSerialized) {
 
-    let chainWallet: IKeyringWallet;
+    let wallet: IKeyringWallet;
 
     if (wData.type === KeyringWalletType.MultiChainWallet) {
-      const wallet = chainWallet = new MultiChainWallet();
+      wallet = new MultiChainWallet();
       wallet.deserialize(wData);
     }
     else if (wData.type === KeyringWalletType.SingleAccountWallet) {
-      const wallet = chainWallet = new SingleAccountWallet();
+      wallet = new SingleAccountWallet();
+      wallet.deserialize(wData);
+    }
+    else if (wData.type === KeyringWalletType.MultiAccountWallet) {
+      wallet = new MultiAccountWallet();
+      wallet.deserialize(wData);
+    }
+    else if (wData.type === KeyringWalletType.MultiKeyWallet) {
+      wallet = new MultiKeyWallet();
       wallet.deserialize(wData);
     }
     else {
       throw new Error('Unknown Wallet type - ' + wData.type + ', support types are [' + KeyringWalletType.MultiChainWallet +',' + KeyringWalletType.SingleAccountWallet + ']');
     }
 
-    this.wallets.push(chainWallet)
-    return chainWallet;
+    this.wallets.push(wallet)
+
+    return wallet;
   }
 
   private updateUnlocked () {
