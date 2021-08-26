@@ -109,6 +109,14 @@
     stream-browserify "^3.0.0"
     uuid "^3.4.0"
 
+"@stardust-collective/dag4-network@^1.0.12":
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.12.tgz#ce5277f16950cee47a8e5b32939bf22a5d95590b"
+  integrity sha512-hdk/vtcUzfn2vvX4jp98wpgd8bhbcs71PVdngRBratArHStetccv+YY7WMMvTqLYlgvOPtjbv/NvQePIKOIzhA==
+  dependencies:
+    "@stardust-collective/dag4-core" "^1.0.5"
+    rxjs "^6.6.3"
+
 "@stardust-collective/dag4-network@^1.0.9":
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/@stardust-collective/dag4-network/-/dag4-network-1.0.9.tgz#1c1d9c0e42f5f3588b3194e96d187d943c05bd98"
