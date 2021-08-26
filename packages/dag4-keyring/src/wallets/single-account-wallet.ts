@@ -83,7 +83,7 @@ export class SingleAccountWallet implements IKeyringWallet {
     }
   }
 
-  importAccount (hdPath: string) {
+  importAccount (hdPath: string, label: string) {
     throw new Error('SimpleChainWallet does not support importAccount');
     return null;
   }

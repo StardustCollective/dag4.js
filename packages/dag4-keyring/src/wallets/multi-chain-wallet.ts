@@ -77,7 +77,7 @@ export class MultiChainWallet implements IKeyringWallet {
     }
   }
 
-  importAccount (hdPath: string) {
+  importAccount (hdPath: string, label: string) {
     throw new Error('MultiChainWallet does not support importAccount');
     return null;
   }

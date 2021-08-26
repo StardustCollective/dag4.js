@@ -24,7 +24,6 @@ export type KeyringWalletSerialized = {
   type: string,
   label: string,
   secret?: string,
-  secrets?: string[],
   numOfAccounts?: number,
   network?: KeyringNetwork,
   rings?: KeyringRingSerialized[]
@@ -50,6 +49,7 @@ export type KeyringRingSerialized = {
 }
 
 export type KeyringAccountSerialized = {
+  label?: string;
   privateKey?: string;
   publicKey?: string;
   tokens?: string[];
@@ -58,6 +58,7 @@ export type KeyringAccountSerialized = {
 
 export type KeyringAccountState = {
   address: string;
+  label? : string;
   tokens?: string[];
   supportedAssets: KeyringAssetType[];
 }
@@ -76,6 +77,7 @@ export interface IKeyringAccount {
   create (privateKey: string): IKeyringAccount;
   serialize (includeSecret: boolean): KeyringAccountSerialized;
   deserialize (data: KeyringAccountSerialized): IKeyringAccount;
+  getDecimals(): number;
   signMessage(msg: string): string;
   verifyMessage(msg: string, signature: string, saysAddress: string): boolean;
   signTransaction (address: string, tx, opts?: any);
@@ -103,7 +105,7 @@ export interface IKeyringWallet {
   readonly supportedAssets: KeyringAssetType[];
   serialize (): KeyringWalletSerialized;
   deserialize (data: KeyringWalletSerialized);
-  importAccount(secret: string): IKeyringAccount;
+  importAccount(secret: string, label: string): IKeyringAccount;
   getAccounts(): IKeyringAccount[];
   removeAccount (account: IKeyringAccount);
   getAccountByAddress (address: string): IKeyringAccount;

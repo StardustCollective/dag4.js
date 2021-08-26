@@ -20,12 +20,18 @@ export abstract class EcdsaAccount {
   protected assets: Asset[];
   protected bip44Index: number;
 
+  abstract decimals: number;
   abstract network: KeyringNetwork;
   abstract hasTokenSupport: boolean;
   abstract supportedAssets: KeyringAssetType[];
   private provider: Web3Provider;
+  private label: string;
 
   abstract verifyMessage(msg: string, signature: string, saysAddress: string): boolean;
+
+  getDecimals() {
+    return this.decimals;
+  }
 
   create (privateKey: string) {
     this.wallet = privateKey ? Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex')) : Wallet.generate();
@@ -63,6 +69,9 @@ export abstract class EcdsaAccount {
       address: this.getAddress(),
       supportedAssets: this.supportedAssets
     }
+    if (this.label) {
+      result.label = this.label;
+    }
     if (this.tokens) {
       result.tokens = this.tokens;
     }
@@ -76,12 +85,13 @@ export abstract class EcdsaAccount {
   serialize (includePrivateKey = true): KeyringAccountSerialized {
     const result:KeyringAccountSerialized = {}
     if (includePrivateKey) result.privateKey = this.getPrivateKey();
+    if (this.label) result.label = this.label;
     if (this.tokens) result.tokens = this.tokens.concat();
     if (this.bip44Index >= 0) result.bip44Index = this.bip44Index;
     return result;
   }
 
-  deserialize ({privateKey, publicKey, tokens, bip44Index}: KeyringAccountSerialized) {
+  deserialize ({privateKey, publicKey, tokens, bip44Index, label}: KeyringAccountSerialized) {
 
     if (privateKey) {
       this.wallet = Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex'));
@@ -90,6 +100,7 @@ export abstract class EcdsaAccount {
       this.wallet = Wallet.fromPublicKey(Buffer.from(publicKey, 'hex'));
     }
 
+    this.label = label;
     this.bip44Index = bip44Index;
     this.tokens = tokens || this.tokens;
     return this;

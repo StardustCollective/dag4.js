@@ -10,6 +10,7 @@ const PKCS_PREFIX = '3056301006072a8648ce3d020106052b8104000a034200';
 
 export class DagAccount extends EcdsaAccount implements IKeyringAccount {
 
+  decimals = 8;
   network = KeyringNetwork.Constellation;
   hasTokenSupport = false;
   supportedAssets = [KeyringAssetType.DAG];

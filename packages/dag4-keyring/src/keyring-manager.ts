@@ -220,10 +220,10 @@ export class KeyringManager extends SafeEventEmitter  {
     return this.findAccount(address).getPrivateKey()
   }
 
-  async importAccountPrivateKey (walletId: string, secret: string) {
+  async importAccountPrivateKey (walletId: string, secret: string, label: string) {
     const wallet = this.wallets.find(w => w.id === walletId);
 
-    const account = wallet.importAccount(secret);
+    const account = wallet.importAccount(secret, label);
 
     await this.persistAllWallets();
     this.updateMemStoreWallets();

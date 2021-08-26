@@ -6,6 +6,7 @@ import * as ethUtil from 'ethereumjs-util';
 
 export class EthAccount extends EcdsaAccount implements IKeyringAccount {
 
+  decimals = 18;
   network = KeyringNetwork.Ethereum;
   hasTokenSupport = true;
   supportedAssets = [KeyringAssetType.ETH,KeyringAssetType.ERC20];

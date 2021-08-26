@@ -51,7 +51,7 @@ export class MultiKeyWallet implements IKeyringWallet {
       type: this.type,
       label: this.label,
       network: this.network,
-      secrets: this.keyRings.map(k => k.getAccounts()[0].getPrivateKey())
+      rings: this.keyRings.map(k => k.serialize())
     }
   }
 
@@ -61,8 +61,11 @@ export class MultiKeyWallet implements IKeyringWallet {
     this.network = data.network;
     this.keyRings = [];
 
-    if (data.secrets && data.secrets.length) {
-      data.secrets.forEach(key => this.importAccount(key));
+    if (data.rings && data.rings.length) {
+      data.rings.forEach(ring => {
+        const a = ring.accounts[0];
+        this.importAccount(a.privateKey, a.label)
+      });
     }
 
     if (this.network === KeyringNetwork.Ethereum) {
@@ -74,9 +77,9 @@ export class MultiKeyWallet implements IKeyringWallet {
     }
   }
 
-  importAccount (secret: string) {
+  importAccount (secret: string, label: string) {
     const keyring = new SimpleKeyring();
-    keyring.deserialize({network: this.network, accounts: [{ privateKey: secret }]});
+    keyring.deserialize({network: this.network, accounts: [{ privateKey: secret, label }]});
     this.keyRings.push(keyring);
     return keyring.getAccounts()[0];
   }
