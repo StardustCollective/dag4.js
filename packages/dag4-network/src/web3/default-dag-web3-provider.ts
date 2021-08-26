@@ -1,6 +1,7 @@
 import {BlockExplorerApi, LoadBalancerApi} from "../api";
 import {NetworkInfo} from "../types";
 import {globalDagNetwork} from "../global-dag-network";
+import {Transaction} from "../dto";
 
 export class DefaultDagWeb3Provider {
 
@@ -46,6 +47,18 @@ export class DefaultDagWeb3Provider {
     async getTransactionCount(address: string) {
         const balObj = await this.getLoadBalancerApi().getAddressLastAcceptedTransactionRef(address);
         return balObj.ordinal;
+    }
+
+    async getTransactionHistory (address: string, limit = 100): Promise<Transaction[]> {
+        return this.getBlockExplorerApi().getTransactionsByAddress(address, limit);
+    }
+
+    async getTokenTransactionHistory (address: string, limit = 100): Promise<Transaction[]> {
+        return [];
+    }
+
+    async getTokenAddressBalances (addresses: string[], tokenContractAddress?: string[]) {
+        return {};
     }
 
     private getLoadBalancerApi() {
