@@ -26,7 +26,8 @@ export type KeyringWalletSerialized = {
   secret?: string,
   numOfAccounts?: number,
   network?: KeyringNetwork,
-  rings?: KeyringRingSerialized[]
+  rings?: KeyringRingSerialized[],
+  accounts?: KeyringAccountSerialized[]
 }
 
 export type KeyringWalletState = {
@@ -77,6 +78,7 @@ export interface IKeyringAccount {
   create (privateKey: string): IKeyringAccount;
   serialize (includeSecret: boolean): KeyringAccountSerialized;
   deserialize (data: KeyringAccountSerialized): IKeyringAccount;
+  getLabel(): string;
   getDecimals(): number;
   signMessage(msg: string): string;
   verifyMessage(msg: string, signature: string, saysAddress: string): boolean;

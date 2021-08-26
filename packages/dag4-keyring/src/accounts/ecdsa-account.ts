@@ -33,6 +33,10 @@ export abstract class EcdsaAccount {
     return this.decimals;
   }
 
+  getLabel(): string {
+    return this.label;
+  }
+
   create (privateKey: string) {
     this.wallet = privateKey ? Wallet.fromPrivateKey(Buffer.from(privateKey, 'hex')) : Wallet.generate();
     return this;
