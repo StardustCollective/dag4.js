@@ -3,8 +3,10 @@ import { Network} from '@xchainjs/xchain-client';
 import {BigNumber, ethers, FixedNumber} from 'ethers';
 import {Client} from '@xchainjs/xchain-ethereum';
 import {tokenContractService} from './token-contract-service';
+import ERC_20_ABI from 'erc-20-abi';
 
 import * as utils from '@xchainjs/xchain-util';
+import {formatUnits} from "ethers/lib/utils";
 
 export {utils};
 
@@ -30,6 +32,19 @@ export class XChainEthClient extends Client {
     }
 
     this['changeWallet'](new ethers.Wallet(privateKey, this.getProvider()));
+  }
+
+  async estimateTokenTransferGasLimit (recipient: string, contractAddress: string, txAmount: BigNumber, defaultValue?: number) {
+
+    try {
+      const contract = new ethers.Contract(contractAddress, ERC_20_ABI, this.getProvider());
+      const gasLimit: BigNumber = await contract.estimateGas.transfer(recipient, txAmount, {from: this.getAddress()});
+
+      return gasLimit.toNumber();
+    }
+    catch(e) {
+      return defaultValue;
+    }
   }
 
   isValidEthereumAddress (address: string) {

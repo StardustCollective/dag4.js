@@ -97,6 +97,7 @@ export class AccountTracker {
     clearTimeout(this.timeoutId);
     this.isRunning = false;
     this.provider = null;
+    this.lastBlock = null;
   }
 
   private async getTokenBalances () {

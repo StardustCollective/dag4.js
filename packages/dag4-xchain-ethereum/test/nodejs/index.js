@@ -2,6 +2,7 @@ const xchainUtil = require("@xchainjs/xchain-util");
 const {getTokenAddress} = require("@xchainjs/xchain-ethereum");
 
 const {XChainEthClient} = require("../../dist/cjs/client");
+const {ethers} = require("ethers");
 
 const PRIVATE_KEY = "114d7d51019c7f704388e03fb5c74174f27e2fc68ac88c82832ec9b1174b17fd";
 
@@ -29,23 +30,25 @@ async function testGetTokenBalance() {
     const tokenInfo =
         { address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', symbol: 'USDC', decimals: 6 };
 
-
     const tokens = await ethClient.getTokenBalance('0xcd4328383abc5399a910b7e01c8047d95b3afa8a', tokenInfo);
 
     console.log(JSON.stringify(tokens, null, 2))
 
 }
 
+async function getEthBalance () {
+    const provider = new ethers.providers.InfuraProvider();
+    const result = await provider.getBalance('0x70504ae3853e42533a22BBAA96915Af95178aBe6');
+    console.log(ethers.utils.formatEther(result));
+}
+
 async function testGetTokenBalanceTestnet() {
 
-    const tokenInfo =
-        { address: '0xeb349b537d77eec95d2761177c7581d6535630a1', symbol: 'FOO', decimals: 18 };
-
+    const tokenInfo = { address: '0xeb349b537d77eec95d2761177c7581d6535630a1', symbol: 'FOO', decimals: 18 };
 
     const tokens = await ethClient.getTokenBalance('0xC769323999C7b5cAD4c125bE0F33e83Ee4FB25c0', tokenInfo, 3);
 
     console.log(JSON.stringify(tokens, null, 2))
-
 }
 
 async function testGetTokenInfo() {
@@ -66,5 +69,6 @@ async function testXChainUtils () {
 }
 
 // testXChainUtils();
-testGetTokenBalance();
-testGetTokenInfo()
+// testGetTokenBalance();
+// testGetTokenInfo()
+getEthBalance();
