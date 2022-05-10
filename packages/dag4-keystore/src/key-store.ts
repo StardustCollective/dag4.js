@@ -260,7 +260,7 @@ export class KeyStore {
     amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
     fee = Math.floor(new BigNumber(fee).multipliedBy(1e8).toNumber());
 
-    if (amount < 0) {
+    if (amount < 1e8) {
       throw new Error('KeyStore :: Send amount must be greater than 1e-8');
     }
 

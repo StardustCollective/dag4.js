@@ -12,7 +12,7 @@
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "rollup": "rollup -c ../../scripts/config/rollup.config.js",
     "rollup2": "rollup -c config/rollup.config.js && rollup -c config/rollup.config.js --environment NODE_ENV:production",
-    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/**/der*-test.ts",
+    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/*",
     "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",
-    "@types/mocha": "^8.0.3",
+    "@types/mocha": "^8.2.3",
     "@types/node": "^14.6.2",
     "chai": "^4.2.0",
     "codelyzer": "^6.0.0",
