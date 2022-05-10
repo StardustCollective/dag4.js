@@ -45,17 +45,6 @@ const DERIVATION_PATH_MAP = {
   [DERIVATION_PATH.ETH_LEDGER]: CONSTANTS.BIP_44_ETH_PATH_LEDGER
 }
 
-const typeCheckJKey = (key: V3Keystore<KDFParamsPrivateKey>) => {
-
-  const params = (key && key.crypto && key.crypto.kdfparams);
-
-  if (params && params.salt && params.n !== undefined && params.r !== undefined && params.p !== undefined  && params.dklen !== undefined) {
-    return true;
-  }
-
-  throw new Error('Invalid JSON Private Key format');
-}
-
 export class KeyStore {
 
   sha512 (hash: string | Buffer) {
@@ -218,7 +207,6 @@ export class KeyStore {
   }
 
   async generateTransaction (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
-
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 
     if (!privateKey) {
@@ -245,13 +233,14 @@ export class KeyStore {
     signatureElt.signature = signature;
     signatureElt.id = {};
     signatureElt.id.hex = uncompressedPublicKey.substring(2); //Remove 04 prefix
-    tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
 
-    return tx;
+    const transaction = txEncode.getTxFromPostTransaction(tx);
+    transaction.addSignature(signatureElt);
+
+    return transaction.getPostTransaction();
   }
 
   prepareTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef, fee = 0) {
-
     if (toAddress === fromAddress) {
       throw new Error('KeyStore :: An address cannot send a transaction to itself');
     }
@@ -268,25 +257,23 @@ export class KeyStore {
       throw new Error('KeyStore :: Send fee must be greater or equal to zero');
     }
 
-    const tx = txEncode.buildTx(amount, toAddress, fromAddress, lastRef);
+    const tx = txEncode.getTx(amount, toAddress, fromAddress, lastRef, fee);
 
-    if (fee > 0) {
-      tx.edge.data.fee = fee;
-    }
+    tx.setEncodedHashReference();
 
-    const hashReference = txEncode.encodeTx(tx, true);
-
-    tx.edge.observationEdge.data.hashReference = hashReference;
-
-    const encodedTx = txEncode.encodeTx(tx, false);
+    const encodedTx = tx.getEncoded(false);
 
     const serializedTx = txEncode.kryoSerialize(encodedTx);
 
     const hash = this.sha256(Buffer.from(serializedTx, 'hex'));
 
-    tx.edge.signedObservationEdge.signatureBatch.hash = hash;
+    tx.setSignatureBatchHash(hash);
 
-    return { tx, hash, rle: encodedTx };
+    return { 
+      tx: tx.getPostTransaction(), 
+      hash, 
+      rle: encodedTx 
+    };
   }
 
 }
