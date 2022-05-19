@@ -13,15 +13,19 @@
     "url": "https://github.com/StardustCollective/dag4.js/issues"
   },
   "homepage": "https://github.com/StardustCollective/dag4.js#readme",
-  "main": "cjs/index.js",
-  "module": "esm/index.js",
-  "typings": "types/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "tsc && tsc -p tsconfig.cjs.json",
+    "build": "npx tsc && npx tsc -p tsconfig.cjs.json",
     "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
     "release:preflight": "npm pack ./dist --dry-run"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.4"
   }
 }

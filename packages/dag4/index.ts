@@ -6,11 +6,9 @@ import {
   RestApi as _RestApi,
   RestApiOptionsRequest as _RestApiOptionsRequest
 } from '@stardust-collective/dag4-core';
-import {Snapshot as _Snapshot, Transaction as _Transaction} from '@stardust-collective/dag4-network';
+import {globalDagNetwork, Snapshot as _Snapshot, Transaction as _Transaction, PendingTx as _PendingTx, NetworkInfo as _NetworkInfo} from '@stardust-collective/dag4-network';
 import {keyStore, HDKey as _HDKey, DERIVATION_PATH as _DERIVATION_PATH} from '@stardust-collective/dag4-keystore';
-import {PendingTx as _PendingTx, NetworkInfo as _NetworkInfo} from '@stardust-collective/dag4-network/types';
 import {DagAccount, DagMonitor} from '@stardust-collective/dag4-wallet';
-import {globalDagNetwork} from '@stardust-collective/dag4-network';
 
 
 export namespace Dag4Types {

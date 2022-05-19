@@ -5,9 +5,9 @@
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
   "license": "MIT",
-  "main": "cjs/index.js",
-  "module": "esm/index.js",
-  "typings": "types/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
   "homepage": "https://github.com/StardustCollective/dag4.js#readme",
   "scripts": {
     "prebuild": "rimraf dist/",
@@ -27,9 +27,9 @@
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "erc-20-abi": "^1.0.0",
-    "single-call-balance-checker-abi": "^1.0.0",
     "ethers": "^5.0.32",
-    "rxjs": "^7.0.0"
+    "rxjs": "^7.0.0",
+    "single-call-balance-checker-abi": "^1.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",

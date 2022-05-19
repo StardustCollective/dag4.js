@@ -5,8 +5,9 @@
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
   "license": "MIT",
-  "main": "cjs/index.js",
-  "module": "esm/index.js",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
   "homepage": "https://github.com/StardustCollective/dag4.js/packages/dag4-keyring/#readme",
   "scripts": {
     "prebuild": "rimraf dist/",
