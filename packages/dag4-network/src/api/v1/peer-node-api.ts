@@ -1,9 +1,9 @@
 
 import {RestApi} from '@stardust-collective/dag4-core';
 
-import {PeerMetricsRawData, PeerMetrics} from '../dto/v1/peer-metrics';
-import {ClusterInfo, ClusterPeerInfo} from '../dto/v1/cluster-peer-info';
-import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../dto/v1';
+import {PeerMetricsRawData, PeerMetrics} from '../../dto/v1/peer-metrics';
+import {ClusterInfo, ClusterPeerInfo} from '../../dto/v1/cluster-peer-info';
+import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../../dto/v1';
 
 export class PeerNodeApi {
 

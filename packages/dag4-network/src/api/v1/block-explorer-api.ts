@@ -1,6 +1,6 @@
 import {RestApi} from '@stardust-collective/dag4-core';
-import {DNC} from '../DNC';
-import {Block, Snapshot, Transaction} from '../dto/v1';
+import {DNC} from '../../DNC';
+import {Block, Snapshot, Transaction} from '../../dto/v1';
 
 
 

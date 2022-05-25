@@ -1,10 +1,10 @@
 import {RestApi} from '@stardust-collective/dag4-core';
-import {DNC} from '../DNC';
-import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../dto/v1';
-import {ClusterInfo, ClusterPeerInfo} from '../dto/v1';
-import {PeerMetrics} from '../dto/v1/peer-metrics';
-import {PeerMetricsResponse} from './peer-node-api';
-import {CbTransaction} from '../dto/v1/cb-transaction';
+import {DNC} from '../../DNC';
+import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../../dto/v1';
+import {ClusterInfo, ClusterPeerInfo} from '../../dto/v1';
+import {PeerMetrics} from '../../dto/v1/peer-metrics';
+import {PeerMetricsResponse} from '../v1/peer-node-api';
+import {CbTransaction} from '../../dto/v1/cb-transaction';
 
 export class L1Api {
 

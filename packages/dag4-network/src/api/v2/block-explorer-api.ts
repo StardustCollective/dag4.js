@@ -1,6 +1,6 @@
 import {RestApi} from '@stardust-collective/dag4-core';
-import {DNC} from '../DNC';
-import {SnapshotV2, TransactionV2, RewardTransaction, AddressBalance, BlockV2} from '../dto/v2';
+import {DNC} from '../../DNC';
+import {SnapshotV2, TransactionV2, RewardTransaction, AddressBalance, BlockV2} from '../../dto/v2';
 
 type HashOrOrdinal = string | number;
 

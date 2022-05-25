@@ -1,10 +1,10 @@
 import {Subject} from 'rxjs';
 import {NetworkInfo} from './types/network-info';
-import {BlockExplorerApi} from './api/block-explorer-api';
-import {BlockExplorerV2Api} from './api/block-explorer-v2-api';
-import {LoadBalancerApi} from './api/load-balancer-api';
-import {L0Api} from './api/l0-api';
-import {L1Api} from './api/l1-api';
+import {LoadBalancerApi} from './api/v1/load-balancer-api';
+import {BlockExplorerApi} from './api/v1/block-explorer-api';
+import {L0Api} from './api/v2/l0-api';
+import {L1Api} from './api/v2/l1-api';
+import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
 
 export class DagNetwork {
 

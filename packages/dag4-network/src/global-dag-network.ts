@@ -1,6 +1,6 @@
 
-import {BlockExplorerApi, blockExplorerApi} from './api/block-explorer-api';
-import {LoadBalancerApi, loadBalancerApi} from './api/load-balancer-api';
+import {BlockExplorerApi, blockExplorerApi} from './api/v1/block-explorer-api';
+import {LoadBalancerApi, loadBalancerApi} from './api/v1/load-balancer-api';
 import {DagNetwork} from './dag-network';
 import {PeerNodeApi} from './api';
 
