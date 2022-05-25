@@ -1,8 +1,6 @@
 import {keyStore, KeyTrio, PostTransaction} from '@stardust-collective/dag4-keystore';
-import {globalDagNetwork} from '@stardust-collective/dag4-network';
-
-import {DagNetwork, NetworkInfo} from '@stardust-collective/dag4-network';
-import {PendingTx} from '@stardust-collective/dag4-network/types';
+import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
+import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
 
@@ -87,7 +85,7 @@ export class DagAccount {
     const addressObj = await this.network.loadBalancerApi.getAddressBalance(address);
 
     if (addressObj && !isNaN(addressObj.balance)) {
-      result = new  BigNumber(addressObj.balance).dividedBy(1e8).toNumber();
+      result = new  BigNumber(addressObj.balance).dividedBy(DAG_DECIMALS).toNumber();
     }
 
     return result;
@@ -107,7 +105,7 @@ export class DagAccount {
       return 0;
     }
 
-    return 1 / 1e8;
+    return 1 / DAG_DECIMALS;
   }
 
   async generateSignedTransaction (toAddress: string, amount: number, fee = 0): Promise<PostTransaction>  {
@@ -121,7 +119,7 @@ export class DagAccount {
 
   async transferDag (toAddress: string, amount: number, fee = 0, autoEstimateFee = false): Promise<PendingTx> {
 
-    let normalizedAmount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
+    let normalizedAmount = Math.floor(new BigNumber(amount).multipliedBy(DAG_DECIMALS).toNumber());
     const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
 
     if (fee === 0 && autoEstimateFee) {
@@ -133,11 +131,11 @@ export class DagAccount {
 
         //Check to see if sending max amount
         if (addressObj.balance === normalizedAmount) {
-          amount -= 1e-8
+          amount -= DAG_DECIMALS
           normalizedAmount--;
         }
 
-        fee = 1e-8;
+        fee = DAG_DECIMALS;
       }
     }
 
@@ -214,20 +212,8 @@ export class DagAccount {
 
 }
 
-// function normalizeMult (num: number) {
-//   return Math.floor(new BigNumber(num).multipliedBy(1e8).toNumber());
-// }
-//
-// function normalizeDiv (num: number) {
-//   return (new BigNumber(num).dividedBy(1e8).toNumber());
-// }
-
-
-
 type TransferBatchItem = {
   address: string,
   amount: number,
   fee?: number
 }
-
-// export const walletSession = new WalletAccount();

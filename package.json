@@ -14,6 +14,7 @@
     "prebuild": "npm run clean",
     "build-rollup": "rollup -c scripts/config/rollup.config.js && rollup -c scripts/config/rollup.config.js --environment NODE_ENV:production",
     "build-all": "npm run build && npm run build-rollup",
+    "build": "npm run build --workspaces",
     "prerelease": "npm run build && npm version patch --no-git-tag-version",
     "release": "node ./scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
