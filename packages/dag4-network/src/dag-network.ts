@@ -1,7 +1,10 @@
 import {Subject} from 'rxjs';
 import {NetworkInfo} from './types/network-info';
 import {BlockExplorerApi} from './api/block-explorer-api';
+import {BlockExplorerV2Api} from './api/block-explorer-v2-api';
 import {LoadBalancerApi} from './api/load-balancer-api';
+import {L0Api} from './api/l0-api';
+import {L1Api} from './api/l1-api';
 
 export class DagNetwork {
 
@@ -11,6 +14,9 @@ export class DagNetwork {
 
   loadBalancerApi = new LoadBalancerApi();
   blockExplorerApi = new BlockExplorerApi();
+  blockExplorerV2Api = new BlockExplorerV2Api();
+  l0Api = new L0Api();
+  l1Api = new L1Api();
 
   constructor(netInfo?: NetworkInfo) {
     if (netInfo) {
@@ -36,8 +42,16 @@ export class DagNetwork {
     if (this.connectedNetwork !== netInfo) {
       this.connectedNetwork = netInfo;
 
-      this.blockExplorerApi.config().baseUrl(netInfo.beUrl);
-      this.loadBalancerApi.config().baseUrl(netInfo.lbUrl);
+      if (netInfo.networkVersion === '2.0') {
+        console.log('v2.0');
+        this.blockExplorerV2Api.config().baseUrl(netInfo.beUrl);
+        this.l0Api.config().baseUrl(netInfo.l0Url);
+        this.l1Api.config().baseUrl(netInfo.l1Url);
+      } else { // v1
+        console.log('v1');
+        this.blockExplorerApi.config().baseUrl(netInfo.beUrl);
+        this.loadBalancerApi.config().baseUrl(netInfo.lbUrl);
+      }
 
       this.networkChange$.next(netInfo);
     }

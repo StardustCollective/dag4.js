@@ -7,9 +7,9 @@ import {PeerMetrics} from '../dto/v1/peer-metrics';
 import {PeerMetricsResponse} from './peer-node-api';
 import {CbTransaction} from '../dto/v1/cb-transaction';
 
-export class LoadBalancerApi {
+export class L0Api {
 
-  private service = new RestApi(DNC.LOAD_BALANCER_URL);
+  private service = new RestApi(DNC.L0_URL);
 
   constructor (host?: string) {
     if (host) {
@@ -22,11 +22,12 @@ export class LoadBalancerApi {
   }
 
   async getMetrics () {
-    return this.service.$get<PeerMetricsResponse>('/metrics').then(rawData => PeerMetrics.parse(rawData.metrics, 0));
+    // TODO: add parsing for v2 response... returns weird string
+    return this.service.$get<PeerMetricsResponse>('/metric').then(rawData => PeerMetrics.parse(rawData.metrics, 0));
   }
 
   async getAddressBalance (address: string) {
-    return this.service.$get<AddressBalance>('/address/' + address);
+    return this.service.$get<AddressBalance>(`/dag/${address}/balance`);
   }
 
   async getAddressLastAcceptedTransactionRef (address: string) {
@@ -34,29 +35,17 @@ export class LoadBalancerApi {
   }
 
   async getTotalSupply () {
-    return this.service.$get<TotalSupply>('/total-supply');
+    return this.service.$get<TotalSupply>('/dag/total-supply');
   }
 
-  async postTransaction (tx: any) {
-    return this.service.$post<string>('/transaction', tx);
+  async getTotalSupplyAtOrdinal (ordinal: number) {
+    return this.service.$get<TotalSupply>(`/dag/${ordinal}/total-supply`);
   }
 
-  async getTransaction (hash: string) {
-    return this.service.$get<CbTransaction>('/transaction/' + hash);
-  }
-
-  async checkTransactionStatus (hash: string) {
-    const tx = await this.service.$get<CbTransaction>('/transaction/' + hash);
-
-    if (tx) {
-      if (tx.cbBaseHash) {
-        return { accepted: true, inMemPool: false };
-      }
-      return { accepted: false, inMemPool: true };
-    }
-
-    return null;
-  }
+  // In block explorer API?
+  // async getTransaction (hash: string) {
+  //   return this.service.$get<CbTransaction>('/transaction/' + hash);
+  // }
 
   async getClusterInfo (): Promise<ClusterPeerInfo[]> {
     return this.service.$get<ClusterInfo[]>('/cluster/info').then(info => this.processClusterInfo(info))
@@ -67,9 +56,9 @@ export class LoadBalancerApi {
   }
 
   //Returns number of connected Nodes in Cluster
-  async activeNodeCount () {
-    return this.service.$get<number>('/utils/health');
-  }
+  // async activeNodeCount () {
+  //   return this.service.$get<number>('/utils/health');
+  // }
 
   private retryClusterInfo (info: ClusterInfo[]) {
     if (info && info.map) {
@@ -90,5 +79,5 @@ export class LoadBalancerApi {
   }
 }
 
-export const loadBalancerApi = new LoadBalancerApi();
+export const l0Api = new L0Api();
 
