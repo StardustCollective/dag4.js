@@ -1,4 +1,4 @@
-export type TransactionParent = {
+export type TransactionReference = {
   hash: string
   ordinal: number
 }
@@ -15,7 +15,7 @@ export type TransactionV2 = {
   destination: string
   amount: number
   fee: number
-  parent: TransactionParent 
+  parent: TransactionReference 
   snapshot: string
   block: string
   timestamp: string

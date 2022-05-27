@@ -1,10 +1,6 @@
 import {RestApi} from '@stardust-collective/dag4-core';
 import {DNC} from '../../DNC';
-import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../../dto/v1';
-import {ClusterInfo, ClusterPeerInfo} from '../../dto/v1';
-import {PeerMetrics} from '../../dto/v1/peer-metrics';
-import {PeerMetricsResponse} from '../v1/peer-node-api';
-import {CbTransaction} from '../../dto/v1/cb-transaction';
+import {ClusterInfo, ClusterPeerInfo, TransactionReference} from '../../dto/v2';
 
 export class L1Api {
 
@@ -22,11 +18,11 @@ export class L1Api {
 
   async getMetrics () {
     // TODO: add parsing for v2 response... returns 404
-    return this.service.$get<PeerMetricsResponse>('/metric').then(rawData => PeerMetrics.parse(rawData.metrics, 0));
+    return this.service.$get<string>('/metric');
   }
 
   async getAddressLastAcceptedTransactionRef (address: string) {
-    return this.service.$get<AddressLastAcceptedTransaction>(`/transaction/last-reference/${address}`);
+    return this.service.$get<TransactionReference>(`/transaction/last-reference/${address}`);
   }
 
   async postTransaction (tx: any) {

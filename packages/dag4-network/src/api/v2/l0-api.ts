@@ -28,13 +28,13 @@ export class L0Api {
   private retryClusterInfo (info: ClusterInfo[]) {
     if (info && info.map) {
       return this.processClusterInfo(info);
-    } else {
-      return new Promise<ClusterPeerInfo[]>(resolve => {
-        setTimeout(() => {
-          resolve(this.getClusterInfoWithRetry());
-        }, 1000)
-      });
-    }
+    } 
+
+    return new Promise<ClusterPeerInfo[]>(resolve => {
+      setTimeout(() => {
+        resolve(this.getClusterInfoWithRetry());
+      }, 1000)
+    });
   }
 
   private processClusterInfo (info: ClusterInfo[]): ClusterPeerInfo[] {
