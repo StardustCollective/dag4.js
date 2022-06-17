@@ -5,10 +5,11 @@ import {BlockExplorerApi} from './api/v1/block-explorer-api';
 import {L0Api} from './api/v2/l0-api';
 import {L1Api} from './api/v2/l1-api';
 import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
+import {PostTransactionV2} from './dto/v2';
+import {PostTransaction} from './dto/v1';
 
 export class DagNetwork {
-
-  private connectedNetwork: NetworkInfo = { id: 'main', beUrl: '', lbUrl: ''};
+  private connectedNetwork: NetworkInfo = { id: 'main', beUrl: '', lbUrl: '', l0Url: '', l1Url: ''};
 
   private networkChange$ = new Subject<NetworkInfo>();
 
@@ -61,5 +62,47 @@ export class DagNetwork {
     return this.connectedNetwork;
   }
 
+  getNetworkVersion() {
+    return this.connectedNetwork.networkVersion;
+  }
+
+  async getAddressBalance(address: string) {
+    if (this.getNetworkVersion() === '2.0') {
+      return this.l0Api.getAddressBalance(address);
+    }
+
+    return this.loadBalancerApi.getAddressBalance(address);
+  }
+
+  async getAddressLastAcceptedTransactionRef(address: string) {
+    if (this.getNetworkVersion() === '2.0') {
+      return this.l1Api.getAddressLastAcceptedTransactionRef(address);
+    }
+
+    return this.loadBalancerApi.getAddressLastAcceptedTransactionRef(address);
+  }
+
+  async getPendingTransaction(hash: string | null) {
+    if (this.getNetworkVersion() === '2.0') {
+      return null; // TODO: currently no way to get a pending txn
+    }
+
+    return this.loadBalancerApi.getTransaction(hash);
+  }
+
+  async postTransaction(tx: PostTransaction | PostTransactionV2) {
+    if (this.getNetworkVersion() === '2.0') {
+      console.log('sending v2.0');
+      try {
+        return this.l1Api.postTransaction(tx as PostTransactionV2);
+      } catch(err: any) {
+        console.log('Caught postTransaction err: ', err);
+        console.log(err.stack);
+      }
+      
+    }
+
+    return this.loadBalancerApi.postTransaction(tx as PostTransaction);
+  }
 }
 

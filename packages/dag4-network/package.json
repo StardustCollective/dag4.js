@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "@stardust-collective/dag4-core": "*",
-    "rxjs": "^6.6.3"
+    "rxjs": "^6.6.3",
+    "bignumber.js": "^9.0.1"
   },
   "devDependencies": {
 

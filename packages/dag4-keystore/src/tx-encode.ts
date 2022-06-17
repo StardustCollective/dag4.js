@@ -1,5 +1,6 @@
 import {Buffer} from 'buffer';
-import {Transaction, TransactionProps, AddressLastRef, PostTransaction} from './transaction';
+import {Transaction, AddressLastRef, PostTransaction} from './transaction';
+import {TransactionV2, PostTransactionV2, AddressLastRefV2} from './transaction-v2';
 
 class TxEncode {
 
@@ -40,8 +41,24 @@ class TxEncode {
     return tx;
   }
 
+  getTxV2 (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRefV2, fee?: number): TransactionV2 {
+    const tx = new TransactionV2({
+      amount, 
+      fee,
+      toAddress,
+      fromAddress,
+      lastTxRef: lastRef
+    });
+
+    return tx;
+  }
+
   getTxFromPostTransaction(tx: PostTransaction) {
     return Transaction.fromPostTransaction(tx);
+  }
+  
+  getV2TxFromPostTransaction(tx: PostTransactionV2) {
+    return TransactionV2.fromPostTransaction(tx);
   }
 
   encodeTx (tx: PostTransaction, hashReference: boolean) {
@@ -50,8 +67,8 @@ class TxEncode {
     return transaction.getEncoded(hashReference);
   }
 
-  kryoSerialize (msg: string) {
-    const prefix = '0301' + Buffer.from(this.utf8Length(msg.length + 1)).toString('hex');
+  kryoSerialize (msg: string, setReferences = true) {
+    const prefix = '03' + (setReferences ? '01' : '') + Buffer.from(this.utf8Length(msg.length + 1)).toString('hex'); 
 
     const coded = Buffer.from(msg, 'utf8').toString('hex');
 

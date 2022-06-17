@@ -61,7 +61,15 @@ export type PostTransaction = {
   isTest: boolean,
 }
 
-export class Transaction {
+export interface TransactionInterface {
+  getPostTransaction(): any;
+  getEncoded(hashReference: boolean): string;
+  setEncodedHashReference(): void;
+  setSignatureBatchHash(hash: string): void;
+  addSignature(signature: Record<string, any>): void;
+}
+
+export class Transaction implements TransactionInterface {
   private tx: PostTransaction = {
     edge: {
       observationEdge: {
@@ -124,6 +132,10 @@ export class Transaction {
 
     if (salt === undefined) {
       salt = MIN_SALT + parseInt(randomBytes(6).toString('hex'), 16);
+    }
+
+    if (fee) { // defined and > 0
+      this.tx.edge.data.fee = fee;
     }
 
     this.tx.edge.data.salt = salt;

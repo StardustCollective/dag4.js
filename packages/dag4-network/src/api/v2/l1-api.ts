@@ -1,6 +1,6 @@
 import {RestApi} from '@stardust-collective/dag4-core';
 import {DNC} from '../../DNC';
-import {ClusterInfo, ClusterPeerInfo, TransactionReference} from '../../dto/v2';
+import {ClusterInfo, ClusterPeerInfo, TransactionReference, PostTransactionV2} from '../../dto/v2';
 
 export class L1Api {
 
@@ -25,7 +25,7 @@ export class L1Api {
     return this.service.$get<TransactionReference>(`/transaction/last-reference/${address}`);
   }
 
-  async postTransaction (tx: any) {
+  async postTransaction (tx: PostTransactionV2) {
     return this.service.$post<string>('/transaction', tx);
   }
 

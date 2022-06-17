@@ -21,3 +21,20 @@ export type TransactionV2 = {
   timestamp: string
   transactionOriginal: TransactionOriginal // TODO: this isn't defined in docs
 }
+
+export type Proof = {
+  signature: string,
+  id: string
+};
+
+export type PostTransactionV2 = {
+  value: {
+     source: string,
+     destination: string,
+     amount: number,
+     fee: number,
+     parent: TransactionReference,
+     salt: bigint | string
+  },
+  proofs: Proof[]
+};

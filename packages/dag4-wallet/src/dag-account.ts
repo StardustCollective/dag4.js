@@ -1,4 +1,4 @@
-import {keyStore, KeyTrio, PostTransaction} from '@stardust-collective/dag4-keystore';
+import {keyStore, KeyTrio, PostTransaction, PostTransactionV2} from '@stardust-collective/dag4-keystore';
 import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
 import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
@@ -79,28 +79,27 @@ export class DagAccount {
   }
 
   async getBalanceFor (address: string) {
-
-    let result: number = undefined;
-
-    const addressObj = await this.network.loadBalancerApi.getAddressBalance(address);
+    const addressObj = await this.network.getAddressBalance(address);
 
     if (addressObj && !isNaN(addressObj.balance)) {
-      result = new  BigNumber(addressObj.balance).dividedBy(DAG_DECIMALS).toNumber();
+      return new BigNumber(addressObj.balance).dividedBy(DAG_DECIMALS).toNumber();
     }
 
-    return result;
+    return undefined;
   }
 
   async getFeeRecommendation () {
-
     //Get last tx ref
-    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
-    if (!lastRef.prevHash) {
+    const lastRef = (await this.network.getAddressLastAcceptedTransactionRef(this.address)) as any;
+
+    const hash = lastRef.prevHash || lastRef.hash; // v1 vs v2 format
+
+    if (!hash) {
       return 0;
     }
 
     //Check for pending TX
-    const lastTx = await this.network.loadBalancerApi.getTransaction(lastRef.prevHash);
+    const lastTx = await this.network.getPendingTransaction(hash);
     if (!lastTx) {
       return 0;
     }
@@ -108,26 +107,25 @@ export class DagAccount {
     return 1 / DAG_DECIMALS;
   }
 
-  async generateSignedTransaction (toAddress: string, amount: number, fee = 0): Promise<PostTransaction>  {
+  async generateSignedTransaction (toAddress: string, amount: number, fee = 0, lastRef?): Promise<PostTransaction | PostTransactionV2>  {
+    lastRef = lastRef ? lastRef : await this.network.getAddressLastAcceptedTransactionRef(this.address);
 
-    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    if (this.network.getNetworkVersion() === '2.0') {
+      return keyStore.generateTransactionV2(amount, toAddress, this.keyTrio, lastRef as any, fee);
+    } 
 
-    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
-
-    return tx;
+    return keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef as any, fee);
   }
 
   async transferDag (toAddress: string, amount: number, fee = 0, autoEstimateFee = false): Promise<PendingTx> {
-
     let normalizedAmount = Math.floor(new BigNumber(amount).multipliedBy(DAG_DECIMALS).toNumber());
-    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    const lastRef: any = await this.network.getAddressLastAcceptedTransactionRef(this.address);
 
     if (fee === 0 && autoEstimateFee) {
-      const tx = await this.network.loadBalancerApi.getTransaction(lastRef.prevHash);
+      const tx = await this.network.getPendingTransaction(lastRef.prevHash || lastRef.hash);
 
       if (tx) {
-
-        const addressObj = await this.network.loadBalancerApi.getAddressBalance(this.address);
+        const addressObj = await this.network.getAddressBalance(this.address);
 
         //Check to see if sending max amount
         if (addressObj.balance === normalizedAmount) {
@@ -139,11 +137,10 @@ export class DagAccount {
       }
     }
 
-    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
-    const txHash = await this.network.loadBalancerApi.postTransaction(tx);
+    const tx = await this.generateSignedTransaction(toAddress, amount, fee);
+    const txHash = await this.network.postTransaction(tx);
 
     if (txHash) {
-      //this.memPool.addToMemPoolMonitor({ timestamp: Date.now(), hash: txHash, amount: amount * 1e8, receiver: toAddress, sender: this.address });
       return { timestamp: Date.now(), hash: txHash, amount: normalizedAmount, receiver: toAddress, fee, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
     }
   }
