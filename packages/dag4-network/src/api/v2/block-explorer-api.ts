@@ -19,27 +19,27 @@ export class BlockExplorerV2Api {
 
   // Snapshots
   async getSnapshot (id: HashOrOrdinal) {
-    return this.service.$get<SnapshotV2>(`/global-snapshot/${id}`);
+    return this.service.$get<SnapshotV2>(`/global-snapshots/${id}`);
   }
 
   async getTransactionsBySnapshot (id: HashOrOrdinal) {
-    return this.service.$get<TransactionV2[]>(`/global-snapshot/${id}/transaction`);
+    return this.service.$get<TransactionV2[]>(`/global-snapshots/${id}/transaction`);
   }
 
   async getRewardsBySnapshot(id: HashOrOrdinal) {
-    return this.service.$get<RewardTransaction>(`/global-snapshot/${id}/rewards`);
+    return this.service.$get<RewardTransaction>(`/global-snapshots/${id}/rewards`);
   }
 
   async getLatestSnapshot () {
-    return this.service.$get<SnapshotV2>('/global-snapshot/latest');
+    return this.service.$get<SnapshotV2>('/global-snapshots/latest');
   }
 
   async getLatestSnapshotTransactions() {
-    return this.service.$get<TransactionV2>('/global-snapshot/latest/transaction');
+    return this.service.$get<TransactionV2>('/global-snapshots/latest/transaction');
   }
 
   async getLatestSnapshotRewards() {
-    return this.service.$get<RewardTransaction>('/global-snapshot/latest/rewards');
+    return this.service.$get<RewardTransaction>('/global-snapshots/latest/rewards');
   }
 
   // Transactions
@@ -52,7 +52,7 @@ export class BlockExplorerV2Api {
   }
 
   async getTransactionsByAddress (address: string, limit: number = 0, searchAfter = '', sentOnly = false, receivedOnly = false, searchBefore = '') {
-    let params, path = `/address/${address}/transaction`;
+    let params, path = `/addresses/${address}/transactions`;
 
     if (limit || searchAfter) {
       params = {};
@@ -79,17 +79,17 @@ export class BlockExplorerV2Api {
   }
 
   async getTransaction (hash: string) {
-    return this.service.$get<TransactionV2>(`/transaction/${hash}`);
+    return this.service.$get<TransactionV2>(`/transactions/${hash}`);
   }
 
   // Addresses
   async getAddressBalance(hash: string) {
-    return this.service.$get<AddressBalance>(`/address/${hash}/balance`);
+    return this.service.$get<AddressBalance>(`/addresses/${hash}/balance`);
   }
 
   // Blocks
   async getCheckpointBlock(hash: string) {
-    return this.service.$get<BlockV2>(`/block/${hash}`);
+    return this.service.$get<BlockV2>(`/blocks/${hash}`);
   }
 }
 

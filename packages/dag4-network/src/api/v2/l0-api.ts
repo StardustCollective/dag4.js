@@ -67,16 +67,16 @@ export class L0Api {
   // Global Snapshot
   // TODO: returns weird string
   async getLatestSnapshot() {
-    return this.service.$get<string>(`/global-snapshot/latest`);
+    return this.service.$get<string>(`/global-snapshots/latest`);
   }
 
   async getLatestSnapshotOrdinal() {
-    return this.service.$get<SnapshotOrdinal>(`/global-snapshot/latest/ordinal`);
+    return this.service.$get<SnapshotOrdinal>(`/global-snapshots/latest/ordinal`);
   }
   
     // TODO: returns weird string
   async getSnapshot(id: string | number) {
-    return this.service.$get<string>(`/global-snapshot/${id}`);
+    return this.service.$get<string>(`/global-snapshots/${id}`);
   }
 
   // State Channels

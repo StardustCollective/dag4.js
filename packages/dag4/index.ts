@@ -1,3 +1,4 @@
+import fetch from 'cross-fetch';
 import {
   arrayUtils,
   dagDi,
@@ -81,13 +82,6 @@ type Dag4Config = {
   network: Dag4Types.NetworkInfo
 }
 
-// dag4.config({
-//   appId: 'stargazer',
-//   network: {
-//     id: 'main',
-//     beUrl: '',
-//     lbUrl: ''
-//   }
-// })
-
-//
+// default config
+console.log('setting default fetch');
+dag4.di.useFetchHttpClient(fetch);

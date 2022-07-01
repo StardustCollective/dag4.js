@@ -22,11 +22,11 @@ export class L1Api {
   }
 
   async getAddressLastAcceptedTransactionRef (address: string) {
-    return this.service.$get<TransactionReference>(`/transaction/last-reference/${address}`);
+    return this.service.$get<TransactionReference>(`/transactions/last-reference/${address}`);
   }
 
   async postTransaction (tx: PostTransactionV2) {
-    return this.service.$post<string>('/transaction', tx);
+    return this.service.$post<string>('/transactions', tx);
   }
 
   async getClusterInfo (): Promise<ClusterPeerInfo[]> {
