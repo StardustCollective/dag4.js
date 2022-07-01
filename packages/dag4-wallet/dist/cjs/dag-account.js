@@ -63,9 +63,9 @@ class DagAccount {
     async getBalanceFor(address) {
         const addressObj = await this.network.getAddressBalance(address);
         if (addressObj && !isNaN(addressObj.balance)) {
-            return new bignumber_js_1.BigNumber(addressObj.balance).dividedBy(dag4_core_1.DAG_DECIMALS).toNumber();
+            return new bignumber_js_1.BigNumber(addressObj.balance).multipliedBy(dag4_core_1.DAG_DECIMALS).toNumber();
         }
-        return undefined;
+        return 0;
     }
     async getFeeRecommendation() {
         //Get last tx ref
