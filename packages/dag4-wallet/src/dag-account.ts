@@ -82,10 +82,10 @@ export class DagAccount {
     const addressObj = await this.network.getAddressBalance(address);
 
     if (addressObj && !isNaN(addressObj.balance)) {
-      return new BigNumber(addressObj.balance).dividedBy(DAG_DECIMALS).toNumber();
+      return new BigNumber(addressObj.balance).multipliedBy(DAG_DECIMALS).toNumber();
     }
 
-    return undefined;
+    return 0;
   }
 
   async getFeeRecommendation () {
