@@ -1,0 +1,55 @@
+import SafeEventEmitter from '@metamask/safe-event-emitter';
+import { IKeyringWallet, KeyringNetwork, KeyringWalletState, KeyringWalletType } from './kcs';
+import { MultiChainWallet, SingleAccountWallet, MultiAccountWallet, MultiKeyWallet } from './wallets';
+import { IKeyringAccount } from './kcs';
+export declare type KeyringVaultState = {
+    isUnlocked: boolean;
+    wallets: KeyringWalletState[];
+};
+export declare class KeyringManager extends SafeEventEmitter {
+    private storage;
+    private encryptor;
+    private wallets;
+    private memStore;
+    private password;
+    constructor();
+    isUnlocked(): boolean;
+    generateSeedPhrase(): string;
+    private fullUpdate;
+    notifyUpdate(): void;
+    setWalletLabel(walletId: string, label: string): void;
+    removeWalletById(id: string): Promise<void>;
+    createOrRestoreVault(label: string, seed?: string, password?: string): Promise<MultiChainWallet>;
+    private createCrossChainHdWallet;
+    createMultiAccountWallet(label: string, seed: string, chain: KeyringNetwork, numOfAccounts?: number): Promise<MultiAccountWallet>;
+    createMultiKeyWallet(label: string, chain: KeyringNetwork): Promise<MultiKeyWallet>;
+    createMultiChainHdWallet(label: string, seed?: string): Promise<MultiChainWallet>;
+    createSingleAccountWallet(label: string, network: KeyringNetwork, privateKey?: string): Promise<SingleAccountWallet>;
+    addTokenToAccount(walletId: string, accountAddress: string, address: string): IKeyringAccount;
+    private newMultiChainHdWallet;
+    logout(): void;
+    login(password: string): Promise<void>;
+    setPassword(password: any): void;
+    checkPassword(password: any): boolean;
+    removeEmptyWallets(): void;
+    exportAccountPrivateKey(address: string): string;
+    importAccountPrivateKey(walletId: string, secret: string, label: string): Promise<IKeyringAccount>;
+    exportWalletSecretKeyOrPhrase(walletId: string): string;
+    removeAccount(address: any): Promise<void>;
+    signTransaction(tx: any, fromAddress: string, opts?: {}): void;
+    signMessage(msgParams: {
+        from: string;
+        data: string;
+    }, opts?: any): any;
+    private unlockWallets;
+    getAccounts(): IKeyringAccount[];
+    getWallets(filterByType?: KeyringWalletType): IKeyringWallet[];
+    getWalletById(id: string): IKeyringWallet;
+    getWalletForAccount(address: string): IKeyringWallet;
+    findAccount(address: string): IKeyringAccount;
+    private persistAllWallets;
+    private _restoreWallet;
+    private updateUnlocked;
+    private clearWallets;
+    private updateMemStoreWallets;
+}

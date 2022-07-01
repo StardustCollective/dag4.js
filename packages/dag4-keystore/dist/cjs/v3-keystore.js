@@ -1,0 +1,127 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.V3Keystore = void 0;
+const bip39_1 = require("./bip39/bip39");
+const buffer_1 = require("buffer");
+const randombytes_1 = __importDefault(require("randombytes"));
+const v4_1 = __importDefault(require("uuid/v4"));
+const blake = __importStar(require("blakejs"));
+const pbkdf2_1 = __importStar(require("pbkdf2"));
+const aes = __importStar(require("ethereum-cryptography/aes"));
+const ENCRYPT = {
+    cipher: 'aes-128-ctr',
+    kdf: 'pbkdf2',
+    prf: 'hmac-sha256',
+    dklen: 32,
+    c: 262144,
+    hash: 'sha256'
+};
+const typeCheckJPhrase = (key) => {
+    const params = (key && key.crypto && key.crypto.kdfparams);
+    if (params && params.salt && params.c !== undefined && params.dklen !== undefined) {
+        return true;
+    }
+    throw new Error('Invalid JSON Keystore format');
+};
+const blake256 = (data) => {
+    if (!(data instanceof buffer_1.Buffer)) {
+        data = buffer_1.Buffer.from(data, 'hex');
+    }
+    const context = blake.blake2bInit(32, null);
+    blake.blake2bUpdate(context, data);
+    return buffer_1.Buffer.from(blake.blake2bFinal(context)).toString('hex');
+};
+const pbkdf2Async = async (passphrase, salt, iterations, keylen, digest) => {
+    return new Promise((resolve, reject) => {
+        pbkdf2_1.pbkdf2(passphrase, salt, iterations, keylen, digest, (err, drived) => {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(drived);
+            }
+        });
+    });
+};
+class V3Keystore {
+    static async encryptPhrase(phrase, password) {
+        if (!bip39_1.bip39.validateMnemonic(phrase)) {
+            throw new Error('Invalid BIP39 phrase');
+        }
+        const ID = (0, v4_1.default)();
+        const salt = (0, randombytes_1.default)(32);
+        const iv = (0, randombytes_1.default)(16);
+        const phraseBuff = buffer_1.Buffer.from(phrase, 'utf8');
+        const kdfParams = {
+            prf: ENCRYPT.prf,
+            dklen: ENCRYPT.dklen,
+            salt: salt.toString('hex'),
+            c: ENCRYPT.c,
+        };
+        const cipherParams = {
+            iv: iv.toString('hex'),
+        };
+        const derivedKey = await pbkdf2Async(buffer_1.Buffer.from(password), salt, kdfParams.c, kdfParams.dklen, ENCRYPT.hash);
+        //encrypt(msg: Buffer, key: Buffer, iv: Buffer, mode = 'aes-128-ctr', pkcs7PaddingEnabled = true): Buffer;
+        const cipherText = aes.encrypt(phraseBuff, derivedKey.slice(0, 16), iv, ENCRYPT.cipher); //.toString('hex');
+        // const cipherIV = crypto.createCipheriv(cipher, derivedKey.slice(0, 16), iv)
+        // const cipherText = Buffer.concat([cipherIV.update(Buffer.from(phrase, 'utf8')), cipherIV.final()])
+        const mac = blake256(buffer_1.Buffer.concat([derivedKey.slice(16, 32), buffer_1.Buffer.from(cipherText)]));
+        const cryptoStruct = {
+            cipher: ENCRYPT.cipher,
+            ciphertext: cipherText.toString('hex'),
+            cipherparams: cipherParams,
+            kdf: ENCRYPT.kdf,
+            kdfparams: kdfParams,
+            mac: mac,
+        };
+        const keystore = {
+            crypto: cryptoStruct,
+            id: ID,
+            version: 1,
+            meta: 'stardust-collective/dag4'
+        };
+        return keystore;
+    }
+    static async decryptPhrase(keystore, password) {
+        typeCheckJPhrase(keystore);
+        const kdfparams = keystore.crypto.kdfparams;
+        const derivedKey = await pbkdf2Async(buffer_1.Buffer.from(password), buffer_1.Buffer.from(kdfparams.salt, 'hex'), kdfparams.c, kdfparams.dklen, ENCRYPT.hash);
+        const ciphertext = buffer_1.Buffer.from(keystore.crypto.ciphertext, 'hex');
+        const mac = blake256(buffer_1.Buffer.concat([derivedKey.slice(16, 32), ciphertext]));
+        const iv = buffer_1.Buffer.from(keystore.crypto.cipherparams.iv, 'hex');
+        if (mac !== keystore.crypto.mac) {
+            return Promise.reject('invalid password');
+        }
+        const phrase = aes.decrypt(ciphertext, derivedKey.slice(0, 16), iv, ENCRYPT.cipher);
+        return phrase.toString('utf8');
+    }
+}
+exports.V3Keystore = V3Keystore;
+//# sourceMappingURL=v3-keystore.js.map

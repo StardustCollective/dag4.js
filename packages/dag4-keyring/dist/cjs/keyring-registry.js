@@ -1,0 +1,46 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.keyringRegistry = void 0;
+class KeyringRegistry {
+    registry = new Map();
+    registerAccountClass(id, clazz) {
+        this.registry.set(id, clazz);
+    }
+    createAccount(id) {
+        const clazz = this.registry.get(id);
+        return new clazz();
+    }
+}
+exports.keyringRegistry = new KeyringRegistry();
+//Manager
+//  wallets: { id?, label, type, wallet }[]
+//  MCHD, multiChainHdKeyring(seed)
+//  SCHD, singleChainHdKeyring(seed, chain)
+//  CCHD, crossChainHdKeyring(seed)
+//  SIMP, simpleKeyring(privateKey, chain)
+//    accounts: IKeyringAccount[]
+//      tokens: IKeyringAccountTokens[]
+//    flattenAccountAndTokens()
+//    getAccounts()
+//        getTokens()
+// - creates a single wallet with multiple chains, each with their own single account.
+// createMultiChainHdWallet(seed: string)
+//  DEFAULT ACCOUNTS
+//    Constellation, Ethereum
+//    keyring.addAccount() throws Error
+//  ERC-20
+//    account.addToken(chain, contractId)
+// - creates a single wallet with one chain, multiple accounts, creates first account by default.
+// createSingleChainHdWallet(seed: string, chain: KeyringChain)
+//   keyring.addChain()
+//      keyring.addAccount()
+//        account.addToken(contractId)
+// - creates a single wallet with multiple chains, multiple accounts, creates first account by default one per chain.
+// createCrossChainHdWallet(seed: string)
+//    keyring.addAccount()
+//      account.addToken(contractId)
+// - creates a single wallet with one chain, creates first account by default, one per chain.
+// createSimpleWallet(privateKey: string, chain: KeyringChain)
+//    keyring.addAccount()
+//      account.addToken(contractId)
+//# sourceMappingURL=keyring-registry.js.map
