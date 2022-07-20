@@ -3,6 +3,7 @@ import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
 import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
+import {networkConfig} from './network-config';
 
 export class DagAccount {
 
@@ -10,8 +11,21 @@ export class DagAccount {
   private sessionChange$ = new Subject<boolean>();
   private network: DagNetwork = globalDagNetwork;
 
-  connect(networkInfo: NetworkInfo) {
-    this.network = new DagNetwork(networkInfo);
+  connect(networkInfo: NetworkInfo, useDefaultConfig = true) {
+    let baseConfig = {};
+
+    if (useDefaultConfig && networkInfo.networkVersion) {
+      const version = networkInfo.networkVersion.split('.')[0];
+      const networkType = networkInfo.testnet ? 'testnet' : 'mainnet';
+
+      baseConfig = networkConfig[version][networkType];
+    }
+
+    this.network.config({
+      ...baseConfig,
+      ...networkInfo
+    });
+
     return this;
   }
 
@@ -27,6 +41,10 @@ export class DagAccount {
 
   get keyTrio () {
     return this.m_keyTrio;
+  }
+
+  get publicKey () {
+    return this.m_keyTrio.publicKey;
   }
 
   loginSeedPhrase (words: string) {
@@ -113,8 +131,28 @@ export class DagAccount {
     if (this.network.getNetworkVersion() === '2.0') {
       return keyStore.generateTransactionV2(amount, toAddress, this.keyTrio, lastRef as any, fee);
     } 
+    
+    // Support old and new lastRef format
+    if (lastRef && lastRef.hash && !lastRef.prevHash) {
+      lastRef.prevHash = lastRef.hash;
+    }
 
     return keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef as any, fee);
+  }
+
+  async generateSignedTransactionWithHash (toAddress: string, amount: number, fee = 0, lastRef?): Promise<{ transaction: PostTransaction | PostTransactionV2, hash: string}>  {
+    lastRef = lastRef ? lastRef : await this.network.getAddressLastAcceptedTransactionRef(this.address);
+
+    if (this.network.getNetworkVersion() === '2.0') {
+      return keyStore.generateTransactionWithHashV2(amount, toAddress, this.keyTrio, lastRef as any, fee);
+    }
+    
+    // Support old and new lastRef format
+    if (lastRef && lastRef.hash && !lastRef.prevHash) {
+      lastRef.prevHash = lastRef.hash;
+    }
+
+    return keyStore.generateTransactionWithHash(amount, toAddress, this.keyTrio, lastRef as any, fee);
   }
 
   async transferDag (toAddress: string, amount: number, fee = 0, autoEstimateFee = false): Promise<PendingTx> {
@@ -146,19 +184,42 @@ export class DagAccount {
   }
 
   async waitForCheckPointAccepted (hash: string) {
+    // In V2 the txn is accepted as it's processed so we don't need to check multiple times
+    if (this.network.getNetworkVersion() === '2.0') {
+      console.log('waitForCheckPointAccepted hash: ', hash);
+      
+      let txn;
+      try {
+        txn = await this.network.getPendingTransaction(hash) as any;
+      } catch(err: any) { 
+        // 404 NOOP
+      }
+
+      console.log('pendingTx: ', txn);
+
+      if (txn && txn.status === 'Waiting') {
+        return true;
+      }
+
+      try {
+        await this.network.getTransaction(hash);
+      } catch(err: any) { 
+        // 404s if not found
+        return false;
+      }
+
+      return true
+    }
 
     let attempts = 0;
-
     for (let i = 1; ; i++) {
-
       const result = await this.network.loadBalancerApi.checkTransactionStatus(hash);
 
       if (result) {
         if (result.accepted) {
           break;
         }
-      }
-      else {
+      } else {
         attempts++;
 
         if (attempts > 20) {
