@@ -5,4 +5,5 @@ export type NetworkInfo = {
   l0Url?: string;
   l1Url?: string;
   networkVersion?: string;
+  testnet?: boolean;
 }

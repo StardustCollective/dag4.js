@@ -3,10 +3,13 @@ export type TransactionReference = {
   ordinal: number
 }
 
-// TODO: not actually defined, fill from API response
-export type TransactionOriginal = {
-  hash: string
-  ordinal: number
+type TransactionValueV2 = {
+    source: string,
+    destination: string,
+    amount: number,
+    fee: number,
+    parent: TransactionReference,
+    salt: bigint | string
 }
 
 export type TransactionV2 = {
@@ -19,7 +22,13 @@ export type TransactionV2 = {
   snapshot: string
   block: string
   timestamp: string
-  transactionOriginal: TransactionOriginal // TODO: this isn't defined in docs
+  transactionOriginal: TransactionReference
+}
+
+export type PendingTransaction = {
+  transaction: TransactionValueV2
+  hash: string
+  status: string
 }
 
 export type Proof = {
@@ -28,13 +37,6 @@ export type Proof = {
 };
 
 export type PostTransactionV2 = {
-  value: {
-     source: string,
-     destination: string,
-     amount: number,
-     fee: number,
-     parent: TransactionReference,
-     salt: bigint | string
-  },
+  value: TransactionValueV2,
   proofs: Proof[]
 };

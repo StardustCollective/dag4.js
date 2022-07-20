@@ -44,12 +44,10 @@ export class DagNetwork {
       this.connectedNetwork = netInfo;
 
       if (netInfo.networkVersion === '2.0') {
-        console.log('v2.0');
         this.blockExplorerV2Api.config().baseUrl(netInfo.beUrl);
         this.l0Api.config().baseUrl(netInfo.l0Url);
         this.l1Api.config().baseUrl(netInfo.l1Url);
       } else { // v1
-        console.log('v1');
         this.blockExplorerApi.config().baseUrl(netInfo.beUrl);
         this.loadBalancerApi.config().baseUrl(netInfo.lbUrl);
       }
@@ -84,22 +82,24 @@ export class DagNetwork {
 
   async getPendingTransaction(hash: string | null) {
     if (this.getNetworkVersion() === '2.0') {
-      return null; // TODO: currently no way to get a pending txn
+      return this.l1Api.getPendingTransaction(hash);
     }
 
     return this.loadBalancerApi.getTransaction(hash);
   }
 
+  async getTransaction(hash: string | null) {
+    if (this.getNetworkVersion() === '2.0') {
+      return this.blockExplorerV2Api.getTransaction(hash);
+    }
+
+    return this.blockExplorerApi.getTransaction(hash);
+  }
+
   async postTransaction(tx: PostTransaction | PostTransactionV2) {
     if (this.getNetworkVersion() === '2.0') {
-      console.log('sending v2.0');
-      try {
-        return this.l1Api.postTransaction(tx as PostTransactionV2);
-      } catch(err: any) {
-        console.log('Caught postTransaction err: ', err);
-        console.log(err.stack);
-      }
-      
+      console.log('posting tx to 2.0');
+      return this.l1Api.postTransaction(tx as PostTransactionV2);
     }
 
     return this.loadBalancerApi.postTransaction(tx as PostTransaction);
