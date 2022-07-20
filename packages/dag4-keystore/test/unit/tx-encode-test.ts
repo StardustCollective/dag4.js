@@ -2,39 +2,52 @@ import {expect} from 'chai';
 import {keyStore} from '../../src/key-store';
 import {txEncode} from '../../src/tx-encode';
 
-const testData = require('../resources/valid-tx.json');
+const validV1Txns = require('../resources/valid-txns-v1.json');
 
 const HASH_REFERENCE = '100101010';
 const ENCODED_TX = '240DAG2rVZNxft1DFyegDqEuTHV7uS27j1qb2CbepnS40DAG5A4s8whzjwz2y9VxjLQgL9bwtUjuRzvemTGFd100101010';
 const SERIALIZED_TX = '0301df013234304441473272565a4e7866743144467965674471457554485637755332376a31716232436265706e533430444147354134733877687a6a777a32793956786a4c51674c39627774556a75527a76656d54474664313030313031303130';
 const HASH = 'bf74a28f2e64de19b312b73c0b8a3233b1de3cdff84fc2743ebb7efa219e7f56';
 
+const stripTxnSignatures = (txn: Record<string, any>) => {
+  return {
+    ...txn,
+    signedObservationEdge: {
+      signatureBatch: {
+        hash: '',
+        signatures: [],
+      },
+    },
+  }
+}
+
 describe('TX-Encode', () => {
-
-  let hashReference, encodedTx, serializedTx, hash;
-
   it('hash reference', () => {
-    hashReference = txEncode.encodeTx(testData, true);
+    const hashReference = txEncode.encodeTx(validV1Txns[0].transaction, true);
 
-    expect(hashReference).to.equal(HASH_REFERENCE);
+    expect(hashReference).to.equal('55839064fa640ea8a562d61540904f4a1658a04bb6a7238d02d49ece14ef8b2fefff539624010141f465cec34dfd8');
   });
 
   it('encoded tx', () => {
-    encodedTx = txEncode.encodeTx(testData, false);
+    const encodedTx = txEncode.encodeTx(validV1Txns[0].transaction, false);
 
-    expect(encodedTx).to.equal(ENCODED_TX);
+    expect(encodedTx).to.equal('240DAG4bQGdnDJ5okVdsdtvJzBwQoPGjLNzN7HC1CBV40DAG4EqbfJNSYZDDfs7AUzofotJzZXeRYgHaGZ6jQ55839064fa640ea8a562d61540904f4a1658a04bb6a7238d02d49ece14ef8b2fefff539624010141f465cec34dfd8');
   });
 
   it('kryo serialize', () => {
-    serializedTx = txEncode.kryoSerialize(encodedTx);
+    const encodedTx = txEncode.encodeTx(validV1Txns[0].transaction, false);
+    const serializedTx = txEncode.kryoSerialize(encodedTx);
 
-    expect(serializedTx).to.equal(SERIALIZED_TX);
+    expect(serializedTx).to.equal('0301f30232343044414734625147646e444a356f6b5664736474764a7a4277516f50476a4c4e7a4e37484331434256343044414734457162664a4e53595a444466733741557a6f666f744a7a5a58655259674861475a366a51353538333930363466613634306561386135363264363135343039303466346131363538613034626236613732333864303264343965636531346566386232666566666635333936323430313031343166343635636563333464666438');
   });
 
   it('sha 256 hash', () => {
-    hash = keyStore.sha256(Buffer.from(serializedTx, 'hex'));
+    const txn = stripTxnSignatures(validV1Txns[0].transaction);
+    const encodedTx = txEncode.encodeTx(txn as any, false);
+    const serializedTx = txEncode.kryoSerialize(encodedTx);
 
-    expect(hash).to.equal(HASH);
+    const hash = keyStore.sha256(Buffer.from(serializedTx, 'hex'));
+
+    expect(hash).to.equal(validV1Txns[0].hash);
   });
-
 });

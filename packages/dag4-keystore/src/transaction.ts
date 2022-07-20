@@ -176,14 +176,14 @@ export class Transaction implements TransactionInterface {
     encodedTx += amount;
 
     // == lastTxRef
-    const lastTxRefHash = tx.lastTxRef.prevHash;
-    const lastTxRefHashLen = lastTxRefHash.length;
+    const lastTxRefHash = tx.lastTxRef.prevHash ? tx.lastTxRef.prevHash : '';
+    const lastTxRefHashLen = lastTxRefHash ? lastTxRefHash.length : 0;
 
     encodedTx += lastTxRefHashLen;
     encodedTx += lastTxRefHash;
 
     // == lastTxRefOrdinal
-    const lastTxRefOrdinal = tx.lastTxRef.ordinal.toString();
+    const lastTxRefOrdinal = tx.lastTxRef.ordinal ? tx.lastTxRef.ordinal.toString() : '';
     const lastTxRefOrdinalLen = lastTxRefOrdinal.length;
 
     encodedTx += lastTxRefOrdinalLen;

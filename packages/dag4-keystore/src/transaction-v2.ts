@@ -49,7 +49,6 @@ export class TransactionV2 implements TransactionInterface {
   };
   
   constructor({fromAddress, toAddress, amount, fee, lastTxRef, salt}: TransactionPropsV2) {
-    console.log('TransactionV2 fee: ', fee);
     if (fromAddress) {
       this.tx.value.source = fromAddress;
     }

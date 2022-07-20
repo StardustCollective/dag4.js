@@ -1,6 +1,5 @@
-import * as EC from "elliptic";
+import * as secp from "@noble/secp256k1";
 import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
-const curve = new EC.ec("secp256k1");
 import { BigNumber } from "bignumber.js";
 import * as jsSha256 from "js-sha256";
 import * as jsSha512 from "js-sha512";
@@ -135,23 +134,17 @@ export class KeyStore {
     return wallet.getPrivateKey().toString("hex")
   }
 
-  sign (privateKey: string, msg: string) {
-
+  async sign (privateKey: string, msg: string) {
     const sha512Hash = this.sha512(msg);
 
-    const ecSig = curve.sign(sha512Hash, Buffer.from(privateKey, 'hex')); //, {canonical: true});
-    const ecSigHex = Buffer.from(ecSig.toDER()).toString('hex');
-
-    return ecSigHex;
+    const sig = await secp.sign(sha512Hash, privateKey);
+    return Buffer.from(sig).toString('hex');
   }
 
-  verify (publicKey: string, msg: string, signature: EC.SignatureInput) {
-
+  verify (publicKey: string, msg: string, signature: string) {
     const sha512Hash = this.sha512(msg);
 
-    const validSig = curve.verify(sha512Hash, signature, Buffer.from(publicKey, 'hex'));
-
-    return validSig;
+    return secp.verify(signature, sha512Hash, publicKey);
   }
 
   validateDagAddress (address: string) {
@@ -168,10 +161,7 @@ export class KeyStore {
   }
 
   getPublicKeyFromPrivate (privateKey: string, compact = false) {
-
-    const point = curve.keyFromPrivate(privateKey).getPublic();
-
-    return Buffer.from(point.encode(null, compact)).toString('hex')
+    return Buffer.from(secp.getPublicKey(privateKey, compact)).toString('hex');
   }
 
   getDagAddressFromPrivateKey (privateKeyHex: string) {
@@ -207,7 +197,7 @@ export class KeyStore {
     return ('DAG' + par + end);
   }
 
-  async generateTransaction (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
+  async generateTransactionWithHash (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 
     if (!privateKey) {
@@ -220,7 +210,7 @@ export class KeyStore {
 
     const { tx, hash } = this.prepareTx(amount, toAddress, fromAddress, lastRef, fee);
 
-    const signature = this.sign(privateKey, hash);
+    const signature = await this.sign(privateKey, hash);
 
     const uncompressedPublicKey = publicKey.length === 128 ? '04' + publicKey : publicKey;
 
@@ -235,17 +225,21 @@ export class KeyStore {
     signatureElt.id = {};
     signatureElt.id.hex = uncompressedPublicKey.substring(2); //Remove 04 prefix
 
-    // const transaction = txEncode.getTxFromPostTransaction(tx as PostTransaction);
-    // transaction.addSignature(signatureElt);
-
-    // return transaction.getPostTransaction();
-
     tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
 
-    return tx;
+    return {
+      hash,
+      transaction: tx
+    }
   }
 
-  async generateTransactionV2 (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRefV2, fee = 0) {
+  async generateTransaction(amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
+    const { transaction } = await this.generateTransactionWithHash(amount, toAddress, keyTrio, lastRef, fee);
+
+    return transaction;
+  }
+
+  async generateTransactionWithHashV2 (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRefV2, fee = 0) {
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 
     if (!privateKey) {
@@ -258,7 +252,7 @@ export class KeyStore {
 
     const { tx, hash } = this.prepareTx(amount, toAddress, fromAddress, lastRef, fee, '2.0');
 
-    const signature = this.sign(privateKey, hash);
+    const signature = await this.sign(privateKey, hash);
 
     const uncompressedPublicKey = publicKey.length === 128 ? '04' + publicKey : publicKey;
 
@@ -275,7 +269,16 @@ export class KeyStore {
     const transaction = txEncode.getV2TxFromPostTransaction(tx as PostTransactionV2);
     transaction.addSignature(signatureElt);
 
-    return transaction.getPostTransaction();
+    return {
+      hash,
+      transaction: transaction.getPostTransaction()
+    };
+  }
+
+  async generateTransactionV2 (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRefV2, fee = 0) {
+    const { transaction } = await this.generateTransactionWithHashV2(amount, toAddress, keyTrio, lastRef, fee);
+
+    return transaction;
   }
 
   prepareTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef | AddressLastRefV2, fee = 0, version = '1.0') {
@@ -288,7 +291,6 @@ export class KeyStore {
     fee = Math.floor(new BigNumber(fee).multipliedBy(1e8).toNumber());
 
     if (amount < 1e-8) {
-      console.log('amount: ', amount);
       throw new Error('KeyStore :: Send amount must be greater than 1e-8');
     }
 
@@ -308,16 +310,10 @@ export class KeyStore {
 
     const serializedTx = txEncode.kryoSerialize(encodedTx, version === '1.0');
 
-    console.log('serializedTx: ', serializedTx);
-
     const hash = this.sha256(Buffer.from(serializedTx, 'hex'));
-
-    console.log('hash: ', hash);
 
     if (version === '1.0') {
       tx.setSignatureBatchHash(hash);
-
-      
     }
 
     return { 
