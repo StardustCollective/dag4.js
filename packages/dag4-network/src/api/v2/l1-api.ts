@@ -1,6 +1,6 @@
 import {RestApi} from '@stardust-collective/dag4-core';
 import {DNC} from '../../DNC';
-import {ClusterInfo, ClusterPeerInfo, TransactionReference, PostTransactionV2, PendingTransaction} from '../../dto/v2';
+import {ClusterInfoV2, ClusterPeerInfoV2, TransactionReference, PostTransactionV2, PendingTransaction} from '../../dto/v2';
 
 export class L1Api {
 
@@ -33,20 +33,20 @@ export class L1Api {
     return this.service.$post<string>('/transactions', tx);
   }
 
-  async getClusterInfo (): Promise<ClusterPeerInfo[]> {
-    return this.service.$get<ClusterInfo[]>('/cluster/info').then(info => this.processClusterInfo(info))
+  async getClusterInfo (): Promise<ClusterPeerInfoV2[]> {
+    return this.service.$get<ClusterInfoV2[]>('/cluster/info').then(info => this.processClusterInfo(info))
   }
 
-  async getClusterInfoWithRetry (): Promise<ClusterPeerInfo[]> {
-    return this.service.$get<ClusterInfo[]>('/cluster/info', null, { retry: 5 }).then(info => this.retryClusterInfo(info))
+  async getClusterInfoWithRetry (): Promise<ClusterPeerInfoV2[]> {
+    return this.service.$get<ClusterInfoV2[]>('/cluster/info', null, { retry: 5 }).then(info => this.retryClusterInfo(info))
   }
 
-  private retryClusterInfo (info: ClusterInfo[]) {
+  private retryClusterInfo (info: ClusterInfoV2[]) {
     if (info && info.map) {
       return this.processClusterInfo(info);
     }
     else {
-      return new Promise<ClusterPeerInfo[]>(resolve => {
+      return new Promise<ClusterPeerInfoV2[]>(resolve => {
         setTimeout(() => {
           resolve(this.getClusterInfoWithRetry());
         }, 1000)
@@ -55,7 +55,7 @@ export class L1Api {
     }
   }
 
-  private processClusterInfo (info: ClusterInfo[]): ClusterPeerInfo[] {
+  private processClusterInfo (info: ClusterInfoV2[]): ClusterPeerInfoV2[] {
     return info && info.map && info.map(d => ({ alias: d.alias, walletId: d.id.hex, ip: d.ip.host, status: d.status, reputation: d.reputation }));
   }
 }

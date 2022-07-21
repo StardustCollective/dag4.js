@@ -1,6 +1,6 @@
 import { SnapshotOrdinal } from './total-supply';
 
-export type AddressBalance = {
+export type AddressBalanceV2 = {
   balance: number
   ordinal: number
 };

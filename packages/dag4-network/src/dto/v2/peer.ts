@@ -5,7 +5,7 @@ export enum PeerNodeState {
   PendingDownload = 'PendingDownload'
 }
 
-export type ClusterPeerInfo = {
+export type ClusterPeerInfoV2 = {
   ip: string;
   alias: string;
   status: PeerNodeState;
@@ -13,7 +13,7 @@ export type ClusterPeerInfo = {
   reputation: number;
 }
 
-export type ClusterInfo = {
+export type ClusterInfoV2 = {
   "alias": string,
   "id": {
     "hex": string

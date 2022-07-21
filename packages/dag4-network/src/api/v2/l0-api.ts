@@ -1,7 +1,7 @@
 import {RestApi} from '@stardust-collective/dag4-core';
 
 import {DNC} from '../../DNC';
-import {ClusterInfo, ClusterPeerInfo, L0AddressBalance, SnapshotOrdinal, TotalSupply} from '../../dto/v2';
+import {ClusterInfoV2, ClusterPeerInfoV2, L0AddressBalance, SnapshotOrdinal, TotalSupplyV2} from '../../dto/v2';
 
 export class L0Api {
   private service = new RestApi(DNC.L0_URL);
@@ -17,27 +17,27 @@ export class L0Api {
   }
 
   // Cluster Info
-  async getClusterInfo (): Promise<ClusterPeerInfo[]> {
-    return this.service.$get<ClusterInfo[]>('/cluster/info').then(info => this.processClusterInfo(info))
+  async getClusterInfo (): Promise<ClusterPeerInfoV2[]> {
+    return this.service.$get<ClusterInfoV2[]>('/cluster/info').then(info => this.processClusterInfo(info))
   }
 
-  async getClusterInfoWithRetry (): Promise<ClusterPeerInfo[]> {
-    return this.service.$get<ClusterInfo[]>('/cluster/info', null, { retry: 5 }).then(info => this.retryClusterInfo(info))
+  async getClusterInfoWithRetry (): Promise<ClusterPeerInfoV2[]> {
+    return this.service.$get<ClusterInfoV2[]>('/cluster/info', null, { retry: 5 }).then(info => this.retryClusterInfo(info))
   }
 
-  private retryClusterInfo (info: ClusterInfo[]) {
+  private retryClusterInfo (info: ClusterInfoV2[]) {
     if (info && info.map) {
       return this.processClusterInfo(info);
     } 
 
-    return new Promise<ClusterPeerInfo[]>(resolve => {
+    return new Promise<ClusterPeerInfoV2[]>(resolve => {
       setTimeout(() => {
         resolve(this.getClusterInfoWithRetry());
       }, 1000)
     });
   }
 
-  private processClusterInfo (info: ClusterInfo[]): ClusterPeerInfo[] {
+  private processClusterInfo (info: ClusterInfoV2[]): ClusterPeerInfoV2[] {
     return info && info.map && info.map(d => ({ alias: d.alias, walletId: d.id.hex, ip: d.ip.host, status: d.status, reputation: d.reputation }));
   }
 
@@ -49,11 +49,11 @@ export class L0Api {
 
   // DAG
   async getTotalSupply () {
-    return this.service.$get<TotalSupply>('/dag/total-supply');
+    return this.service.$get<TotalSupplyV2>('/dag/total-supply');
   }
 
   async getTotalSupplyAtOrdinal (ordinal: number) {
-    return this.service.$get<TotalSupply>(`/dag/${ordinal}/total-supply`);
+    return this.service.$get<TotalSupplyV2>(`/dag/${ordinal}/total-supply`);
   }
  
   async getAddressBalance (address: string) {

@@ -2,7 +2,7 @@ export type SnapshotOrdinal = {
   value: number
 }
 
-export type TotalSupply = {
+export type TotalSupplyV2 = {
   total: number
   ordinal: SnapshotOrdinal
 }
