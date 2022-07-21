@@ -186,16 +186,12 @@ export class DagAccount {
   async waitForCheckPointAccepted (hash: string) {
     // In V2 the txn is accepted as it's processed so we don't need to check multiple times
     if (this.network.getNetworkVersion() === '2.0') {
-      console.log('waitForCheckPointAccepted hash: ', hash);
-      
       let txn;
       try {
         txn = await this.network.getPendingTransaction(hash) as any;
       } catch(err: any) { 
         // 404 NOOP
       }
-
-      console.log('pendingTx: ', txn);
 
       if (txn && txn.status === 'Waiting') {
         return true;
@@ -244,7 +240,6 @@ export class DagAccount {
 
     //Run for a max of 2 minutes (5 * 24 times)
     for (let i = 1; i < 24; i++) {
-
       const result = await this.getBalance();
 
       if (result !== undefined) {

@@ -83,5 +83,4 @@ type Dag4Config = {
 }
 
 // default config
-console.log('setting default fetch');
 dag4.di.useFetchHttpClient(fetch);

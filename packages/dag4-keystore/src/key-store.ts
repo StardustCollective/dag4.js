@@ -45,6 +45,9 @@ const DERIVATION_PATH_MAP = {
   [DERIVATION_PATH.ETH_LEDGER]: CONSTANTS.BIP_44_ETH_PATH_LEDGER
 }
 
+// Personal sign format `${PERSONAL_SIGN_PREFIX}${msg.length.toString()}${msg}`
+export const PERSONAL_SIGN_PREFIX = `\u0019Constellation Signed Message:\n`;
+
 export class KeyStore {
 
   sha512 (hash: string | Buffer) {
@@ -139,6 +142,12 @@ export class KeyStore {
 
     const sig = await secp.sign(sha512Hash, privateKey);
     return Buffer.from(sig).toString('hex');
+  }
+
+  async personalSign (privateKey: string, msg: string) {
+    msg = Buffer.from(msg, 'utf-8').toString('base64');
+    const message = `${PERSONAL_SIGN_PREFIX}${msg.length.toString()}\n${msg}`;
+    return this.sign(privateKey, message);
   }
 
   verify (publicKey: string, msg: string, signature: string) {
