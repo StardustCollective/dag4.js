@@ -82,7 +82,13 @@ export class DagNetwork {
 
   async getPendingTransaction(hash: string | null) {
     if (this.getNetworkVersion() === '2.0') {
-      return this.l1Api.getPendingTransaction(hash);
+      let pendingTransaction = null;
+      try {
+        pendingTransaction = await this.l1Api.getPendingTransaction(hash);
+      } catch (e: any) {
+        // NOOP 404
+      }
+      return pendingTransaction;
     }
 
     return this.loadBalancerApi.getTransaction(hash);
@@ -90,7 +96,13 @@ export class DagNetwork {
 
   async getTransaction(hash: string | null) {
     if (this.getNetworkVersion() === '2.0') {
-      return this.blockExplorerV2Api.getTransaction(hash);
+      let transaction = null;
+      try {
+        transaction = await this.blockExplorerV2Api.getTransaction(hash);
+      } catch (e: any) {
+        // NOOP 404
+      }
+      return transaction;
     }
 
     return this.blockExplorerApi.getTransaction(hash);
@@ -98,8 +110,10 @@ export class DagNetwork {
 
   async postTransaction(tx: PostTransaction | PostTransactionV2) {
     if (this.getNetworkVersion() === '2.0') {
-      console.log('posting tx to 2.0');
-      return this.l1Api.postTransaction(tx as PostTransactionV2);
+      const response = this.l1Api.postTransaction(tx as PostTransactionV2) as any;
+
+      // Allow for data: { hash: '' } format or string format response
+      return response?.data?.hash ? response.data.hash : response;
     }
 
     return this.loadBalancerApi.postTransaction(tx as PostTransaction);
