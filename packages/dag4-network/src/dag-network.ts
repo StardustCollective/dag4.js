@@ -96,23 +96,24 @@ export class DagNetwork {
 
   async getTransaction(hash: string | null): Promise<null | TransactionV2 | Transaction> {
     if (this.getNetworkVersion() === '2.0') {
-      let transaction = null;
+      let response = null;
       try {
-        transaction = await this.blockExplorerV2Api.getTransaction(hash);
+        response = await this.blockExplorerV2Api.getTransaction(hash);
       } catch (e: any) {
         // NOOP 404
       }
-      return transaction;
+      return response?.data;
     }
 
     return this.blockExplorerApi.getTransaction(hash);
   }
 
-  async postTransaction(tx: PostTransaction | PostTransactionV2) {
+  async postTransaction(tx: PostTransaction | PostTransactionV2): Promise<string> {
     if (this.getNetworkVersion() === '2.0') {
-      const response = await this.l1Api.postTransaction(tx as PostTransactionV2);
+      const response = await this.l1Api.postTransaction(tx as PostTransactionV2) as any;
 
-      return response?.data?.hash;
+      // Support data/meta format and object return format
+      return response.data ? response.data.hash : response.hash;
     }
 
     return this.loadBalancerApi.postTransaction(tx as PostTransaction);

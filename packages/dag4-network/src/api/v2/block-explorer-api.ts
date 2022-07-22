@@ -1,6 +1,6 @@
 import {RestApi} from '@stardust-collective/dag4-core';
 import {DNC} from '../../DNC';
-import {SnapshotV2, TransactionV2, RewardTransaction, AddressBalanceV2, BlockV2} from '../../dto/v2';
+import {SnapshotV2, TransactionV2, GetTransactionResponseV2, RewardTransaction, AddressBalanceV2, BlockV2} from '../../dto/v2';
 
 type HashOrOrdinal = string | number;
 
@@ -79,7 +79,7 @@ export class BlockExplorerV2Api {
   }
 
   async getTransaction (hash: string) {
-    return this.service.$get<TransactionV2>(`/transactions/${hash}`);
+    return this.service.$get<GetTransactionResponseV2>(`/transactions/${hash}`);
   }
 
   // Addresses

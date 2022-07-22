@@ -16,8 +16,7 @@
     "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
-    "release:preflight": "npm pack ./dist --dry-run",
-    "test": "TS_NODE_PROJECT='tsconfig.cjs.json' mocha -r ts-node/register test/unit/**/*-test.ts"
+    "release:preflight": "npm pack ./dist --dry-run"
   },
   "dependencies": {
     "@xchainjs/xchain-client": "^0.7.0",

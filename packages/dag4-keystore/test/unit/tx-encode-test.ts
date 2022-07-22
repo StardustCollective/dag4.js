@@ -48,6 +48,6 @@ describe('TX-Encode', () => {
 
     const hash = keyStore.sha256(Buffer.from(serializedTx, 'hex'));
 
-    expect(hash).to.equal(validV1Txns[0].hash);
+    expect(hash).to.equal('9aa281d664953cb181e8c420b2e07b5f540b86bc92271258d697aada4ee48865');
   });
 });

@@ -1,6 +1,6 @@
 import {keyStore, KeyTrio, PostTransaction, PostTransactionV2} from '@stardust-collective/dag4-keystore';
 import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
-import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx} from '@stardust-collective/dag4-network';
+import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
 import {networkConfig} from './network-config';
@@ -179,7 +179,17 @@ export class DagAccount {
     const txHash = await this.network.postTransaction(tx);
 
     if (txHash) {
-      return { timestamp: Date.now(), hash: txHash, amount: amount, receiver: toAddress, fee, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
+      return { 
+        timestamp: Date.now(), 
+        hash: txHash, 
+        amount: amount, 
+        receiver: toAddress, 
+        fee, 
+        sender: this.address, 
+        ordinal: lastRef.ordinal, 
+        pending: true, 
+        status: 'POSTED' 
+      } ;
     }
   }
 
@@ -259,10 +269,51 @@ export class DagAccount {
    return new Promise(resolve => setTimeout(resolve, time * 1000));
   }
 
-  transferDagBatch(transfers: TransferBatchItem[]) {
+  // 2.0+ only
+  async generateBatchTransactions(transfers: TransferBatchItem[], lastRef?: TransactionReference) {
+    if (this.network.getNetworkVersion() === '1.0') {
+      throw new Error('transferDagBatch not available for mainnet 1.0');
+    }
 
+    if (!lastRef) {
+      lastRef = await this.network.getAddressLastAcceptedTransactionRef(this.address) as TransactionReference;
+    }
+
+    const txns = [];
+    for (const transfer of transfers) {
+      const { transaction, hash } = await this.generateSignedTransactionWithHash(transfer.address, transfer.amount, transfer.fee, lastRef);
+
+      lastRef = {
+        hash,
+        ordinal: lastRef.ordinal + 1
+      }
+      
+      txns.push(transaction);
+    }
+
+    return txns;
   }
 
+  async sendBatchTransactions(transactions: PostTransactionV2[]) {
+    if (this.network.getNetworkVersion() === '1.0') {
+      throw new Error('transferDagBatch not available for mainnet 1.0');
+    }
+
+    const hashes = [];
+    for (const txn of transactions) {
+      const hash = await this.network.postTransaction(txn);
+
+      hashes.push(hash);
+    }
+
+    return hashes;
+  }
+
+  async transferDagBatch(transfers: TransferBatchItem[], lastRef?: TransactionReference) {
+    const txns = await this.generateBatchTransactions(transfers, lastRef);
+
+    return this.sendBatchTransactions(txns);
+  }
 }
 
 type TransferBatchItem = {

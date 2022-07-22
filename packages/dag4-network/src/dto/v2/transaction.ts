@@ -42,7 +42,9 @@ export type PostTransactionV2 = {
 };
 
 export type PostTransactionResponseV2 = {
-  data: {
-    hash: string
-  }
+  hash: string
 };
+
+export type GetTransactionResponseV2 = {
+  data: TransactionV2
+}
