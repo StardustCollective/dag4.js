@@ -140,6 +140,43 @@ if (pendingTx === null) {
 }
 ```
 
+### Upgrading from networkVersion 1.0
+v1.2.0 of the dag4 package introduces support for Constellation mainnet 2.0 and a number of new features 
+specific to the new network version. It is also 100% backwards compatible with existing mainnet 1.0 
+integrations from earlier versions (1.1.x) of the package. Not all endpoints relevant to mainnet 1.0 
+are used in 2.0 though so there is a migration process to prepare for the switchover in networks. 
+
+Migrate all calls to specific APIs to use dag4.network
+```js
+// Mainnet 1.0
+await dag4.network.loadBalancerApi.getAddressLastAcceptedTransactionRef('DAGabc123');
+
+// Mainnet 1.0 and 2.0 support based on configured network version
+await dag4.network.getAddressLastAcceptedTransactionRef('DAGabc123');
+```
+
+Use dag4.account as much as possible
+```js
+// mainnet 1.0
+await dag4.keyStore.generateTransaction(...);
+
+// mainnet 1.0 and 2.0 support based on configured network version
+await dag4.account.generateSignedTransaction(...);
+```
+
+After the above changes, both versions of the network are supported with a configuration change
+```js
+// mainnent 1.0 support
+dag4.account.connect({
+    networkVersion: '1.0'
+});
+
+// mainnet 2.0 support
+dag4.account.connect({
+    networkVersion: '2.0'
+});
+```
+
 ## Documentation
 
 Documentation can be found at [Wiki][docs].
