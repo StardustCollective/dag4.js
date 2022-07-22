@@ -1,6 +1,6 @@
 import {RestApi} from '@stardust-collective/dag4-core';
 import {DNC} from '../../DNC';
-import {ClusterInfoV2, ClusterPeerInfoV2, TransactionReference, PostTransactionV2, PendingTransaction} from '../../dto/v2';
+import {ClusterInfoV2, ClusterPeerInfoV2, TransactionReference, PostTransactionV2, PendingTransaction, PostTransactionResponseV2} from '../../dto/v2';
 
 export class L1Api {
 
@@ -30,7 +30,7 @@ export class L1Api {
   }
 
   async postTransaction (tx: PostTransactionV2) {
-    return this.service.$post<string>('/transactions', tx);
+    return this.service.$post<PostTransactionResponseV2>('/transactions', tx);
   }
 
   async getClusterInfo (): Promise<ClusterPeerInfoV2[]> {

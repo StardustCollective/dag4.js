@@ -179,7 +179,7 @@ export class DagAccount {
     const txHash = await this.network.postTransaction(tx);
 
     if (txHash) {
-      return { timestamp: Date.now(), hash: txHash, amount: normalizedAmount, receiver: toAddress, fee, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
+      return { timestamp: Date.now(), hash: txHash, amount: amount, receiver: toAddress, fee, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
     }
   }
 

@@ -110,10 +110,9 @@ export class DagNetwork {
 
   async postTransaction(tx: PostTransaction | PostTransactionV2) {
     if (this.getNetworkVersion() === '2.0') {
-      const response = this.l1Api.postTransaction(tx as PostTransactionV2) as any;
+      const response = await this.l1Api.postTransaction(tx as PostTransactionV2);
 
-      // Allow for data: { hash: '' } format or string format response
-      return response?.data?.hash ? response.data.hash : response;
+      return response?.data?.hash;
     }
 
     return this.loadBalancerApi.postTransaction(tx as PostTransaction);

@@ -40,3 +40,9 @@ export type PostTransactionV2 = {
   value: TransactionValueV2,
   proofs: Proof[]
 };
+
+export type PostTransactionResponseV2 = {
+  data: {
+    hash: string
+  }
+};
