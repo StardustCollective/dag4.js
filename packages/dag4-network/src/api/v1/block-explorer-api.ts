@@ -1,6 +1,7 @@
-import {DNC} from '../DNC';
-import {Block, Snapshot, Transaction} from '../dto';
 import {RestApi} from '@stardust-collective/dag4-core';
+import {DNC} from '../../DNC';
+import {Block, Snapshot, Transaction} from '../../dto/v1';
+
 
 
 type HashOrHeight = string | number;

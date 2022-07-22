@@ -62,18 +62,17 @@ describe('Key Store', () => {
     const result = keyStore.getPrivateKeyFromMnemonic(testData.SEED_PHRASE);
     expect(result).to.equal(testData.SEED_PRIVATE_KEY);
 
-    // console.log(keyStore.generateSeedPhrase());
   });
 
   it('Error-Check: Fee is less than 0',  async () => {
 
-    const keyTrio = { privateKey: '', publicKey: '', address: '1' };
+    const keyTrio = { privateKey: testData.PRIVATE_KEY, publicKey: testData.PUBLIC_KEY, address: '1' };
     let tx;
     try {
       tx = await keyStore.generateTransaction(1, '2', keyTrio, null, -1);
     }
     catch (e) {
-      expect(e.message).to.equal('KeyStore :: Fee must be greater or equal to zero');
+      expect(e.message).to.equal('KeyStore :: Send fee must be greater or equal to zero');
       return;
     }
 
@@ -83,13 +82,14 @@ describe('Key Store', () => {
 
   it('Error-Check: Amount is less than 0',  async () => {
 
-    const keyTrio = { privateKey: '', publicKey: '', address: '1' };
+    const keyTrio = { privateKey: testData.PRIVATE_KEY, publicKey: testData.PUBLIC_KEY, address: '1' };
+    const lastRef = { prevHash: 'abc123', ordinal: 1 };
     let tx;
     try {
-      tx = await keyStore.generateTransaction(1e-9, '2', keyTrio, null);
+      tx = await keyStore.generateTransaction(1e-9, '2', keyTrio, lastRef);
     }
     catch (e) {
-      expect(e.message).to.equal('KeyStore :: Amount must be greater than 1e-8');
+      expect(e.message).to.equal('KeyStore :: Send amount must be greater than 1e-8');
       return;
     }
 

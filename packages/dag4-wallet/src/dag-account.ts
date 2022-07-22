@@ -1,10 +1,9 @@
-import {keyStore, KeyTrio, PostTransaction} from '@stardust-collective/dag4-keystore';
-import {globalDagNetwork} from '@stardust-collective/dag4-network';
-
-import {DagNetwork, NetworkInfo} from '@stardust-collective/dag4-network';
-import {PendingTx} from '@stardust-collective/dag4-network/types';
+import {keyStore, KeyTrio, PostTransaction, PostTransactionV2} from '@stardust-collective/dag4-keystore';
+import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
+import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
+import {networkConfig} from './network-config';
 
 export class DagAccount {
 
@@ -12,8 +11,21 @@ export class DagAccount {
   private sessionChange$ = new Subject<boolean>();
   private network: DagNetwork = globalDagNetwork;
 
-  connect(networkInfo: NetworkInfo) {
-    this.network = new DagNetwork(networkInfo);
+  connect(networkInfo: NetworkInfo, useDefaultConfig = true) {
+    let baseConfig = {};
+
+    if (useDefaultConfig && networkInfo.networkVersion) {
+      const version = networkInfo.networkVersion.split('.')[0];
+      const networkType = networkInfo.testnet ? 'testnet' : 'mainnet';
+
+      baseConfig = networkConfig[version][networkType];
+    }
+
+    this.network.config({
+      ...baseConfig,
+      ...networkInfo
+    });
+
     return this;
   }
 
@@ -29,6 +41,10 @@ export class DagAccount {
 
   get keyTrio () {
     return this.m_keyTrio;
+  }
+
+  get publicKey () {
+    return this.m_keyTrio.publicKey;
   }
 
   loginSeedPhrase (words: string) {
@@ -81,89 +97,135 @@ export class DagAccount {
   }
 
   async getBalanceFor (address: string) {
-
-    let result: number = undefined;
-
-    const addressObj = await this.network.loadBalancerApi.getAddressBalance(address);
+    const addressObj = await this.network.getAddressBalance(address);
 
     if (addressObj && !isNaN(addressObj.balance)) {
-      result = new  BigNumber(addressObj.balance).dividedBy(1e8).toNumber();
+      return new BigNumber(addressObj.balance).multipliedBy(DAG_DECIMALS).toNumber();
     }
 
-    return result;
+    return 0;
   }
 
   async getFeeRecommendation () {
-
     //Get last tx ref
-    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
-    if (!lastRef.prevHash) {
+    const lastRef = (await this.network.getAddressLastAcceptedTransactionRef(this.address)) as any;
+
+    const hash = lastRef.prevHash || lastRef.hash; // v1 vs v2 format
+
+    if (!hash) {
       return 0;
     }
 
     //Check for pending TX
-    const lastTx = await this.network.loadBalancerApi.getTransaction(lastRef.prevHash);
+    const lastTx = await this.network.getPendingTransaction(hash);
     if (!lastTx) {
       return 0;
     }
 
-    return 1 / 1e8;
+    return 1 / DAG_DECIMALS;
   }
 
-  async generateSignedTransaction (toAddress: string, amount: number, fee = 0): Promise<PostTransaction>  {
+  async generateSignedTransaction (toAddress: string, amount: number, fee = 0, lastRef?): Promise<PostTransaction | PostTransactionV2>  {
+    lastRef = lastRef ? lastRef : await this.network.getAddressLastAcceptedTransactionRef(this.address);
 
-    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    if (this.network.getNetworkVersion() === '2.0') {
+      return keyStore.generateTransactionV2(amount, toAddress, this.keyTrio, lastRef as any, fee);
+    } 
+    
+    // Support old and new lastRef format
+    if (lastRef && lastRef.hash && !lastRef.prevHash) {
+      lastRef.prevHash = lastRef.hash;
+    }
 
-    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
+    return keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef as any, fee);
+  }
 
-    return tx;
+  async generateSignedTransactionWithHash (toAddress: string, amount: number, fee = 0, lastRef?): Promise<{ transaction: PostTransaction | PostTransactionV2, hash: string}>  {
+    lastRef = lastRef ? lastRef : await this.network.getAddressLastAcceptedTransactionRef(this.address);
+
+    if (this.network.getNetworkVersion() === '2.0') {
+      return keyStore.generateTransactionWithHashV2(amount, toAddress, this.keyTrio, lastRef as any, fee);
+    }
+    
+    // Support old and new lastRef format
+    if (lastRef && lastRef.hash && !lastRef.prevHash) {
+      lastRef.prevHash = lastRef.hash;
+    }
+
+    return keyStore.generateTransactionWithHash(amount, toAddress, this.keyTrio, lastRef as any, fee);
   }
 
   async transferDag (toAddress: string, amount: number, fee = 0, autoEstimateFee = false): Promise<PendingTx> {
-
-    let normalizedAmount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
-    const lastRef = await this.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(this.address);
+    let normalizedAmount = Math.floor(new BigNumber(amount).multipliedBy(DAG_DECIMALS).toNumber());
+    const lastRef: any = await this.network.getAddressLastAcceptedTransactionRef(this.address);
 
     if (fee === 0 && autoEstimateFee) {
-      const tx = await this.network.loadBalancerApi.getTransaction(lastRef.prevHash);
+      const tx = await this.network.getPendingTransaction(lastRef.prevHash || lastRef.hash);
 
       if (tx) {
-
-        const addressObj = await this.network.loadBalancerApi.getAddressBalance(this.address);
+        const addressObj = await this.network.getAddressBalance(this.address);
 
         //Check to see if sending max amount
         if (addressObj.balance === normalizedAmount) {
-          amount -= 1e-8
+          amount -= DAG_DECIMALS
           normalizedAmount--;
         }
 
-        fee = 1e-8;
+        fee = DAG_DECIMALS;
       }
     }
 
-    const tx = await keyStore.generateTransaction(amount, toAddress, this.keyTrio, lastRef, fee);
-    const txHash = await this.network.loadBalancerApi.postTransaction(tx);
+    const tx = await this.generateSignedTransaction(toAddress, amount, fee);
+    const txHash = await this.network.postTransaction(tx);
 
     if (txHash) {
-      //this.memPool.addToMemPoolMonitor({ timestamp: Date.now(), hash: txHash, amount: amount * 1e8, receiver: toAddress, sender: this.address });
-      return { timestamp: Date.now(), hash: txHash, amount: normalizedAmount, receiver: toAddress, fee, sender: this.address, ordinal: lastRef.ordinal, pending: true, status: 'POSTED' } ;
+      return { 
+        timestamp: Date.now(), 
+        hash: txHash, 
+        amount: amount, 
+        receiver: toAddress, 
+        fee, 
+        sender: this.address, 
+        ordinal: lastRef.ordinal, 
+        pending: true, 
+        status: 'POSTED' 
+      } ;
     }
   }
 
   async waitForCheckPointAccepted (hash: string) {
+    // In V2 the txn is accepted as it's processed so we don't need to check multiple times
+    if (this.network.getNetworkVersion() === '2.0') {
+      let txn;
+      try {
+        txn = await this.network.getPendingTransaction(hash) as any;
+      } catch(err: any) { 
+        // 404 NOOP
+      }
+
+      if (txn && txn.status === 'Waiting') {
+        return true;
+      }
+
+      try {
+        await this.network.getTransaction(hash);
+      } catch(err: any) { 
+        // 404s if not found
+        return false;
+      }
+
+      return true
+    }
 
     let attempts = 0;
-
     for (let i = 1; ; i++) {
-
       const result = await this.network.loadBalancerApi.checkTransactionStatus(hash);
 
       if (result) {
         if (result.accepted) {
           break;
         }
-      }
-      else {
+      } else {
         attempts++;
 
         if (attempts > 20) {
@@ -188,7 +250,6 @@ export class DagAccount {
 
     //Run for a max of 2 minutes (5 * 24 times)
     for (let i = 1; i < 24; i++) {
-
       const result = await this.getBalance();
 
       if (result !== undefined) {
@@ -208,26 +269,55 @@ export class DagAccount {
    return new Promise(resolve => setTimeout(resolve, time * 1000));
   }
 
-  transferDagBatch(transfers: TransferBatchItem[]) {
+  // 2.0+ only
+  async generateBatchTransactions(transfers: TransferBatchItem[], lastRef?: TransactionReference) {
+    if (this.network.getNetworkVersion() === '1.0') {
+      throw new Error('transferDagBatch not available for mainnet 1.0');
+    }
 
+    if (!lastRef) {
+      lastRef = await this.network.getAddressLastAcceptedTransactionRef(this.address) as TransactionReference;
+    }
+
+    const txns = [];
+    for (const transfer of transfers) {
+      const { transaction, hash } = await this.generateSignedTransactionWithHash(transfer.address, transfer.amount, transfer.fee, lastRef);
+
+      lastRef = {
+        hash,
+        ordinal: lastRef.ordinal + 1
+      }
+      
+      txns.push(transaction);
+    }
+
+    return txns;
   }
 
+  async sendBatchTransactions(transactions: PostTransactionV2[]) {
+    if (this.network.getNetworkVersion() === '1.0') {
+      throw new Error('transferDagBatch not available for mainnet 1.0');
+    }
+
+    const hashes = [];
+    for (const txn of transactions) {
+      const hash = await this.network.postTransaction(txn);
+
+      hashes.push(hash);
+    }
+
+    return hashes;
+  }
+
+  async transferDagBatch(transfers: TransferBatchItem[], lastRef?: TransactionReference) {
+    const txns = await this.generateBatchTransactions(transfers, lastRef);
+
+    return this.sendBatchTransactions(txns);
+  }
 }
-
-// function normalizeMult (num: number) {
-//   return Math.floor(new BigNumber(num).multipliedBy(1e8).toNumber());
-// }
-//
-// function normalizeDiv (num: number) {
-//   return (new BigNumber(num).dividedBy(1e8).toNumber());
-// }
-
-
 
 type TransferBatchItem = {
   address: string,
   amount: number,
   fee?: number
 }
-
-// export const walletSession = new WalletAccount();

@@ -1,10 +1,6 @@
 import {Buffer} from 'buffer';
-
-import randomBytes from 'randombytes';
-
-//Enforce a minimum complexity in resulting hash: 8725724278030335
-const MIN_SALT = Number.MAX_SAFE_INTEGER - 2**48;
-
+import {Transaction, AddressLastRef, PostTransaction} from './transaction';
+import {TransactionV2, PostTransactionV2, AddressLastRefV2} from './transaction-v2';
 
 class TxEncode {
 
@@ -21,105 +17,58 @@ class TxEncode {
     return '0' + unpadded;
   };
 
-  buildTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef): PostTransaction {
+  buildTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef, fee?: number): PostTransaction {
+    const tx = this.getTx(
+      amount, 
+      toAddress,
+      fromAddress,
+      lastRef,
+      fee,
+    );
 
-    const salt = MIN_SALT + parseInt(randomBytes(6).toString('hex'), 16);
+    return tx.getPostTransaction();
+  }
 
-    return {
-      'edge': {
-        'observationEdge': {
-          'parents': [{
-            'hashReference': fromAddress,
-            'hashType': 'AddressHash',
-          }, {
-            'hashReference': toAddress,
-            'hashType': 'AddressHash',
-          }],
-          'data': {
-            'hashType': 'TransactionDataHash',
-            'hashReference': ''
-          },
-        },
-        'signedObservationEdge': {
-          'signatureBatch': {
-            'hash': '',
-            'signatures': [],
-          },
-        },
-        'data': {
-          'amount': amount,
-          'lastTxRef': {
-            'prevHash': lastRef.prevHash,
-            'ordinal': lastRef.ordinal,
-          },
-          'salt': salt,
-        },
-      },
-      'lastTxRef': {
-        'prevHash': lastRef.prevHash,
-        'ordinal': lastRef.ordinal,
-      },
-      'isDummy': false,
-      'isTest': false
-    };
+  getTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef, fee?: number): Transaction {
+    const tx = new Transaction({
+      amount, 
+      fee,
+      toAddress,
+      fromAddress,
+      lastTxRef: lastRef
+    });
+
+    return tx;
+  }
+
+  getTxV2 (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRefV2, fee?: number): TransactionV2 {
+    const tx = new TransactionV2({
+      amount, 
+      fee,
+      toAddress,
+      fromAddress,
+      lastTxRef: lastRef
+    });
+
+    return tx;
+  }
+
+  getTxFromPostTransaction(tx: PostTransaction) {
+    return Transaction.fromPostTransaction(tx);
+  }
+  
+  getV2TxFromPostTransaction(tx: PostTransactionV2) {
+    return TransactionV2.fromPostTransaction(tx);
   }
 
   encodeTx (tx: PostTransaction, hashReference: boolean) {
+    const transaction = Transaction.fromPostTransaction(tx);
 
-    let parentsTx = '';
-
-    if (!hashReference) {
-
-      //Encode parents
-      parentsTx += tx.edge.observationEdge.parents.length.toString();
-      parentsTx += tx.edge.observationEdge.parents.map(p => p.hashReference.length + p.hashReference).join('')
-    }
-
-    let encodedTx = '';
-
-    // == amount
-    const amount = tx.edge.data.amount.toString(16);
-    const amountLen = amount.length;
-
-    encodedTx += amountLen;
-    encodedTx += amount;
-
-    // == lastTxRef
-    const lastTxRefHash = tx.lastTxRef.prevHash;
-    const lastTxRefHashLen = lastTxRefHash.length;
-
-    encodedTx += lastTxRefHashLen;
-    encodedTx += lastTxRefHash;
-
-    // == lastTxRefOrdinal
-    const lastTxRefOrdinal = tx.lastTxRef.ordinal.toString();
-    const lastTxRefOrdinalLen = lastTxRefOrdinal.length;
-
-    encodedTx += lastTxRefOrdinalLen;
-    encodedTx += lastTxRefOrdinal;
-
-    // == fee
-    const fee = (tx.edge.data.fee || 0).toString();
-    const feeLen = fee.length;
-
-    encodedTx += feeLen;
-    encodedTx += fee;
-
-    // == salt
-    const salt = tx.edge.data.salt.toString(16)
-    const saltLen = salt.length;
-
-    encodedTx += saltLen;
-    encodedTx += salt;
-    //
-
-    encodedTx = parentsTx + encodedTx;
-
-    return encodedTx;
+    return transaction.getEncoded(hashReference);
   }
 
-  kryoSerialize (msg: string) {
-    const prefix = '0301' + Buffer.from(this.utf8Length(msg.length + 1)).toString('hex');
+  kryoSerialize (msg: string, setReferences = true) {
+    const prefix = '03' + (setReferences ? '01' : '') + Buffer.from(this.utf8Length(msg.length + 1)).toString('hex'); 
 
     const coded = Buffer.from(msg, 'utf8').toString('hex');
 
@@ -166,44 +115,3 @@ class TxEncode {
 }
 
 export const txEncode = new TxEncode();
-
-type AddressLastRef ={
-  prevHash: string,
-  ordinal: number
-}
-
-export type PostTransaction = {
-  edge: {
-    observationEdge: {
-      parents: {
-        hashReference: string,
-        hashType: 'AddressHash',
-      }[],
-      data: {
-        hashType: 'TransactionDataHash',
-        hashReference: string
-      },
-    },
-    signedObservationEdge: {
-      signatureBatch: {
-        hash: string,
-        signatures: string[],
-      },
-    },
-    data: {
-      fee?: number;
-      amount: number,
-      lastTxRef: {
-        prevHash: string,
-        ordinal: number,
-      },
-      salt: number,
-    },
-  },
-  lastTxRef: {
-    prevHash: string,
-    ordinal: number,
-  },
-  isDummy: boolean,
-  isTest: boolean,
-}

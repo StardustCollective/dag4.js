@@ -1,18 +1,18 @@
+import * as secp from "@noble/secp256k1";
+import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
+import { BigNumber } from "bignumber.js";
 import * as jsSha256 from "js-sha256";
 import * as jsSha512 from "js-sha512";
 import * as bs58 from 'bs58';
 import {Buffer} from 'buffer';
+import Wallet, {hdkey} from 'ethereumjs-wallet';
+
 import {KeyTrio} from './key-trio';
 import {txEncode} from './tx-encode';
 import {bip39} from './bip39/bip39';
 import {KDFParamsPhrase, KDFParamsPrivateKey, V3Keystore} from './v3-keystore';
-import Wallet from 'ethereumjs-wallet'
-import {hdkey} from 'ethereumjs-wallet'
-
-import * as EC from "elliptic";
-import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
-const curve = new EC.ec("secp256k1");
-import { BigNumber } from "bignumber.js";
+import { PostTransaction, AddressLastRef } from "./transaction";
+import { PostTransactionV2, AddressLastRefV2 } from "./transaction-v2";
 
 //SIZE
 // elliptic - 360kb
@@ -45,16 +45,8 @@ const DERIVATION_PATH_MAP = {
   [DERIVATION_PATH.ETH_LEDGER]: CONSTANTS.BIP_44_ETH_PATH_LEDGER
 }
 
-const typeCheckJKey = (key: V3Keystore<KDFParamsPrivateKey>) => {
-
-  const params = (key && key.crypto && key.crypto.kdfparams);
-
-  if (params && params.salt && params.n !== undefined && params.r !== undefined && params.p !== undefined  && params.dklen !== undefined) {
-    return true;
-  }
-
-  throw new Error('Invalid JSON Private Key format');
-}
+// Personal sign format `${PERSONAL_SIGN_PREFIX}${msg.length.toString()}${msg}`
+export const PERSONAL_SIGN_PREFIX = `\u0019Constellation Signed Message:\n`;
 
 export class KeyStore {
 
@@ -145,23 +137,23 @@ export class KeyStore {
     return wallet.getPrivateKey().toString("hex")
   }
 
-  sign (privateKey: string, msg: string) {
-
+  async sign (privateKey: string, msg: string) {
     const sha512Hash = this.sha512(msg);
 
-    const ecSig = curve.sign(sha512Hash, Buffer.from(privateKey, 'hex'));//, {canonical: true});
-    const ecSigHex = Buffer.from(ecSig.toDER()).toString('hex');
-
-    return ecSigHex;
+    const sig = await secp.sign(sha512Hash, privateKey);
+    return Buffer.from(sig).toString('hex');
   }
 
-  verify (publicKey: string, msg: string, signature: EC.SignatureInput) {
+  // NOTE: msg must be base64 encoded 
+  async personalSign (privateKey: string, msg: string) {
+    const message = `${PERSONAL_SIGN_PREFIX}${msg.length.toString()}\n${msg}`;
+    return this.sign(privateKey, message);
+  }
 
+  verify (publicKey: string, msg: string, signature: string) {
     const sha512Hash = this.sha512(msg);
 
-    const validSig = curve.verify(sha512Hash, signature, Buffer.from(publicKey, 'hex'));
-
-    return validSig;
+    return secp.verify(signature, sha512Hash, publicKey);
   }
 
   validateDagAddress (address: string) {
@@ -178,10 +170,7 @@ export class KeyStore {
   }
 
   getPublicKeyFromPrivate (privateKey: string, compact = false) {
-
-    const point = curve.keyFromPrivate(privateKey).getPublic();
-
-    return Buffer.from(point.encode(null, compact)).toString('hex')
+    return Buffer.from(secp.getPublicKey(privateKey, compact)).toString('hex');
   }
 
   getDagAddressFromPrivateKey (privateKeyHex: string) {
@@ -217,8 +206,7 @@ export class KeyStore {
     return ('DAG' + par + end);
   }
 
-  async generateTransaction (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
-
+  async generateTransactionWithHash (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
     const {address: fromAddress, publicKey, privateKey} = keyTrio;
 
     if (!privateKey) {
@@ -231,7 +219,7 @@ export class KeyStore {
 
     const { tx, hash } = this.prepareTx(amount, toAddress, fromAddress, lastRef, fee);
 
-    const signature = this.sign(privateKey, hash);
+    const signature = await this.sign(privateKey, hash);
 
     const uncompressedPublicKey = publicKey.length === 128 ? '04' + publicKey : publicKey;
 
@@ -245,13 +233,64 @@ export class KeyStore {
     signatureElt.signature = signature;
     signatureElt.id = {};
     signatureElt.id.hex = uncompressedPublicKey.substring(2); //Remove 04 prefix
+
     tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
 
-    return tx;
+    return {
+      hash,
+      transaction: tx
+    }
   }
 
-  prepareTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef, fee = 0) {
+  async generateTransaction(amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRef, fee = 0) {
+    const { transaction } = await this.generateTransactionWithHash(amount, toAddress, keyTrio, lastRef, fee);
 
+    return transaction;
+  }
+
+  async generateTransactionWithHashV2 (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRefV2, fee = 0) {
+    const {address: fromAddress, publicKey, privateKey} = keyTrio;
+
+    if (!privateKey) {
+      throw new Error('No private key set');
+    }
+
+    if (!publicKey) {
+      throw new Error('No public key set');
+    }
+
+    const { tx, hash } = this.prepareTx(amount, toAddress, fromAddress, lastRef, fee, '2.0');
+
+    const signature = await this.sign(privateKey, hash);
+
+    const uncompressedPublicKey = publicKey.length === 128 ? '04' + publicKey : publicKey;
+
+    const success = this.verify(uncompressedPublicKey, hash, signature);
+
+    if (!success) {
+      throw new Error('Sign-Verify failed');
+    }
+
+    const signatureElt: any = {};
+    signatureElt.id = uncompressedPublicKey.substring(2); //Remove 04 prefix
+    signatureElt.signature = signature;
+
+    const transaction = txEncode.getV2TxFromPostTransaction(tx as PostTransactionV2);
+    transaction.addSignature(signatureElt);
+
+    return {
+      hash,
+      transaction: transaction.getPostTransaction()
+    };
+  }
+
+  async generateTransactionV2 (amount: number, toAddress: string, keyTrio: KeyTrio, lastRef: AddressLastRefV2, fee = 0) {
+    const { transaction } = await this.generateTransactionWithHashV2(amount, toAddress, keyTrio, lastRef, fee);
+
+    return transaction;
+  }
+
+  prepareTx (amount: number, toAddress: string, fromAddress: string, lastRef: AddressLastRef | AddressLastRefV2, fee = 0, version = '1.0') {
     if (toAddress === fromAddress) {
       throw new Error('KeyStore :: An address cannot send a transaction to itself');
     }
@@ -260,7 +299,7 @@ export class KeyStore {
     amount = Math.floor(new BigNumber(amount).multipliedBy(1e8).toNumber());
     fee = Math.floor(new BigNumber(fee).multipliedBy(1e8).toNumber());
 
-    if (amount < 0) {
+    if (amount < 1e-8) {
       throw new Error('KeyStore :: Send amount must be greater than 1e-8');
     }
 
@@ -268,25 +307,29 @@ export class KeyStore {
       throw new Error('KeyStore :: Send fee must be greater or equal to zero');
     }
 
-    const tx = txEncode.buildTx(amount, toAddress, fromAddress, lastRef);
-
-    if (fee > 0) {
-      tx.edge.data.fee = fee;
+    let tx, encodedTx;
+    if (version === '1.0') {
+      tx = txEncode.getTx(amount, toAddress, fromAddress, lastRef as AddressLastRef, fee);
+      tx.setEncodedHashReference();
+      encodedTx = tx.getEncoded(false);
+    } else {
+      tx = txEncode.getTxV2(amount, toAddress, fromAddress, lastRef as AddressLastRefV2, fee);
+      encodedTx = tx.getEncoded();
     }
 
-    const hashReference = txEncode.encodeTx(tx, true);
-
-    tx.edge.observationEdge.data.hashReference = hashReference;
-
-    const encodedTx = txEncode.encodeTx(tx, false);
-
-    const serializedTx = txEncode.kryoSerialize(encodedTx);
+    const serializedTx = txEncode.kryoSerialize(encodedTx, version === '1.0');
 
     const hash = this.sha256(Buffer.from(serializedTx, 'hex'));
 
-    tx.edge.signedObservationEdge.signatureBatch.hash = hash;
+    if (version === '1.0') {
+      tx.setSignatureBatchHash(hash);
+    }
 
-    return { tx, hash, rle: encodedTx };
+    return { 
+      tx: tx.getPostTransaction(), 
+      hash, 
+      rle: encodedTx 
+    };
   }
 
 }
@@ -294,10 +337,3 @@ export class KeyStore {
 export const keyStore = new KeyStore();
 
 export type HDKey = EthereumHDKey;
-
-type AddressLastRef = {
-  prevHash: string,
-  ordinal: number
-}
-
-

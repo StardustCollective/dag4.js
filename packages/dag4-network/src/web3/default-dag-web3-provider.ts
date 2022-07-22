@@ -1,7 +1,7 @@
 import {BlockExplorerApi, LoadBalancerApi} from "../api";
 import {NetworkInfo} from "../types";
 import {globalDagNetwork} from "../global-dag-network";
-import {Transaction} from "../dto";
+import {Transaction} from "../dto/v1";
 
 export class DefaultDagWeb3Provider {
 

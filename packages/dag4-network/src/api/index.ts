@@ -1,3 +1,3 @@
-export * from './block-explorer-api'
-export * from './load-balancer-api'
-export * from './peer-node-api'
+export * from './v1/block-explorer-api'
+export * from './v1/load-balancer-api'
+export * from './v1/peer-node-api'

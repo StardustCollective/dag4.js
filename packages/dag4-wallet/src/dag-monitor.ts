@@ -1,8 +1,6 @@
 import {crossPlatformDi} from '@stardust-collective/dag4-core';
-import {blockExplorerApi, globalDagNetwork, loadBalancerApi, Transaction} from '@stardust-collective/dag4-network';
+import {blockExplorerApi, globalDagNetwork, loadBalancerApi, Transaction, PendingTx, CbTransaction} from '@stardust-collective/dag4-network';
 import {Subject} from 'rxjs';
-import {PendingTx} from '@stardust-collective/dag4-network/types';
-import {CbTransaction} from '@stardust-collective/dag4-network/types/dto/cb-transaction';
 
 const TWELVE_MINUTES = 12 * 60 * 1000;
 

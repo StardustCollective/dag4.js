@@ -1,31 +1,27 @@
 {
   "name": "@stardust-collective/dag4-network",
-  "version": "1.0.11",
+  "version": "1.1.0",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
   "license": "MIT",
-  "main": "cjs/index.js",
-  "module": "esm/index.js",
-  "typings": "types/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
   "homepage": "https://github.com/StardustCollective/dag4.js#readme",
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "tsc && tsc -p tsconfig.cjs.json",
+    "build": "tsc && tsc -p tsconfig.cjs.json ",
     "rollup": "rollup -c ../../scripts/config/rollup.config.js",
     "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
     "release:preflight": "npm pack ./dist --dry-run"
   },
-  "peerDependencies": {
-    "@stardust-collective/dag4-core": "^1.0.5"
-  },
   "dependencies": {
-    "@stardust-collective/dag4-core": "^1.0.5",
-    "rxjs": "^6.6.3"
+    "@stardust-collective/dag4-core": "1.1.0",
+    "rxjs": "^6.6.3",
+    "bignumber.js": "^9.0.1"
   },
-  "devDependencies": {
-    "node-fetch": "^2.6.1"
-  }
+  "devDependencies": {}
 }

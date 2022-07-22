@@ -1,10 +1,11 @@
-import {DNC} from '../DNC';
-import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../dto';
-import {ClusterInfo, ClusterPeerInfo} from '../dto';
-import {PeerMetrics} from '../dto/peer-metrics';
-import {PeerMetricsResponse} from './peer-node-api';
-import {CbTransaction} from '../dto/cb-transaction';
 import {RestApi} from '@stardust-collective/dag4-core';
+
+import {DNC} from '../../DNC';
+import {AddressBalance, AddressLastAcceptedTransaction, TotalSupply, Transaction} from '../../dto/v1';
+import {ClusterInfo, ClusterPeerInfo} from '../../dto/v1';
+import {PeerMetrics} from '../../dto/v1/peer-metrics';
+import {PeerMetricsResponse} from './peer-node-api';
+import {CbTransaction} from '../../dto/v1/cb-transaction';
 
 export class LoadBalancerApi {
 
