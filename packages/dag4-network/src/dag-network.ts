@@ -5,8 +5,8 @@ import {BlockExplorerApi} from './api/v1/block-explorer-api';
 import {L0Api} from './api/v2/l0-api';
 import {L1Api} from './api/v2/l1-api';
 import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
-import {PostTransactionV2} from './dto/v2';
-import {PostTransaction} from './dto/v1';
+import {PostTransactionV2, PendingTransaction, TransactionV2} from './dto/v2';
+import {PostTransaction, CbTransaction, Transaction} from './dto/v1';
 
 export class DagNetwork {
   private connectedNetwork: NetworkInfo = { id: 'main', beUrl: '', lbUrl: '', l0Url: '', l1Url: ''};
@@ -80,7 +80,7 @@ export class DagNetwork {
     return this.loadBalancerApi.getAddressLastAcceptedTransactionRef(address);
   }
 
-  async getPendingTransaction(hash: string | null) {
+  async getPendingTransaction(hash: string | null): Promise<null | PendingTransaction | CbTransaction> {
     if (this.getNetworkVersion() === '2.0') {
       let pendingTransaction = null;
       try {
@@ -94,7 +94,7 @@ export class DagNetwork {
     return this.loadBalancerApi.getTransaction(hash);
   }
 
-  async getTransaction(hash: string | null) {
+  async getTransaction(hash: string | null): Promise<null | TransactionV2 | Transaction> {
     if (this.getNetworkVersion() === '2.0') {
       let transaction = null;
       try {
