@@ -11,7 +11,9 @@ export enum KeyringWalletType {
   CrossChainWallet = 'CCW',
   MultiAccountWallet = 'MAW',   //Single Chain, Multiple seed accounts, MSW
   SingleAccountWallet = 'SAW',  //Single Chain, Single Key account, SKW
-  MultiKeyWallet = 'MKW'        //Single Chain, Multiple Key accounts, MKW
+  MultiKeyWallet = 'MKW',       //Single Chain, Multiple Key accounts, MKW
+  LedgerAccountWallet = "LAW",
+  BitfiAccountWallet  = "BAW"
 }
 
 export enum KeyringAssetType {
@@ -21,32 +23,34 @@ export enum KeyringAssetType {
 }
 
 export type KeyringWalletSerialized = {
-  type: string,
-  label: string,
-  secret?: string,
-  numOfAccounts?: number,
-  network?: KeyringNetwork,
-  rings?: KeyringRingSerialized[],
-  accounts?: KeyringAccountSerialized[]
+  type: string;
+  label: string;
+  secret?: string;
+  numOfAccounts?: number;
+  network?: KeyringNetwork;
+  rings?: KeyringRingSerialized[];
+  accounts?: KeyringAccountSerialized[];
 }
 
 export type KeyringWalletState = {
   id: string;
-  label: string,
-  type: KeyringWalletType,
-  supportedAssets: KeyringAssetType[],
-  accounts: KeyringWalletAccountState[]
+  label: string;
+  type: KeyringWalletType;
+  supportedAssets: KeyringAssetType[];
+  accounts: KeyringWalletAccountState[];
 }
 
 export type KeyringWalletAccountState = {
-  address: string,
-  network?: KeyringNetwork,
-  tokens?: string[]
+  address: string;
+  network?: KeyringNetwork;
+  tokens?: string[];
+  publicKey?: string;
+  deviceId?: string;
 }
 
 export type KeyringRingSerialized = {
   network: KeyringNetwork;
-  accounts: KeyringAccountSerialized[]
+  accounts: KeyringAccountSerialized[];
 }
 
 export type KeyringAccountSerialized = {
