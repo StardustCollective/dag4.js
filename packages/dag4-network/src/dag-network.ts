@@ -102,7 +102,7 @@ export class DagNetwork {
       } catch (e: any) {
         // NOOP 404
       }
-      return response?.data;
+      return response ? response.data : null;
     }
 
     return this.blockExplorerApi.getTransaction(hash);
