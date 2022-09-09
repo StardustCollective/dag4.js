@@ -94,6 +94,20 @@ export class DagNetwork {
     return this.loadBalancerApi.getTransaction(hash);
   }
 
+  async getTransactionsByAddress(address: string, limit?: number, searchAfter?: string): Promise<Transaction[] | TransactionV2[]> {
+    if (this.getNetworkVersion() === '2.0') {
+      let response = null;
+      try {
+        response = await this.blockExplorerV2Api.getTransactionsByAddress(address, limit, searchAfter);
+      } catch (e: any) {
+        // NOOP 404
+      }
+      return response ? response.data : null;
+    }
+
+    return this.blockExplorerApi.getTransactionsByAddress(address, limit, searchAfter);
+  }
+
   async getTransaction(hash: string | null): Promise<null | TransactionV2 | Transaction> {
     if (this.getNetworkVersion() === '2.0') {
       let response = null;
