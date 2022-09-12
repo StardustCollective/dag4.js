@@ -107,21 +107,21 @@ export class DagMonitor {
         timestamp: new Date(timestamp).toISOString(),
         transactionOriginal: { ordinal, hash: '' },
       } as TransactionV2;
-    } else {
-      return { 
-        hash, 
-        amount, 
-        receiver, 
-        sender, 
-        fee, 
-        status, 
-        isDummy: false,
-        timestamp: new Date(timestamp).toISOString(),
-        lastTransactionRef: { ordinal, prevHash: '' },
-        snapshotHash: '',
-        checkpointBlock: '',
-      } as Transaction;
-    } 
+    }
+
+    return { 
+      hash, 
+      amount, 
+      receiver, 
+      sender, 
+      fee, 
+      status, 
+      isDummy: false,
+      timestamp: new Date(timestamp).toISOString(),
+      lastTransactionRef: { ordinal, prevHash: '' },
+      snapshotHash: '',
+      checkpointBlock: '',
+    } as Transaction;
   }
 
   private async pollPendingTxs () {
