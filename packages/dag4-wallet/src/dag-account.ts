@@ -89,7 +89,7 @@ export class DagAccount {
   }
 
   getTransactions (limit?: number, searchAfter?: string) {
-    return this.network.blockExplorerApi.getTransactionsByAddress(this.address, limit, searchAfter);
+    return this.network.getTransactionsByAddress(this.address, limit, searchAfter);
   }
 
   validateDagAddress (address: string) {

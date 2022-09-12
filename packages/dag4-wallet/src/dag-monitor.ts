@@ -105,7 +105,7 @@ export class DagMonitor {
         snapshot: '',
         block: '',
         timestamp: new Date(timestamp).toISOString(),
-        transactionOriginal: { ordinal, hash: '' },
+        transactionOriginal: { ordinal, hash },
       } as TransactionV2;
     }
 
@@ -158,16 +158,20 @@ export class DagMonitor {
     let pendingHasConfirmed = false;
     let txChanged = false;
 
+    const networkVersion = this.dagAccount.networkInstance.getNetworkVersion();
+
     for (let index = 0; index < pool.length; index++) {
       const pendingTx = pool[index];
       const txHash = pendingTx.hash;
 
       let cbTx: CbTransaction;
 
-      try {
-        // TODO: Check if we need to update this line for 2.0
-        cbTx = await loadBalancerApi.getTransaction(txHash);
-      } catch(e) {}
+      if (networkVersion === '1.0') {
+        try {
+          // TODO: Check if we need to update this line for 2.0
+          cbTx = await loadBalancerApi.getTransaction(txHash);
+        } catch(e) {}
+      }
 
       if (cbTx) {
 
