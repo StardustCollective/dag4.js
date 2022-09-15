@@ -1,6 +1,6 @@
 import {crossPlatformDi} from '@stardust-collective/dag4-core';
 import {loadBalancerApi, Transaction, PendingTx, CbTransaction, TransactionV2} from '@stardust-collective/dag4-network';
-import {DagAccount} from '@stardust-collective/dag4-wallet';
+import {DagAccount} from './dag-account';
 import {Subject} from 'rxjs';
 
 const TWELVE_MINUTES = 12 * 60 * 1000;
