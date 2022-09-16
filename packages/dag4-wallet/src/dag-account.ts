@@ -15,7 +15,7 @@ export class DagAccount {
     this.network = network || globalDagNetwork;
   }
 
-  connect(networkInfo: NetworkInfo, useDefaultConfig = true) {
+  connect(networkInfo: Omit<NetworkInfo, 'id'> & { id?: string }, useDefaultConfig = true) {
     let baseConfig = {};
 
     if (useDefaultConfig && networkInfo.networkVersion) {
@@ -25,9 +25,12 @@ export class DagAccount {
       baseConfig = networkConfig[version][networkType];
     }
 
+    const networkId = networkInfo.id || 'global';
+
     this.network.config({
       ...baseConfig,
-      ...networkInfo
+      ...networkInfo,
+      id: networkId
     });
 
     return this;

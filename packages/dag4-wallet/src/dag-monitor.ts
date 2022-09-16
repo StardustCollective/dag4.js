@@ -25,7 +25,7 @@ export class DagMonitor {
     return this.memPoolChange$;
   }
 
-  async addToMemPoolMonitor (value: PendingTx | string): Transaction | TransactionV2 {
+  async addToMemPoolMonitor (value: PendingTx | string): Promise<Transaction | TransactionV2> {
     const networkInfo = this.dagAccount.networkInstance.getNetwork();
     const key =  `network-${networkInfo.id}-mempool`;
 
