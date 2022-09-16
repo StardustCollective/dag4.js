@@ -104,4 +104,8 @@ export class SingleAccountWallet implements IKeyringWallet {
     return this.keyring.getAccounts()[0].getPrivateKey();
   }
 
+  resetSid() {
+    SID = 0;
+  }
+
 }
