@@ -13,13 +13,13 @@ export const networkConfig = {
   2: {
     mainnet: {
       beUrl: 'https://be-mainnet.constellationnetwork.io',
-      l0Url: 'https://lb-mainnet.constellationnetwork.io:9000',
-      l1Url: 'https://lb-mainnet.constellationnetwork.io:9010'
+      l0Url: 'https://l0-lb-mainnet.constellationnetwork.io',
+      l1Url: 'https://l1-lb-mainnet.constellationnetwork.io'
     },
     testnet: {
       beUrl: 'https://be-testnet.constellationnetwork.io',
-      l0Url: 'http://lb-testnet.constellationnetwork.io:9000',
-      l1Url: 'http://lb-testnet.constellationnetwork.io:9010',
+      l0Url: 'https://l0-lb-testnet.constellationnetwork.io',
+      l1Url: 'https://l1-lb-testnet.constellationnetwork.io'
     }
   }
 }
