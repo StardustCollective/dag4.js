@@ -56,8 +56,13 @@ export class DagMonitor {
     const cTxs = await this.dagAccount.networkInstance.getTransactionsByAddress(address, limit, searchAfter);    
 
     const { pendingTxs } = await this.processPendingTxs();
+    const pendingTransactions = pendingTxs.map(pending => this.transformPendingToTransaction(pending));
 
-    return pendingTxs.map(pending => this.transformPendingToTransaction(pending)).concat(cTxs);
+    if (cTxs && cTxs.length) {
+    return pendingTransactions.concat(cTxs);
+    }
+
+    return pendingTransactions;
   }
 
   getMemPoolFromMonitor(address?: string): PendingTx[] {
