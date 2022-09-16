@@ -1,13 +1,9 @@
 import {crossPlatformDi} from '@stardust-collective/dag4-core';
-import {blockExplorerApi, globalDagNetwork, loadBalancerApi, Transaction, PendingTx, CbTransaction} from '@stardust-collective/dag4-network';
+import {loadBalancerApi, Transaction, PendingTx, CbTransaction, TransactionV2} from '@stardust-collective/dag4-network';
+import {DagAccount} from './dag-account';
 import {Subject} from 'rxjs';
 
 const TWELVE_MINUTES = 12 * 60 * 1000;
-
-type WalletParent = {
-  getTransactions (limit?: number, searchAfter?: string): Promise<Transaction[]>;
-  address: string;
-}
 
 type WaitFor = {
   promise: Promise<boolean>,
@@ -21,7 +17,7 @@ export class DagMonitor {
   private pendingTimer = 0;
   private waitForMap: { [hash:string]: WaitFor } = {};
 
-  constructor (private walletParent: WalletParent) {
+  constructor (private dagAccount: DagAccount) {
     this.cacheUtils.setPrefix('stargazer-');
   }
 
@@ -29,9 +25,9 @@ export class DagMonitor {
     return this.memPoolChange$;
   }
 
-  async addToMemPoolMonitor (value: PendingTx | string) {
-
-    const key =  `network-${globalDagNetwork.getNetwork().id}-mempool`;
+  async addToMemPoolMonitor (value: PendingTx | string): Transaction | TransactionV2 {
+    const networkInfo = this.dagAccount.networkInstance.getNetwork();
+    const key =  `network-${networkInfo.id}-mempool`;
 
     let payload: PendingTx[] = (await this.cacheUtils.get(key)) || [];
 
@@ -60,21 +56,27 @@ export class DagMonitor {
     return this.transformPendingToTransaction(tx);
   }
 
-  async getLatestTransactions (address: string, limit?: number, searchAfter?: string): Promise<Transaction[]> {
-    const cTxs = await globalDagNetwork.blockExplorerApi.getTransactionsByAddress(address, limit, searchAfter);
+  async getLatestTransactions (address: string, limit?: number, searchAfter?: string): Promise<(Transaction | TransactionV2)[]> {
+    const cTxs = await this.dagAccount.networkInstance.getTransactionsByAddress(address, limit, searchAfter);    
 
     const { pendingTxs } = await this.processPendingTxs();
+    const pendingTransactions = pendingTxs.map(pending => this.transformPendingToTransaction(pending));
 
-    return pendingTxs.map(pending => this.transformPendingToTransaction(pending)).concat(cTxs);
+    if (cTxs && cTxs.length) {
+    return pendingTransactions.concat(cTxs);
+    }
+
+    return pendingTransactions;
   }
 
   async getMemPoolFromMonitor(address?: string): Promise<PendingTx[]> {
-    address = address || this.walletParent.address;
+    address = address || this.dagAccount.address;
+    const networkInfo = this.dagAccount.networkInstance.getNetwork();
 
     let txs: PendingTx[] = [];
 
     try {
-        txs = await this.cacheUtils.get(`network-${globalDagNetwork.getNetwork().id}-mempool`)
+        txs = await this.cacheUtils.get(`network-${networkInfo.id}-mempool`)
     } catch (err) {
         console.log('getMemPoolFromMonitor err: ', err);
         console.log(err.stack);
@@ -89,7 +91,8 @@ export class DagMonitor {
   }
 
   async setToMemPoolMonitor(pool: PendingTx[]) {
-    const key =  `network-${globalDagNetwork.getNetwork().id}-mempool`;
+    const networkInfo = this.dagAccount.networkInstance.getNetwork();
+    const key =  `network-${networkInfo.id}-mempool`;
 
     await this.cacheUtils.set(key, pool);
   }
@@ -108,9 +111,33 @@ export class DagMonitor {
     this.pollPendingTxs();
   }
 
-  private transformPendingToTransaction (pending: PendingTx) {
+  private transformPendingToTransaction (pending: PendingTx): Transaction | TransactionV2 {
     const { hash, amount, receiver, sender, timestamp, ordinal, fee, status } =  pending;
-    return { hash, amount, receiver, sender, fee, status, isDummy: false,
+    const networkVersion = this.dagAccount.networkInstance.getNetworkVersion();
+    if (networkVersion === '2.0') {
+      // TODO: Check TransactionV2 fields
+      return { 
+        hash, 
+        source: sender, 
+        destination: receiver, 
+        amount, 
+        fee, 
+        parent: { ordinal, hash: '' },
+        snapshot: '',
+        block: '',
+        timestamp: new Date(timestamp).toISOString(),
+        transactionOriginal: { ordinal, hash },
+      } as TransactionV2;
+    }
+
+    return { 
+      hash, 
+      amount, 
+      receiver, 
+      sender, 
+      fee, 
+      status, 
+      isDummy: false,
       timestamp: new Date(timestamp).toISOString(),
       lastTransactionRef: { ordinal, prevHash: '' },
       snapshotHash: '',
@@ -152,15 +179,20 @@ export class DagMonitor {
     let pendingHasConfirmed = false;
     let txChanged = false;
 
+    const networkVersion = this.dagAccount.networkInstance.getNetworkVersion();
+
     for (let index = 0; index < pool.length; index++) {
       const pendingTx = pool[index];
       const txHash = pendingTx.hash;
 
       let cbTx: CbTransaction;
 
-      try {
-        cbTx = await loadBalancerApi.getTransaction(txHash);
-      } catch(e) {}
+      if (networkVersion === '1.0') {
+        try {
+          // TODO: Check if we need to update this line for 2.0
+          cbTx = await loadBalancerApi.getTransaction(txHash);
+        } catch(e) {}
+      }
 
       if (cbTx) {
 
@@ -193,10 +225,10 @@ export class DagMonitor {
       }
       else {
 
-        let beTx: Transaction;
+        let beTx: Transaction | TransactionV2;
 
         try {
-          beTx = await blockExplorerApi.getTransaction(txHash);
+          beTx = await this.dagAccount.networkInstance.getTransaction(txHash);
         } catch(e) {}
 
         if (beTx) {
