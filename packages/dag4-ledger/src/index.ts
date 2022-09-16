@@ -6,6 +6,11 @@ import * as txTranscodeUtil from './lib/tx-transcode'
 const MAX_SIGNED_TX_LEN = 512;
 
 const DEVICE_ID = '8004000000';
+const MESSAGE_TYPE_CODES = {
+  SIGN_TRANSACTION: "02",
+  GET_PUBLIC_KEY: "04",
+  SIGN_MESSAGE: "06"
+}
 
 export type LedgerAccount = {
   publicKey: string;
@@ -22,6 +27,14 @@ interface LedgerTransport {
 export class LedgerBridge {
 
   constructor(private transport: LedgerTransport) {}
+
+  async signMessage(message, bip44Index){
+    let messageLengthHex = parseInt(message.length).toString(16).padStart(8, "0");
+    let messageHex = Buffer.from(message, 'utf-8').toString('hex');
+    messageHex = messageLengthHex + messageHex;
+    const results = await this.sign(messageHex, bip44Index, MESSAGE_TYPE_CODES.SIGN_MESSAGE);
+    return results.signature;
+  }
 
   async buildTx (amount: number, publicKey: string, bip44Index: number, fromAddress: string, toAddress: string) {
 
@@ -62,7 +75,7 @@ export class LedgerBridge {
    * Returns a signed transaction ready to be posted to the network.
    */
   async signTransaction(publicKey: string, bip44Index: number, hash: string, ledgerEncodedTx: string) {
-    const results = await this.sign(ledgerEncodedTx, bip44Index);
+    const results = await this.sign(ledgerEncodedTx, bip44Index, MESSAGE_TYPE_CODES.SIGN_TRANSACTION);
 
     //console.log('signTransaction\n' + results.signature);
 
@@ -131,7 +144,7 @@ export class LedgerBridge {
   }
 
 
-  private async sign (ledgerEncodedTx: string, bip44Index: number) {
+  private async sign (ledgerEncodedTx: string, bip44Index: number, messageTypeCode: string) {
 
     const bip44Path = this.createBipPathFromAccount(bip44Index);
 
@@ -145,7 +158,7 @@ export class LedgerBridge {
 
     const ledgerMessage = ledgerEncodedTx + bip44Path;
 
-    const messages = this.splitMessageIntoChunks(ledgerMessage);
+    const messages = this.splitMessageIntoChunks(ledgerMessage, messageTypeCode);
 
     const device = await this.getLedgerInfo();
 
@@ -254,7 +267,7 @@ export class LedgerBridge {
     })
   }
 
-  private splitMessageIntoChunks (ledgerMessage: string) {
+  private splitMessageIntoChunks (ledgerMessage: string, messageTypeCode: string) {
     const messages = [];
     const bufferSize = 255 * 2;
     let offset = 0;
@@ -279,7 +292,7 @@ export class LedgerBridge {
         chunkLengthHex = '0' + chunkLengthHex;
       }
 
-      messages.push('8002' + p1 + '00' + chunkLengthHex + chunk);
+      messages.push('80' + messageTypeCode + p1 + '00' + chunkLengthHex + chunk);
       offset += chunk.length;
     }
 

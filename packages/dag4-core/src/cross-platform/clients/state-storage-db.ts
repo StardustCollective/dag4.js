@@ -25,12 +25,12 @@ export class StateStorageDb {
     this.keyPrefix = prefix;
   }
 
-  set (key: string, value: any) {
-    this.storageClient.setItem(this.keyPrefix + key, JSON.stringify(value));
+  async set (key: string, value: any) {
+    await this.storageClient.setItem(this.keyPrefix + key, JSON.stringify(value));
   }
 
-  get (key: string): any {
-    const value = this.storageClient.getItem(this.keyPrefix + key);
+  async get (key: string) {
+    const value = await this.storageClient.getItem(this.keyPrefix + key);
     if (value) {
       return JSON.parse(value);
     }

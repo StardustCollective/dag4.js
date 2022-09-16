@@ -4,7 +4,8 @@
     "outDir": "dist/cjs",
     "lib": [ "esnext", "dom" ],
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "declarationDir": "dist/types"
   },
 
   "include": [

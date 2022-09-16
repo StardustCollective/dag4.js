@@ -1,6 +1,6 @@
 import {keyStore, KeyTrio, PostTransaction, PostTransactionV2} from '@stardust-collective/dag4-keystore';
 import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
-import {globalDagNetwork, GlobalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference} from '@stardust-collective/dag4-network';
+import {globalDagNetwork, GlobalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference, Transaction, TransactionV2} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
 import {networkConfig} from './network-config';
@@ -51,6 +51,10 @@ export class DagAccount {
     return this.m_keyTrio.publicKey;
   }
 
+  get networkInstance () {
+    return this.network;
+  }
+  
   loginSeedPhrase (words: string) {
     const privateKey = keyStore.getPrivateKeyFromMnemonic(words);
 
@@ -89,7 +93,7 @@ export class DagAccount {
   }
 
   getTransactions (limit?: number, searchAfter?: string) {
-    return this.network.blockExplorerApi.getTransactionsByAddress(this.address, limit, searchAfter);
+    return this.network.getTransactionsByAddress(this.address, limit, searchAfter);
   }
 
   validateDagAddress (address: string) {

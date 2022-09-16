@@ -39,19 +39,21 @@ export class KeyringManager extends SafeEventEmitter  {
   //Encrypted State
   private storage = dag4.dagDi.getStateStorageDb();
 
-  private encryptor = new Encryptor<VaultSerialized>();
+  private encryptor;
   private wallets: IKeyringWallet[];
 
   private memStore: ObservableStore<KeyringVaultState>;
   private password: string;
 
-  constructor () {
+  constructor ({ encryptor }) {
     super()
 
     this.memStore = new ObservableStore<KeyringVaultState>({
       isUnlocked: false,
       wallets: [],
     })
+
+    this.encryptor = encryptor || new Encryptor<VaultSerialized>();
 
     this.wallets = []
   }
@@ -184,6 +186,9 @@ export class KeyringManager extends SafeEventEmitter  {
   }
 
   logout () {
+    // Reset ID counter that used to enumerate wallet IDs.
+    MultiChainWallet.prototype.resetSid();
+    SingleAccountWallet.prototype.resetSid();
     this.password = null;
     this.memStore.updateState({ isUnlocked: false });
     this.emit('lock');
@@ -264,7 +269,7 @@ export class KeyringManager extends SafeEventEmitter  {
   }
 
   private async unlockWallets (password: string) {
-    const encryptedVault = this.storage.get('vault');
+    const encryptedVault = await this.storage.get('vault');
     if (!encryptedVault) {
       //Support recovering wallets from migration
       this.password = password;
@@ -328,7 +333,7 @@ export class KeyringManager extends SafeEventEmitter  {
 
     const encryptedString = await this.encryptor.encrypt(this.password, { wallets: sWallets })
 
-    this.storage.set('vault', encryptedString);
+    await this.storage.set('vault', encryptedString);
   }
 
   private async _restoreWallet (wData: KeyringWalletSerialized) {
