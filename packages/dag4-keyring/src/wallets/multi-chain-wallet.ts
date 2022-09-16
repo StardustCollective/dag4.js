@@ -104,4 +104,8 @@ export class MultiChainWallet implements IKeyringWallet {
     return this.mnemonic;
   }
 
+  resetSid() {
+    SID = 0;
+  }
+  
 }

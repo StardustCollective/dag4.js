@@ -25,11 +25,11 @@ export class DagMonitor {
     return this.memPoolChange$;
   }
 
-  addToMemPoolMonitor (value: PendingTx | string): Transaction | TransactionV2 {
+  async addToMemPoolMonitor (value: PendingTx | string): Transaction | TransactionV2 {
     const networkInfo = this.dagAccount.networkInstance.getNetwork();
     const key =  `network-${networkInfo.id}-mempool`;
 
-    const payload: PendingTx[] = this.cacheUtils.get(key) || [];
+    let payload: PendingTx[] = (await this.cacheUtils.get(key)) || [];
 
     let tx = value as PendingTx;
 
@@ -37,11 +37,15 @@ export class DagMonitor {
       tx = { hash: value, timestamp: Date.now() } as PendingTx;
     }
 
+    if (!payload || !payload.some) {
+      payload = [];
+    }
+
     if (!payload.some(p => p.hash === tx.hash)) {
 
       payload.push(tx);
 
-      this.cacheUtils.set(key, payload);
+      await this.cacheUtils.set(key, payload);
 
       this.lastTimer = Date.now();
       this.pendingTimer = 1000;
@@ -65,20 +69,32 @@ export class DagMonitor {
     return pendingTransactions;
   }
 
-  getMemPoolFromMonitor(address?: string): PendingTx[] {
+  async getMemPoolFromMonitor(address?: string): Promise<PendingTx[]> {
     address = address || this.dagAccount.address;
     const networkInfo = this.dagAccount.networkInstance.getNetwork();
 
-    const txs: PendingTx[]  = this.cacheUtils.get(`network-${networkInfo.id}-mempool`) || [];
+    let txs: PendingTx[] = [];
+
+    try {
+        txs = await this.cacheUtils.get(`network-${networkInfo.id}-mempool`)
+    } catch (err) {
+        console.log('getMemPoolFromMonitor err: ', err);
+        console.log(err.stack);
+        return [];
+    }
+
+    if (!txs) {
+        txs = [];
+    }
 
     return txs.filter(tx => !address || !tx.receiver || tx.receiver === address || tx.sender === address);
   }
 
-  setToMemPoolMonitor(pool: PendingTx[]) {
+  async setToMemPoolMonitor(pool: PendingTx[]) {
     const networkInfo = this.dagAccount.networkInstance.getNetwork();
     const key =  `network-${networkInfo.id}-mempool`;
 
-    this.cacheUtils.set(key, pool);
+    await this.cacheUtils.set(key, pool);
   }
 
   async waitForTransaction (hash: string) {
@@ -140,13 +156,13 @@ export class DagMonitor {
 
     //Has any memPollTxs pending
     if (pendingTxs.length) {
-      this.setToMemPoolMonitor(pendingTxs);
+      await this.setToMemPoolMonitor(pendingTxs);
       this.pendingTimer = 10000;
       this.lastTimer = Date.now();
       setTimeout(() => this.pollPendingTxs(), 10000);
     } else if (poolCount > 0) {
       //NOTE: All tx in persisted pool have completed
-      this.setToMemPoolMonitor([]);
+      await this.setToMemPoolMonitor([]);
     }
 
     this.memPoolChange$.next({
@@ -156,7 +172,7 @@ export class DagMonitor {
   }
 
   private async processPendingTxs () {
-    const pool = this.getMemPoolFromMonitor();
+    const pool = await this.getMemPoolFromMonitor();
     const transTxs: PendingTx[] = [];
     const nextPool: PendingTx[] = [];
 
