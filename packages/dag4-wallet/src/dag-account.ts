@@ -1,6 +1,6 @@
 import {keyStore, KeyTrio, PostTransaction, PostTransactionV2} from '@stardust-collective/dag4-keystore';
 import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
-import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference} from '@stardust-collective/dag4-network';
+import {globalDagNetwork, GlobalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
 import {networkConfig} from './network-config';
@@ -9,7 +9,11 @@ export class DagAccount {
 
   private m_keyTrio: KeyTrio;
   private sessionChange$ = new Subject<boolean>();
-  private network: DagNetwork = globalDagNetwork;
+  private network: DagNetwork | GlobalDagNetwork;
+
+  constructor(network: DagNetwork | GlobalDagNetwork) {
+    this.network = network || globalDagNetwork;
+  }
 
   connect(networkInfo: NetworkInfo, useDefaultConfig = true) {
     let baseConfig = {};
