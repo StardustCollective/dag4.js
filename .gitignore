@@ -10,3 +10,4 @@ node_modules/
 # local files
 .DS_Store
 scratch/
+test.ts

@@ -4,7 +4,7 @@
     "sourceMap": true,
     "declaration": true,
     "strict": false,
-    "target": "ESNext",
+    "target": "es6",
     "lib": [ "ESNext" ],
     "noUnusedLocals": false
   }

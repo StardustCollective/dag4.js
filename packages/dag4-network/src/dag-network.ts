@@ -5,8 +5,8 @@ import {BlockExplorerApi} from './api/v1/block-explorer-api';
 import {L0Api} from './api/v2/l0-api';
 import {L1Api} from './api/v2/l1-api';
 import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
-import {PostTransactionV2, PendingTransaction, TransactionV2} from './dto/v2';
-import {PostTransaction, CbTransaction, Transaction} from './dto/v1';
+import {PostTransactionV2, PendingTransaction, TransactionV2, SnapshotV2} from './dto/v2';
+import {PostTransaction, CbTransaction, Transaction, Snapshot} from './dto/v1';
 
 export class DagNetwork {
   private connectedNetwork: NetworkInfo = { id: 'main', beUrl: '', lbUrl: '', l0Url: '', l1Url: ''};
@@ -131,6 +131,16 @@ export class DagNetwork {
     }
 
     return this.loadBalancerApi.postTransaction(tx as PostTransaction);
+  }
+
+  async getLatestSnapshot(): Promise<Snapshot | SnapshotV2> {
+    if (this.getNetworkVersion() === '2.0') {
+      const response = await this.blockExplorerV2Api.getLatestSnapshot() as any;
+
+      return response.data;
+    }
+
+    return this.blockExplorerApi.getLatestSnapshot();
   }
 }
 

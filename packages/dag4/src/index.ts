@@ -31,7 +31,7 @@ class Dag4Packages {
 
   createAccount (privateKey?: string) {
 
-    const account =  new DagAccount();
+    const account =  new DagAccount(globalDagNetwork);
 
     if (privateKey) {
       account.loginPrivateKey(privateKey);
@@ -42,7 +42,7 @@ class Dag4Packages {
 
   createOrGetGlobalAccount () {
     if (!this.account) {
-      this.account = new DagAccount();
+      this.account = new DagAccount(globalDagNetwork);
     }
     return this.account;
   }

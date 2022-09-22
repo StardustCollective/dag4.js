@@ -1,6 +1,6 @@
 import {keyStore, KeyTrio, PostTransaction, PostTransactionV2} from '@stardust-collective/dag4-keystore';
 import {DAG_DECIMALS} from '@stardust-collective/dag4-core';
-import {globalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference, Transaction, TransactionV2} from '@stardust-collective/dag4-network';
+import {globalDagNetwork, GlobalDagNetwork, DagNetwork, NetworkInfo, PendingTx, TransactionReference, Transaction, TransactionV2} from '@stardust-collective/dag4-network';
 import {BigNumber} from 'bignumber.js';
 import {Subject} from 'rxjs';
 import {networkConfig} from './network-config';
@@ -9,9 +9,13 @@ export class DagAccount {
 
   private m_keyTrio: KeyTrio;
   private sessionChange$ = new Subject<boolean>();
-  private network: DagNetwork = globalDagNetwork;
+  private network: DagNetwork | GlobalDagNetwork;
 
-  connect(networkInfo: NetworkInfo, useDefaultConfig = true) {
+  constructor(network: DagNetwork | GlobalDagNetwork) {
+    this.network = network || globalDagNetwork;
+  }
+
+  connect(networkInfo: Omit<NetworkInfo, 'id'> & { id?: string }, useDefaultConfig = true) {
     let baseConfig = {};
 
     if (useDefaultConfig && networkInfo.networkVersion) {
@@ -21,9 +25,12 @@ export class DagAccount {
       baseConfig = networkConfig[version][networkType];
     }
 
+    const networkId = networkInfo.id || 'global';
+
     this.network.config({
       ...baseConfig,
-      ...networkInfo
+      ...networkInfo,
+      id: networkId
     });
 
     return this;
