@@ -38,7 +38,7 @@ export class LedgerBridge {
 
   async buildTx (amount: number, publicKey: string, bip44Index: number, fromAddress: string, toAddress: string) {
 
-    const lastRef = await dag4.network.loadBalancerApi.getAddressLastAcceptedTransactionRef(fromAddress);
+    const lastRef = await dag4.network.getAddressLastAcceptedTransactionRef(fromAddress);
 
     const { tx, rle } = dag4.keyStore.prepareTx(amount, toAddress, fromAddress, lastRef, 0);
 
@@ -47,7 +47,7 @@ export class LedgerBridge {
     //console.log('rle', rle);
     //console.log('hash', hash);
 
-    const hashReference = txHashEncodeUtil.encodeTxHash(tx, true);
+    // const hashReference = txHashEncodeUtil.encodeTxHash(tx, true);
     //tx.edge.observationEdge.data.hashReference = hashReference;
 
     //console.log('hashReference');

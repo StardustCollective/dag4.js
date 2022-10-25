@@ -82,8 +82,8 @@ const encodeTx = (tx, embedSpaces, hashReference) => {
 
   {
     // lastTxRef
-    const lastTxRefHash = Buffer.from(tx.lastTxRef.prevHash, 'ASCII').toString('hex');
-    const lastTxRefHashLen = numberToHex(tx.lastTxRef.prevHash.length);
+    const lastTxRefHash = Buffer.from(tx.lastTxRef.hash, 'ASCII').toString('hex');
+    const lastTxRefHashLen = numberToHex(tx.lastTxRef.hash.length);
     encodedTx += lastTxRefHashLen;
     if (embedSpaces) {
       encodedTx += ' ';
