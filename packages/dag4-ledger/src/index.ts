@@ -3,7 +3,7 @@ import {dag4} from '@stardust-collective/dag4';
 import * as txHashEncodeUtil from './lib/tx-hash-encode'
 import * as txTranscodeUtil from './lib/tx-transcode'
 
-const MAX_SIGNED_TX_LEN = 512;
+const MAX_SIGNED_TX_LEN = 768;
 
 const DEVICE_ID = '8004000000';
 const MESSAGE_TYPE_CODES = {
