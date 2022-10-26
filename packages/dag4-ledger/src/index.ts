@@ -39,40 +39,14 @@ export class LedgerBridge {
   async buildTx (amount: number, publicKey: string, bip44Index: number, fromAddress: string, toAddress: string) {
 
     const lastRef = await dag4.network.getAddressLastAcceptedTransactionRef(fromAddress);
-
-    const { tx, rle } = dag4.keyStore.prepareTx(amount, toAddress, fromAddress, lastRef, 0, '2.0');
-
-    // const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
-    const hash = tx.value.parent.hash;
-
-    //console.log('rle', rle);
-    //console.log('hash', hash);
-
-    // const hashReference = txHashEncodeUtil.encodeTxHash(tx, true);
-    //tx.edge.observationEdge.data.hashReference = hashReference;
-
-    //console.log('hashReference');
-    //console.log(tx.edge.observationEdge.data.hashReference);
-    //console.log(hashReference);
-
-    //console.log('amount', tx.edge.data.amount);
-
+    const { tx, hash } = dag4.keyStore.prepareTx(amount, toAddress, fromAddress, lastRef, 0, '2.0');
     const ledgerEncodedTx = txTranscodeUtil.encodeTx(tx, false, false);
-
-    //console.log(ledgerEncodedTx);
-
     const signature = await this.signTransaction(publicKey, bip44Index, hash, ledgerEncodedTx);
 
     tx.proofs = [{
       signature,
       id: publicKey.substring(2),
     }];
-
-    // const signatureElt: any = {};
-    // signatureElt.signature = signature;
-    // signatureElt.id = {};
-    // signatureElt.id.hex = publicKey.substring(2); //Remove 04 prefix
-    // tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
 
     return tx;
   }
@@ -83,11 +57,11 @@ export class LedgerBridge {
   async signTransaction(publicKey: string, bip44Index: number, hash: string, ledgerEncodedTx: string) {
     const results = await this.sign(ledgerEncodedTx, bip44Index, MESSAGE_TYPE_CODES.SIGN_TRANSACTION);
 
-    //console.log('signTransaction\n' + results.signature);
+    console.log('signTransaction\n' + results.signature);
 
-    //const success = dag4.keyStore.verify(publicKey, hash, results.signature);
+    const success = dag4.keyStore.verify(publicKey, hash, results.signature);
 
-    //console.log('verify: ', success);
+    console.log('verify: ', success);
 
     return results.signature;
   }
@@ -153,9 +127,6 @@ export class LedgerBridge {
   private async sign (ledgerEncodedTx: string, bip44Index: number, messageTypeCode: string) {
 
     const bip44Path = this.createBipPathFromAccount(bip44Index);
-
-    //console.log('bip44Path', bip44Path);
-
     const transactionByteLength = Math.ceil(ledgerEncodedTx.length / 2);
 
     if (transactionByteLength > MAX_SIGNED_TX_LEN) {
@@ -163,20 +134,15 @@ export class LedgerBridge {
     }
 
     const ledgerMessage = ledgerEncodedTx + bip44Path;
-
     const messages = this.splitMessageIntoChunks(ledgerMessage, messageTypeCode);
-
     const device = await this.getLedgerInfo();
 
     let lastResponse = undefined;
-    // console.log('splitMessageIntoChunks', messages);
     for (let ix = 0; ix < messages.length; ix++) {
       const request = messages[ix];
       const message = Buffer.from(request, 'hex');
       const response = await device.exchange(message);
       const responseStr = response.toString('hex').toUpperCase();
-      // console.log('exchange', 'request', request);
-      // console.log('exchange', 'response', responseStr);
       lastResponse = responseStr;
     }
 
@@ -210,10 +176,6 @@ export class LedgerBridge {
   private createBipPathFromAccount (index: number) {
 
     const childIndex = index.toString(16).padStart(8,'0');
-
-    // console.log('createBipPathFromAccount', index, childIndex);
-
-    //`m/44'/1137'/0'/0/${index}`
 
     const bip44Path =
       '8000002C' +
