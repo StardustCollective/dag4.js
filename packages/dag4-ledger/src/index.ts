@@ -40,9 +40,10 @@ export class LedgerBridge {
 
     const lastRef = await dag4.network.getAddressLastAcceptedTransactionRef(fromAddress);
 
-    const { tx, rle } = dag4.keyStore.prepareTx(amount, toAddress, fromAddress, lastRef, 0);
+    const { tx, rle } = dag4.keyStore.prepareTx(amount, toAddress, fromAddress, lastRef, 0, '2.0');
 
-    const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
+    // const hash = tx.edge.signedObservationEdge.signatureBatch.hash;
+    const hash = tx.value.parent.hash;
 
     //console.log('rle', rle);
     //console.log('hash', hash);
@@ -62,11 +63,16 @@ export class LedgerBridge {
 
     const signature = await this.signTransaction(publicKey, bip44Index, hash, ledgerEncodedTx);
 
-    const signatureElt: any = {};
-    signatureElt.signature = signature;
-    signatureElt.id = {};
-    signatureElt.id.hex = publicKey.substring(2); //Remove 04 prefix
-    tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
+    tx.proofs = [{
+      signature,
+      id: publicKey.substring(2),
+    }];
+
+    // const signatureElt: any = {};
+    // signatureElt.signature = signature;
+    // signatureElt.id = {};
+    // signatureElt.id.hex = publicKey.substring(2); //Remove 04 prefix
+    // tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
 
     return tx;
   }
