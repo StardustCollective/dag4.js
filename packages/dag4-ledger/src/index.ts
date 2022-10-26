@@ -54,14 +54,13 @@ export class LedgerBridge {
   /**
    * Returns a signed transaction ready to be posted to the network.
    */
-  async signTransaction(publicKey: string, bip44Index: number, hash: string, ledgerEncodedTx: string) {
+  async signTransaction(publicKey: string, bip44Index: number, hash: string, ledgerEncodedTx: string) 
+  {
     const results = await this.sign(ledgerEncodedTx, bip44Index, MESSAGE_TYPE_CODES.SIGN_TRANSACTION);
-
-    console.log('signTransaction\n' + results.signature);
-
-    const success = dag4.keyStore.verify(publicKey, hash, results.signature);
-
-    console.log('verify: ', success);
+    
+    // console.log('signTransaction\n' + results.signature);
+    // const success = dag4.keyStore.verify(publicKey, hash, results.signature);
+    // console.log('verify: ', success);
 
     return results.signature;
   }
