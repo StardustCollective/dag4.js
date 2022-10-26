@@ -1,4 +1,5 @@
 'use strict';
+
 // libraries
 
 // modules
@@ -28,6 +29,18 @@ const numberToHex = (n) => {
   }
   return '0' + unpadded;
 };
+
+ const toHexString = (val)  => {
+  val = BigInt(val);
+  let bInt;
+  if (val < BigInt(0)) {
+    bInt = (BigInt(1) << BigInt(64)) + val;
+  } else {
+    bInt = val;
+  }
+
+  return bInt.toString(16)
+}
 
 const encodeTx = (tx, embedSpaces, hashReference) => {
   let encodedTx = '';
@@ -140,7 +153,7 @@ const encodeTx = (tx, embedSpaces, hashReference) => {
 
   {
     // salt
-    const salt = numberToHex(tx.value.salt);
+    const salt = numberToHex(toHexString(tx.value.salt));
     const saltLen = numberToHex(salt.length / 2);
 
     encodedTx += saltLen;
