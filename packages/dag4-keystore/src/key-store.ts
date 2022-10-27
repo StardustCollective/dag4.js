@@ -1,4 +1,4 @@
-import * as secp from "@noble/secp256k1";
+import * as EC from "elliptic";
 import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
 import { BigNumber } from "bignumber.js";
 import * as jsSha256 from "js-sha256";
@@ -14,9 +14,15 @@ import {KDFParamsPhrase, KDFParamsPrivateKey, V3Keystore} from './v3-keystore';
 import { PostTransaction, AddressLastRef } from "./transaction";
 import { PostTransactionV2, AddressLastRefV2 } from "./transaction-v2";
 
-//SIZE
-// elliptic - 360kb
-// ethereumjs-wallet -  680kb
+// Use @noble in newer env, fallback to elliptic in older env
+const useFallbackLib = typeof BigInt === 'undefined';
+
+let curve, secp;
+if (useFallbackLib) {
+  curve = new EC.ec("secp256k1");
+} else {
+  secp = require("@noble/secp256k1");
+}
 
 // coin used by ledger nano s.
 const CONSTELLATION_COIN = 1137;
@@ -140,6 +146,11 @@ export class KeyStore {
   async sign (privateKey: string, msg: string) {
     const sha512Hash = this.sha512(msg);
 
+    if (useFallbackLib) {
+      const ecSig = curve.sign(sha512Hash, Buffer.from(privateKey, 'hex'));//, {canonical: true});
+      return Buffer.from(ecSig.toDER()).toString('hex');
+    }
+
     const sig = await secp.sign(sha512Hash, privateKey);
     return Buffer.from(sig).toString('hex');
   }
@@ -152,6 +163,10 @@ export class KeyStore {
 
   verify (publicKey: string, msg: string, signature: string) {
     const sha512Hash = this.sha512(msg);
+
+    if (useFallbackLib) {
+      return curve.verify(sha512Hash, signature, Buffer.from(publicKey, 'hex'));
+    }
 
     return secp.verify(signature, sha512Hash, publicKey);
   }
@@ -170,6 +185,12 @@ export class KeyStore {
   }
 
   getPublicKeyFromPrivate (privateKey: string, compact = false) {
+    if (useFallbackLib) {
+      const point = curve.keyFromPrivate(privateKey).getPublic();
+
+      return Buffer.from(point.encode(null, compact)).toString('hex')
+    }
+
     return Buffer.from(secp.getPublicKey(privateKey, compact)).toString('hex');
   }
 

@@ -1,3 +1,5 @@
+import { BigNumber } from "bignumber.js";
+
 export type TransactionReference = {
   hash: string
   ordinal: number
@@ -9,7 +11,7 @@ type TransactionValueV2 = {
     amount: number,
     fee: number,
     parent: TransactionReference,
-    salt: bigint | string
+    salt: BigNumber | string
 }
 
 export type TransactionV2 = {
