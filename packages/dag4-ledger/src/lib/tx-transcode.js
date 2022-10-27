@@ -1,4 +1,5 @@
 'use strict';
+
 // libraries
 
 // modules
@@ -29,6 +30,18 @@ const numberToHex = (n) => {
   return '0' + unpadded;
 };
 
+ const toHexString = (val)  => {
+  val = BigInt(val);
+  let bInt;
+  if (val < BigInt(0)) {
+    bInt = (BigInt(1) << BigInt(64)) + val;
+  } else {
+    bInt = val;
+  }
+
+  return bInt.toString(16)
+}
+
 const encodeTx = (tx, embedSpaces, hashReference) => {
   let encodedTx = '';
   /* istanbul ignore if */
@@ -45,29 +58,36 @@ const encodeTx = (tx, embedSpaces, hashReference) => {
   }
 
   if (!hashReference) {
-    encodedTx += bytesToHex([tx.edge.observationEdge.parents.length]);
+    encodedTx += bytesToHex([2]); // Always 2
     if (embedSpaces) {
       encodedTx += ' ';
     }
-    tx.edge.observationEdge.parents.forEach((parent) => {
-      const parentBytes = Buffer.from(parent.hashReference, 'ASCII').toString('hex');
-      const parentBytesLengthHex = numberToHex(parent.hashReference.length);
-
-      encodedTx += parentBytesLengthHex;
+      const sourceAddressBytes = Buffer.from(tx.value.source, 'ASCII').toString('hex');
+      const sourceAddressBytesLengthHex = numberToHex(tx.value.source.length);
+      encodedTx += sourceAddressBytesLengthHex;
+      if (embedSpaces) {
+        encodedTx += ' ';
+      }
+      encodedTx += sourceAddressBytes.toString('hex');
       if (embedSpaces) {
         encodedTx += ' ';
       }
 
-      encodedTx += parentBytes.toString('hex');
+      const destAddressBytes = Buffer.from(tx.value.destination, 'ASCII').toString('hex');
+      const destAddressBytesLengthHex = numberToHex(tx.value.destination.length);
+      encodedTx += destAddressBytesLengthHex;
       if (embedSpaces) {
         encodedTx += ' ';
       }
-    });
+      encodedTx += destAddressBytes.toString('hex');
+      if (embedSpaces) {
+        encodedTx += ' ';
+      }
   }
 
   {
     // amount
-    const amount = numberToHex(tx.edge.data.amount);
+    const amount = numberToHex(tx.value.amount);
     const amountLen = numberToHex(amount.length / 2);
     encodedTx += amountLen;
     if (embedSpaces) {
@@ -82,8 +102,8 @@ const encodeTx = (tx, embedSpaces, hashReference) => {
 
   {
     // lastTxRef
-    const lastTxRefHash = Buffer.from(tx.lastTxRef.prevHash, 'ASCII').toString('hex');
-    const lastTxRefHashLen = numberToHex(tx.lastTxRef.prevHash.length);
+    const lastTxRefHash = Buffer.from(tx.value.parent.hash, 'ASCII').toString('hex');
+    const lastTxRefHashLen = numberToHex(tx.value.parent.hash.length);
     encodedTx += lastTxRefHashLen;
     if (embedSpaces) {
       encodedTx += ' ';
@@ -97,7 +117,7 @@ const encodeTx = (tx, embedSpaces, hashReference) => {
 
   {
     // lastTxRefOrdinal
-    const lastTxRefOrdinal = numberToHex(tx.lastTxRef.ordinal);
+    const lastTxRefOrdinal = numberToHex(tx.value.parent.ordinal);
     const lastTxRefOrdinalLen = numberToHex(lastTxRefOrdinal.length / 2);
     encodedTx += lastTxRefOrdinalLen;
     if (embedSpaces) {
@@ -113,8 +133,8 @@ const encodeTx = (tx, embedSpaces, hashReference) => {
   {
     // fee
     let fee;
-    if (tx.edge.data.fee !== undefined) {
-      fee = numberToHex(tx.edge.data.fee);
+    if (tx.value.fee !== undefined) {
+      fee = numberToHex(tx.value.fee);
     } else {
       fee = numberToHex(0);
     }
@@ -133,7 +153,7 @@ const encodeTx = (tx, embedSpaces, hashReference) => {
 
   {
     // salt
-    const salt = numberToHex(tx.edge.data.salt);
+    const salt = numberToHex(toHexString(tx.value.salt));
     const saltLen = numberToHex(salt.length / 2);
 
     encodedTx += saltLen;
