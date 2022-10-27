@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-ledger",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Ledger hardware integration for signing DAG transactions",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",

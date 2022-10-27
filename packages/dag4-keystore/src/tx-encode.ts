@@ -1,4 +1,5 @@
 import {Buffer} from 'buffer';
+import { BigNumber } from "bignumber.js";
 import {Transaction, AddressLastRef, PostTransaction} from './transaction';
 import {TransactionV2, PostTransactionV2, AddressLastRefV2} from './transaction-v2';
 
@@ -10,7 +11,7 @@ class TxEncode {
 
   numberToHex (n) {
     // @ts-ignore
-    const unpadded = BigInt(n).toString(16);
+    const unpadded = new BigNumber(n).toString(16);
     if (unpadded.length % 2 == 0) {
       return unpadded;
     }

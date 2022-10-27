@@ -1,5 +1,6 @@
-import randomBytes from 'randombytes';
+import { randomBytes } from 'crypto';
 import { TransactionInterface } from './transaction';
+import { BigNumber } from "bignumber.js";
 
 // Enforce a minimum complexity in resulting hash: 8725724278030335
 const MIN_SALT = Number.MAX_SAFE_INTEGER - 2**48;
@@ -15,7 +16,7 @@ export type TransactionPropsV2 = {
   amount?: number,
   fee?: number,
   lastTxRef?: AddressLastRefV2,
-  salt?: string | bigint
+  salt?: string | BigNumber
 };
 
 export type Proof = {
@@ -30,7 +31,7 @@ export type PostTransactionV2 = {
      amount: number,
      fee: number,
      parent: AddressLastRefV2,
-     salt: string | bigint
+     salt: string | BigNumber
   },
   proofs: Proof[]
 };
@@ -70,7 +71,7 @@ export class TransactionV2 implements TransactionInterface {
     }
 
     if (salt === undefined) {
-      salt = BigInt(MIN_SALT + parseInt(randomBytes(6).toString('hex'), 16));
+      salt = new BigNumber(MIN_SALT + parseInt(randomBytes(6).toString('hex'), 16));
     }
 
     this.tx.value.salt = salt;
@@ -87,11 +88,11 @@ export class TransactionV2 implements TransactionInterface {
     });
   }
 
-  static toHexString(val: bigint | string) {
-    val = BigInt(val);
+  static toHexString(val: BigNumber | string) {
+    val = new BigNumber(val);
     let bInt;
-    if (val < BigInt(0)) {
-      bInt = (BigInt(1) << BigInt(64)) + (val as any);
+    if (val < new BigNumber(0)) {
+      bInt = (1 << 64) + (val as any);
     } else {
       bInt = val;
     }
