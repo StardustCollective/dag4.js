@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-ledger",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ledger hardware integration for signing DAG transactions",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -19,7 +19,7 @@
     "release:preflight": "npm pack ./dist --dry-run"
   },
   "dependencies": {
-    "@stardust-collective/dag4": "1.2.4",
+    "@stardust-collective/dag4": "1.2.5",
     "bignumber.js": "^9.0.1"
   }
 }
