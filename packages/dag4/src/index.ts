@@ -7,9 +7,9 @@ import {
   RestApi as _RestApi,
   RestApiOptionsRequest as _RestApiOptionsRequest
 } from '@stardust-collective/dag4-core';
-import {globalDagNetwork, Snapshot as _Snapshot, Transaction as _Transaction, PendingTx as _PendingTx, NetworkInfo as _NetworkInfo} from '@stardust-collective/dag4-network';
+import {globalDagNetwork, Snapshot as _Snapshot, Transaction as _Transaction, PendingTx as _PendingTx, NetworkInfo as _NetworkInfo, StateChannelNetworkInfo as _StateChannelNetworkInfo, StateChannelNetworkInfo } from '@stardust-collective/dag4-network';
 import {keyStore, HDKey as _HDKey, DERIVATION_PATH as _DERIVATION_PATH} from '@stardust-collective/dag4-keystore';
-import {DagAccount, DagMonitor} from '@stardust-collective/dag4-wallet';
+import {StateChannelTokenClient, DagAccount, DagMonitor} from '@stardust-collective/dag4-wallet';
 
 
 export namespace Dag4Types {
@@ -21,6 +21,7 @@ export namespace Dag4Types {
   export type Transaction = _Transaction;
   export type PendingTx = _PendingTx;
   export type NetworkInfo = _NetworkInfo;
+  export type StateChannelNetworkInfo = _StateChannelNetworkInfo;
   export type Snapshot = _Snapshot;
   export type RestApiOptionsRequest = _RestApiOptionsRequest;
 }
@@ -38,6 +39,10 @@ class Dag4Packages {
     }
 
     return account;
+  }
+
+  createStateChannelTokenClient(account: DagAccount, networkInfo: StateChannelNetworkInfo){
+    return new StateChannelTokenClient(account, networkInfo);
   }
 
   createOrGetGlobalAccount () {
@@ -62,6 +67,9 @@ export const dag4 = {
   di: dagDi,
   createAccount (privateKey?: string) {
     return dag4Packages.createAccount(privateKey);
+  },
+  createStateChannelTokenClient(account: DagAccount, networkInfo: StateChannelNetworkInfo){
+    return dag4Packages.createStateChannelTokenClient(account, networkInfo);
   },
   get account () {
     return dag4Packages.createOrGetGlobalAccount();
