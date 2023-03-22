@@ -1,6 +1,6 @@
 export * from './global-dag-network'
 export * from './dag-network'
-export * from './state-channel-token-network'
+export * from './l0-token-network'
 export * from './web3'
 export * from './api'
 export * from './dto/v1'

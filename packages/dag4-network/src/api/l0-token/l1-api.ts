@@ -8,7 +8,7 @@ import {
   PostTransactionResponseV2,
 } from "../../dto/v2";
 
-class StateChannelTokenL1Api {
+class L0TokenL1Api {
   private service: RestApi;
 
   constructor(host: string) {
@@ -72,4 +72,4 @@ class StateChannelTokenL1Api {
   }
 }
 
-export { StateChannelTokenL1Api };
+export { L0TokenL1Api };

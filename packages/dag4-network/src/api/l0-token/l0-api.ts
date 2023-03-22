@@ -8,7 +8,7 @@ import {
   TotalSupplyV2,
 } from "../../dto/v2";
 
-class StateChannelTokenL0Api {
+class L0TokenL0Api {
   private service: RestApi;
 
   constructor(host: string) {
@@ -95,4 +95,4 @@ class StateChannelTokenL0Api {
   }
 }
 
-export { StateChannelTokenL0Api };
+export { L0TokenL0Api };
