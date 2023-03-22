@@ -1,9 +1,18 @@
-export type NetworkInfo = {
+type NetworkInfo = {
   id: string;
-  beUrl?: string
+  beUrl?: string;
   lbUrl?: string;
   l0Url?: string;
   l1Url?: string;
   networkVersion?: string;
   testnet?: boolean;
-}
+};
+
+type StateChannelNetworkInfo = {
+  id: string;
+  l0Url: string;
+  l1Url: string;
+  testnet?: boolean;
+};
+
+export { NetworkInfo, StateChannelNetworkInfo };
