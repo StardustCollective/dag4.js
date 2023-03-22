@@ -10,7 +10,7 @@ import {
 } from "../../dto/v2";
 
 class L1Api {
-  private service = new RestApi(DNC.L1_URL);
+  protected service = new RestApi(DNC.L1_URL);
 
   constructor(host?: string) {
     if (host) {

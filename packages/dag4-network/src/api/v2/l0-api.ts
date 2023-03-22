@@ -9,8 +9,8 @@ import {
   TotalSupplyV2,
 } from "../../dto/v2";
 
-export class L0Api {
-  private service = new RestApi(DNC.L0_URL);
+class L0Api {
+  protected service = new RestApi(DNC.L0_URL);
 
   constructor(host?: string) {
     if (host) {
@@ -118,4 +118,6 @@ export class L0Api {
   }
 }
 
-export const l0Api = new L0Api();
+const l0Api = new L0Api();
+
+export { L0Api, l0Api };
