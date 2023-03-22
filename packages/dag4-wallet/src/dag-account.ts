@@ -419,10 +419,9 @@ export class DagAccount {
   }
 
   createL0TokenClient(
-    account: DagAccount,
     networkInfo: StateChannelNetworkInfo
   ) {
-    return new L0TokenClient(account, networkInfo);
+    return new L0TokenClient(this, networkInfo);
   }
 }
 
