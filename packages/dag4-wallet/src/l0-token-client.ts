@@ -72,7 +72,7 @@ class L0TokenClient {
     return 1 / this.tokenDecimals;
   }
 
-  async transferDag(
+  async transfer(
     toAddress: string,
     amount: number,
     fee = 0,
