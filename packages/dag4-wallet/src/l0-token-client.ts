@@ -8,7 +8,7 @@ import {
   PendingTransaction,
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
-import { DagAccount } from "./dag-account";
+import type { DagAccount } from "./dag-account";
 
 class L0TokenClient {
   private network: L0TokenNetwork;
