@@ -225,7 +225,7 @@ class L0TokenClient {
     return hashes;
   }
 
-  async transferDagBatch(
+  async transferBatch(
     transfers: TransferBatchItem[],
     lastRef?: TransactionReference
   ) {
