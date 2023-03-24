@@ -1,16 +1,31 @@
-import fetch from 'cross-fetch';
+import fetch from "cross-fetch";
 import {
   arrayUtils,
   dagDi,
   IHttpClient as _IHttpClient,
   IKeyValueDb as _IKeyValueDb,
   RestApi as _RestApi,
-  RestApiOptionsRequest as _RestApiOptionsRequest
-} from '@stardust-collective/dag4-core';
-import {globalDagNetwork, Snapshot as _Snapshot, Transaction as _Transaction, PendingTx as _PendingTx, NetworkInfo as _NetworkInfo} from '@stardust-collective/dag4-network';
-import {keyStore, HDKey as _HDKey, DERIVATION_PATH as _DERIVATION_PATH} from '@stardust-collective/dag4-keystore';
-import {DagAccount, DagMonitor} from '@stardust-collective/dag4-wallet';
-
+  RestApiOptionsRequest as _RestApiOptionsRequest,
+} from "@stardust-collective/dag4-core";
+import {
+  globalDagNetwork,
+  Snapshot as _Snapshot,
+  Transaction as _Transaction,
+  PendingTx as _PendingTx,
+  NetworkInfo as _NetworkInfo,
+  StateChannelNetworkInfo as _StateChannelNetworkInfo,
+  StateChannelNetworkInfo,
+} from "@stardust-collective/dag4-network";
+import {
+  keyStore,
+  HDKey as _HDKey,
+  DERIVATION_PATH as _DERIVATION_PATH,
+} from "@stardust-collective/dag4-keystore";
+import {
+  L0TokenClient,
+  DagAccount,
+  DagMonitor,
+} from "@stardust-collective/dag4-wallet";
 
 export namespace Dag4Types {
   export type HDKey = _HDKey;
@@ -21,6 +36,7 @@ export namespace Dag4Types {
   export type Transaction = _Transaction;
   export type PendingTx = _PendingTx;
   export type NetworkInfo = _NetworkInfo;
+  export type StateChannelNetworkInfo = _StateChannelNetworkInfo;
   export type Snapshot = _Snapshot;
   export type RestApiOptionsRequest = _RestApiOptionsRequest;
 }
@@ -29,9 +45,8 @@ class Dag4Packages {
   private account: DagAccount;
   private monitor: DagMonitor;
 
-  createAccount (privateKey?: string) {
-
-    const account =  new DagAccount(globalDagNetwork);
+  createAccount(privateKey?: string) {
+    const account = new DagAccount(globalDagNetwork);
 
     if (privateKey) {
       account.loginPrivateKey(privateKey);
@@ -40,14 +55,21 @@ class Dag4Packages {
     return account;
   }
 
-  createOrGetGlobalAccount () {
+  createL0TokenClient(
+    account: DagAccount,
+    networkInfo: StateChannelNetworkInfo
+  ) {
+    return new L0TokenClient(account, networkInfo);
+  }
+
+  createOrGetGlobalAccount() {
     if (!this.account) {
       this.account = new DagAccount(globalDagNetwork);
     }
     return this.account;
   }
 
-  createOrGetGlobalMonitor () {
+  createOrGetGlobalMonitor() {
     if (!this.monitor) {
       this.monitor = new DagMonitor(this.createOrGetGlobalAccount());
     }
@@ -60,13 +82,19 @@ const dag4Packages = new Dag4Packages();
 export const dag4 = {
   keyStore,
   di: dagDi,
-  createAccount (privateKey?: string) {
+  createAccount(privateKey?: string) {
     return dag4Packages.createAccount(privateKey);
   },
-  get account () {
+  createL0TokenClient(
+    account: DagAccount,
+    networkInfo: StateChannelNetworkInfo
+  ) {
+    return dag4Packages.createL0TokenClient(account, networkInfo);
+  },
+  get account() {
     return dag4Packages.createOrGetGlobalAccount();
   },
-  get monitor () {
+  get monitor() {
     return dag4Packages.createOrGetGlobalMonitor();
   },
   config: (config: Dag4Config) => {
@@ -74,13 +102,13 @@ export const dag4 = {
     globalDagNetwork.config(config.network);
   },
   network: globalDagNetwork,
-  arrayUtils
-}
+  arrayUtils,
+};
 
 type Dag4Config = {
   appId: string;
-  network: Dag4Types.NetworkInfo
-}
+  network: Dag4Types.NetworkInfo;
+};
 
 // default config
 dag4.di.useFetchHttpClient(fetch);
