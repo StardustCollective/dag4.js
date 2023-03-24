@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-network",
-  "version": "1.2.5",
+  "version": "2.1.0-beta",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -19,7 +19,7 @@
     "release:preflight": "npm pack ./dist --dry-run"
   },
   "dependencies": {
-    "@stardust-collective/dag4-core": "1.2.2",
+    "@stardust-collective/dag4-core": "2.1.0-beta",
     "rxjs": "^6.6.3",
     "bignumber.js": "^9.0.1"
   },
