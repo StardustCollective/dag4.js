@@ -4,7 +4,7 @@ import {
 } from "../../dto/v2";
 import { L0Api } from "../v2/l0-api";
 
-class L0TokenL0Api extends L0Api {
+class MetagraphTokenL0Api extends L0Api {
   constructor(host: string) {
     super(host);
   }
@@ -31,4 +31,4 @@ class L0TokenL0Api extends L0Api {
   }
 }
 
-export { L0TokenL0Api };
+export { MetagraphTokenL0Api };

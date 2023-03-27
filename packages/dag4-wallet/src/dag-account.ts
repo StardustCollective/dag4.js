@@ -14,12 +14,12 @@ import {
   TransactionReference,
   Transaction,
   TransactionV2,
-  StateChannelNetworkInfo,
+  MetagraphNetworkInfo,
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import { Subject } from "rxjs";
 import { networkConfig } from "./network-config";
-import { L0TokenClient } from "./l0-token-client";
+import { MetagraphTokenClient } from "./metagraph-token-client";
 
 export class DagAccount {
   private m_keyTrio: KeyTrio;
@@ -418,10 +418,10 @@ export class DagAccount {
     return this.sendBatchTransactions(txns);
   }
 
-  createL0TokenClient(
-    networkInfo: StateChannelNetworkInfo
+  createMetagraphTokenClient(
+    networkInfo: MetagraphNetworkInfo
   ) {
-    return new L0TokenClient(this, networkInfo);
+    return new MetagraphTokenClient(this, networkInfo);
   }
 }
 

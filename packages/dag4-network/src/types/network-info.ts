@@ -8,11 +8,11 @@ type NetworkInfo = {
   testnet?: boolean;
 };
 
-type StateChannelNetworkInfo = {
+type MetagraphNetworkInfo = {
   id: string;
   l0Url: string;
   l1Url: string;
   testnet?: boolean;
 };
 
-export { NetworkInfo, StateChannelNetworkInfo };
+export { NetworkInfo, MetagraphNetworkInfo };
