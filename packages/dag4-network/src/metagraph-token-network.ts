@@ -1,12 +1,12 @@
-import { StateChannelNetworkInfo } from "./types/network-info";
+import { MetagraphNetworkInfo } from "./types/network-info";
 import {
   PostTransactionV2,
   PendingTransaction,
   TransactionV2,
   SnapshotV2,
 } from "./dto/v2";
-import { L0TokenL0Api } from "./api/l0-token/l0-api";
-import { L0TokenL1Api } from "./api/l0-token/l1-api";
+import { MetagraphTokenL0Api } from "./api/metagraph-token/l0-api";
+import { MetagraphTokenL1Api } from "./api/metagraph-token/l1-api";
 
 class MethodNotAvailableError extends Error {
   constructor(ctor: { new (...args: any[]): any }, method: Function) {
@@ -14,16 +14,16 @@ class MethodNotAvailableError extends Error {
   }
 }
 
-class L0TokenNetwork {
-  private connectedNetwork: StateChannelNetworkInfo;
+class MetagraphTokenNetwork {
+  private connectedNetwork: MetagraphNetworkInfo;
 
-  l0Api: L0TokenL0Api;
-  l1Api: L0TokenL1Api;
+  l0Api: MetagraphTokenL0Api;
+  l1Api: MetagraphTokenL1Api;
 
-  constructor(netInfo: StateChannelNetworkInfo) {
+  constructor(netInfo: MetagraphNetworkInfo) {
     this.connectedNetwork = netInfo;
-    this.l0Api = new L0TokenL0Api(netInfo.l0Url);
-    this.l1Api = new L0TokenL1Api(netInfo.l1Url);
+    this.l0Api = new MetagraphTokenL0Api(netInfo.l0Url);
+    this.l1Api = new MetagraphTokenL1Api(netInfo.l1Url);
   }
 
   getNetwork() {
@@ -56,7 +56,7 @@ class L0TokenNetwork {
     searchAfter?: string
   ): Promise<TransactionV2[]> {
     throw new MethodNotAvailableError(
-      L0TokenNetwork,
+      MetagraphTokenNetwork,
       this.getTransactionsByAddress
     );
     /* let response = null;
@@ -76,7 +76,7 @@ class L0TokenNetwork {
     hash: string | null
   ): Promise<null | TransactionV2> {
     throw new MethodNotAvailableError(
-      L0TokenNetwork,
+      MetagraphTokenNetwork,
       this.getTransaction
     );
     /* let response = null;
@@ -99,7 +99,7 @@ class L0TokenNetwork {
 
   async getLatestSnapshot(): Promise<SnapshotV2> {
     throw new MethodNotAvailableError(
-      L0TokenNetwork,
+      MetagraphTokenNetwork,
       this.getLatestSnapshot
     );
     /* const response = (await this.blockExplorerV2Api.getLatestSnapshot()) as any;
@@ -108,4 +108,4 @@ class L0TokenNetwork {
   }
 }
 
-export { L0TokenNetwork };
+export { MetagraphTokenNetwork };

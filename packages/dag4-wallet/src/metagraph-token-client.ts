@@ -3,22 +3,22 @@ import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
 import {
   PendingTx,
   TransactionReference,
-  L0TokenNetwork,
-  StateChannelNetworkInfo,
+  MetagraphTokenNetwork,
+  MetagraphNetworkInfo,
   PendingTransaction,
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import type { DagAccount } from "./dag-account";
 
-class L0TokenClient {
-  private network: L0TokenNetwork;
+class MetagraphTokenClient {
+  private network: MetagraphTokenNetwork;
 
   constructor(
     private account: DagAccount,
-    private networkInfo: StateChannelNetworkInfo,
+    private networkInfo: MetagraphNetworkInfo,
     private tokenDecimals: number = DAG_DECIMALS
   ) {
-    this.network = new L0TokenNetwork(this.networkInfo);
+    this.network = new MetagraphTokenNetwork(this.networkInfo);
   }
 
   get networkInstance() {
@@ -241,4 +241,4 @@ type TransferBatchItem = {
   fee?: number;
 };
 
-export { L0TokenClient };
+export { MetagraphTokenClient };

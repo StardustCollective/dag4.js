@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-keystore",
-  "version": "2.1.0-beta",
+  "version": "2.1.1-beta",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
