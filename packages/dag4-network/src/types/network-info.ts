@@ -12,6 +12,8 @@ type MetagraphNetworkInfo = {
   id: string;
   l0Url: string;
   l1Url: string;
+  beUrl: string;
+  metagraphId: string;
   testnet?: boolean;
 };
 
