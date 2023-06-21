@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-monorepo",
-  "version": "2.1.3",
+  "version": "2.2.0",
   "description": "Constellation HyperGraph Network JavaScript API",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
