@@ -130,29 +130,6 @@ class MetagraphTokenClient {
     }
   }
 
-  async waitForCheckPointAccepted(hash: string) {
-    // In V2 the txn is accepted as it's processed so we don't need to check multiple times
-    let txn: PendingTransaction;
-    try {
-      txn = await this.network.getPendingTransaction(hash);
-    } catch (err: any) {
-      // 404 NOOP
-    }
-
-    if (txn && txn.status === "Waiting") {
-      return true;
-    }
-
-    try {
-      await this.network.getTransaction(hash);
-    } catch (err: any) {
-      // 404s if not found
-      return false;
-    }
-
-    return true;
-  }
-
   async waitForBalanceChange(initialValue?: number) {
     if (initialValue === undefined) {
       initialValue = await this.getBalance();
@@ -182,7 +159,6 @@ class MetagraphTokenClient {
     return new Promise((resolve) => setTimeout(resolve, time * 1000));
   }
 
-  // 2.0+ only
   async generateBatchTransactions(
     transfers: TransferBatchItem[],
     lastRef?: TransactionReference

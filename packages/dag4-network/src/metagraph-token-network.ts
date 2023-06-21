@@ -3,27 +3,24 @@ import {
   PostTransactionV2,
   PendingTransaction,
   TransactionV2,
-  SnapshotV2,
+  CurrencySnapshot
 } from "./dto/v2";
+import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
 import { MetagraphTokenL0Api } from "./api/metagraph-token/l0-api";
 import { MetagraphTokenL1Api } from "./api/metagraph-token/l1-api";
-
-class MethodNotAvailableError extends Error {
-  constructor(ctor: { new (...args: any[]): any }, method: Function) {
-    super(`${ctor.name}.${method.name} is not available`);
-  }
-}
 
 class MetagraphTokenNetwork {
   private connectedNetwork: MetagraphNetworkInfo;
 
   l0Api: MetagraphTokenL0Api;
   l1Api: MetagraphTokenL1Api;
+  beApi: BlockExplorerV2Api;
 
   constructor(netInfo: MetagraphNetworkInfo) {
     this.connectedNetwork = netInfo;
     this.l0Api = new MetagraphTokenL0Api(netInfo.l0Url);
     this.l1Api = new MetagraphTokenL1Api(netInfo.l1Url);
+    this.beApi = new BlockExplorerV2Api(netInfo.beUrl);
   }
 
   getNetwork() {
@@ -55,13 +52,10 @@ class MetagraphTokenNetwork {
     limit?: number,
     searchAfter?: string
   ): Promise<TransactionV2[]> {
-    throw new MethodNotAvailableError(
-      MetagraphTokenNetwork,
-      this.getTransactionsByAddress
-    );
-    /* let response = null;
+    let response = null;
     try {
-      response = await this.blockExplorerV2Api.getTransactionsByAddress(
+      response = await this.beApi.getCurrencyTransactionsByAddress(
+        this.connectedNetwork.metagraphId,
         address,
         limit,
         searchAfter
@@ -69,23 +63,19 @@ class MetagraphTokenNetwork {
     } catch (e: any) {
       // NOOP 404
     }
-    return response ? response.data : null; */
+    return response ? response.data : null;
   }
 
   async getTransaction(
     hash: string | null
   ): Promise<null | TransactionV2> {
-    throw new MethodNotAvailableError(
-      MetagraphTokenNetwork,
-      this.getTransaction
-    );
-    /* let response = null;
+    let response = null;
     try {
-      response = await this.blockExplorerV2Api.getTransaction(hash);
+      response = await this.beApi.getCurrencyTransaction(this.connectedNetwork.metagraphId, hash);
     } catch (e: any) {
       // NOOP 404
     }
-    return response ? response.data : null; */
+    return response ? response.data : null;
   }
 
   async postTransaction(tx: PostTransactionV2): Promise<string> {
@@ -97,14 +87,10 @@ class MetagraphTokenNetwork {
     return response.data ? response.data.hash : response.hash;
   }
 
-  async getLatestSnapshot(): Promise<SnapshotV2> {
-    throw new MethodNotAvailableError(
-      MetagraphTokenNetwork,
-      this.getLatestSnapshot
-    );
-    /* const response = (await this.blockExplorerV2Api.getLatestSnapshot()) as any;
+  async getLatestSnapshot(): Promise<CurrencySnapshot> {
+    const response = (await this.beApi.getLatestCurrencySnapshot(this.connectedNetwork.metagraphId)) as any;
 
-    return response.data; */
+    return response.data;
   }
 }
 
