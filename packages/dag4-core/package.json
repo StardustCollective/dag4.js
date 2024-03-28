@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-core",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Constellation HyperGraph JavaScript API",
   "author": "Frank Fox",
   "license": "MIT",
@@ -17,6 +17,7 @@
   "module": "dist/esm/index.js",
   "typings": "dist/types/index.d.ts",
   "scripts": {
+    "clean:all": "rimraf dist/ && rimraf node_modules",
     "prebuild": "rimraf dist/",
     "build": "npx tsc && npx tsc -p tsconfig.cjs.json",
     "prerelease": "npm run build && npm version patch",

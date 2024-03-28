@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-monorepo",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Constellation HyperGraph Network JavaScript API",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -11,6 +11,15 @@
   "homepage": "https://github.com/StardustCollective/dag4.js#readme",
   "scripts": {
     "clean": "rimraf dist/",
+    "clean:dag4": "cd packages/dag4 && npm run clean:all",
+    "clean:dag4-core": "cd packages/dag4-core && npm run clean:all",
+    "clean:dag4-keyring": "cd packages/dag4-keyring && npm run clean:all",
+    "clean:dag4-keystore": "cd packages/dag4-keystore && npm run clean:all",
+    "clean:dag4-ledger": "cd packages/dag4-ledger && npm run clean:all",
+    "clean:dag4-network": "cd packages/dag4-network && npm run clean:all",
+    "clean:dag4-wallet": "cd packages/dag4-wallet && npm run clean:all",
+    "clean:dag4-xchain-ethereum": "cd packages/dag4-xchain-ethereum && npm run clean:all",
+    "clean:all": "rimraf dist/ && rimraf node_modules && npm run clean:dag4 && npm run clean:dag4-core && npm run clean:dag4-keyring && npm run clean:dag4-keystore && npm run clean:dag4-ledger && npm run clean:dag4-network && npm run clean:dag4-wallet && npm run clean:dag4-xchain-ethereum",
     "prebuild": "npm run clean",
     "build-rollup": "rollup -c scripts/config/rollup.config.js && rollup -c scripts/config/rollup.config.js --environment NODE_ENV:production",
     "build-all": "npm run build && npm run build-rollup",

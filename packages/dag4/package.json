@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Constellation HyperGraph Network JavaScript API",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -11,6 +11,7 @@
   "homepage": "https://github.com/StardustCollective/dag4.js#readme",
   "scripts": {
     "clean": "rimraf dist/",
+    "clean:all": "rimraf dist/ && rimraf node_modules",
     "prebuild": "npm run clean",
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "build-rollup": "rollup -c scripts/config/rollup.config.js && rollup -c scripts/config/rollup.config.js --environment NODE_ENV:production",
@@ -28,10 +29,10 @@
     "url": "https://github.com/StardustCollective/dag4.js/issues"
   },
   "dependencies": {
-    "@stardust-collective/dag4-core": "2.2.0",
-    "@stardust-collective/dag4-keystore": "2.2.0",
-    "@stardust-collective/dag4-network": "2.2.0",
-    "@stardust-collective/dag4-wallet": "2.2.0",
+    "@stardust-collective/dag4-core": "2.2.1",
+    "@stardust-collective/dag4-keystore": "2.2.1",
+    "@stardust-collective/dag4-network": "2.2.1",
+    "@stardust-collective/dag4-wallet": "2.2.1",
     "cross-fetch": "^3.1.5"
   },
   "devDependencies": {
