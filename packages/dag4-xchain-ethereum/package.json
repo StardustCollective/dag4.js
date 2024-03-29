@@ -10,6 +10,7 @@
   "typings": "dist/types/index.d.ts",
   "homepage": "https://github.com/StardustCollective/dag4.js#readme",
   "scripts": {
+    "clean:all": "rimraf dist/ && rimraf node_modules",
     "prebuild": "rimraf dist/",
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "rollup": "rollup -c ../../scripts/config/rollup.config.js",

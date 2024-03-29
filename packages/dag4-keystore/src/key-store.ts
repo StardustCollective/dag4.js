@@ -53,6 +53,7 @@ const DERIVATION_PATH_MAP = {
 
 // Personal sign format `${PERSONAL_SIGN_PREFIX}${msg.length.toString()}${msg}`
 export const PERSONAL_SIGN_PREFIX = `\u0019Constellation Signed Message:\n`;
+export const DATA_SIGN_PREFIX = `\u0019Constellation Signed Data:\n`;
 
 export class KeyStore {
 
@@ -155,9 +156,13 @@ export class KeyStore {
     return Buffer.from(sig).toString('hex');
   }
 
-  // NOTE: msg must be base64 encoded 
   async personalSign (privateKey: string, msg: string) {
     const message = `${PERSONAL_SIGN_PREFIX}${msg.length.toString()}\n${msg}`;
+    return this.sign(privateKey, message);
+  }
+
+  async dataSign (privateKey: string, msg: string) {
+    const message = `${DATA_SIGN_PREFIX}${msg.length.toString()}\n${msg}`;
     return this.sign(privateKey, message);
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-keystore",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -9,6 +9,7 @@
   "module": "dist/esm/index.js",
   "typings": "dist/types/index.d.ts",
   "scripts": {
+    "clean:all": "rimraf dist/ && rimraf node_modules",
     "prebuild": "rimraf dist/",
     "build": "npx tsc && tsc -p tsconfig.cjs.json",
     "rollup": "rollup -c ../../scripts/config/rollup.config.js",

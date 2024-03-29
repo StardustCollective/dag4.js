@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-keyring",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A wallet management tool for multi-chain accounts.",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -10,6 +10,7 @@
   "typings": "dist/types/index.d.ts",
   "homepage": "https://github.com/StardustCollective/dag4.js/packages/dag4-keyring/#readme",
   "scripts": {
+    "clean:all": "rimraf dist/ && rimraf node_modules",
     "prebuild": "rimraf dist/",
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "build-cjs": "tsc -p tsconfig.cjs.json",
@@ -22,7 +23,7 @@
   },
   "dependencies": {
     "@metamask/obs-store": "^6.0.2",
-    "@stardust-collective/dag4-core": "2.2.0",
+    "@stardust-collective/dag4-core": "2.2.1",
     "bn.js": "^4.12.0",
     "bs58": "^4.0.1",
     "buffer": "^5.6.0",
