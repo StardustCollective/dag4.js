@@ -162,7 +162,7 @@ export class KeyStore {
   }
 
   serialize(msg: string): string {
-    return Buffer.from(msg, "utf8").toString("hex");
+    return Buffer.from(msg, "utf-8").toString("hex");
   }
 
   async dataSign(privateKey: string, msg: string) {
