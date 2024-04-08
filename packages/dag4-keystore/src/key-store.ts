@@ -182,6 +182,18 @@ export class KeyStore {
     return secp.verify(signature, sha512Hash, publicKey);
   }
 
+  verifyData (publicKey: string, msg: string, signature: string) {
+    const serializedMessage = this.serialize(msg);
+    const hash = this.sha256(Buffer.from(serializedMessage, "hex"));
+    const sha512Hash = this.sha512(hash);
+
+    if (useFallbackLib) {
+      return curve.verify(sha512Hash, signature, Buffer.from(publicKey, 'hex'));
+    }
+
+    return secp.verify(signature, sha512Hash, publicKey);
+  }
+
   validateDagAddress (address: string) {
     if (!address) return false;
 
