@@ -161,9 +161,15 @@ export class KeyStore {
     return this.sign(privateKey, message);
   }
 
-  async dataSign (privateKey: string, msg: string) {
+  serialize(msg: string): string {
+    return Buffer.from(msg, "utf8").toString("hex");
+  }
+
+  async dataSign(privateKey: string, msg: string) {
     const message = `${DATA_SIGN_PREFIX}${msg.length.toString()}\n${msg}`;
-    return this.sign(privateKey, message);
+    const serializedMessage = this.serialize(message);
+    const hash = this.sha256(Buffer.from(serializedMessage, "hex"));
+    return this.sign(privateKey, hash);
   }
 
   verify (publicKey: string, msg: string, signature: string) {
