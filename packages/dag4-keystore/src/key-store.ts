@@ -161,13 +161,31 @@ export class KeyStore {
     return this.sign(privateKey, message);
   }
 
-  async dataSign (privateKey: string, msg: string) {
+  serialize(msg: string): string {
+    return Buffer.from(msg, "utf-8").toString("hex");
+  }
+
+  async dataSign(privateKey: string, msg: string) {
     const message = `${DATA_SIGN_PREFIX}${msg.length.toString()}\n${msg}`;
-    return this.sign(privateKey, message);
+    const serializedMessage = this.serialize(message);
+    const hash = this.sha256(Buffer.from(serializedMessage, "hex"));
+    return this.sign(privateKey, hash);
   }
 
   verify (publicKey: string, msg: string, signature: string) {
     const sha512Hash = this.sha512(msg);
+
+    if (useFallbackLib) {
+      return curve.verify(sha512Hash, signature, Buffer.from(publicKey, 'hex'));
+    }
+
+    return secp.verify(signature, sha512Hash, publicKey);
+  }
+
+  verifyData (publicKey: string, msg: string, signature: string) {
+    const serializedMessage = this.serialize(msg);
+    const hash = this.sha256(Buffer.from(serializedMessage, "hex"));
+    const sha512Hash = this.sha512(hash);
 
     if (useFallbackLib) {
       return curve.verify(sha512Hash, signature, Buffer.from(publicKey, 'hex'));
