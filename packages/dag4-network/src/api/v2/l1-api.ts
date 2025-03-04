@@ -7,6 +7,8 @@ import {
   PostTransactionV2,
   PendingTransaction,
   PostTransactionResponseV2,
+  SignedTokenLock,
+  SignedAllowSpend,
 } from "../../dto/v2";
 
 class L1Api {
@@ -30,6 +32,36 @@ class L1Api {
   async getAddressLastAcceptedTransactionRef(address: string) {
     return this.service.$get<TransactionReference>(
       `/transactions/last-reference/${address}`
+    );
+  }
+
+  async getAllowSpendLastRef(l1Url: string, address: string) {
+    const l1Service = new RestApi(l1Url);
+    return l1Service.$get<TransactionReference>(
+      `/allow-spends/last-reference/${address}`
+    );
+  }
+
+  async postAllowSpend(l1Url: string, signedAllowSpend: SignedAllowSpend) {
+    const l1Service = new RestApi(l1Url);
+    return l1Service.$post<TransactionReference>(
+      `/allow-spends`,
+      signedAllowSpend
+    );
+  }
+
+  async getTokenLockLastRef(l1Url: string, address: string) {
+    const l1Service = new RestApi(l1Url);
+    return l1Service.$get<TransactionReference>(
+      `/token-locks/last-reference/${address}`
+    );
+  }
+
+  async postTokenLock(l1Url: string, signedTokenLock: SignedTokenLock) {
+    const l1Service = new RestApi(l1Url);
+    return l1Service.$post<TransactionReference>(
+      `/token-locks`,
+      signedTokenLock
     );
   }
 

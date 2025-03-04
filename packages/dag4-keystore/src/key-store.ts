@@ -6,13 +6,13 @@ import * as jsSha512 from "js-sha512";
 import * as bs58 from 'bs58';
 import {Buffer} from 'buffer';
 import Wallet, {hdkey} from 'ethereumjs-wallet';
-
 import {KeyTrio} from './key-trio';
 import {txEncode} from './tx-encode';
 import {bip39} from './bip39/bip39';
 import {KDFParamsPhrase, KDFParamsPrivateKey, V3Keystore} from './v3-keystore';
-import { PostTransaction, AddressLastRef } from "./transaction";
+import { AddressLastRef } from "./transaction";
 import { PostTransactionV2, AddressLastRefV2 } from "./transaction-v2";
+import { serializeBrotli } from "utils";
 
 // Use @noble in newer env, fallback to elliptic in older env
 const useFallbackLib = typeof BigInt === 'undefined';
@@ -325,6 +325,79 @@ export class KeyStore {
     return {
       hash,
       transaction: transaction.getPostTransaction()
+    };
+  }
+
+  async getSignedTokenLock(
+    body: {
+      source: string;
+      amount: number;
+      fee: number;
+      currencyId?: string;
+      parent: { hash: string; ordinal: number };
+      unlockEpoch: number;
+    },
+    keys: {
+      publicKey: string;
+      privateKey: string;
+    }
+  ) {
+    const { source, amount, fee, currencyId, parent, unlockEpoch } = body;
+    const { publicKey, privateKey } = keys;
+
+    const tokenLockBody = {
+      source,
+      amount,
+      fee,
+      ...(currencyId ? { currencyId } : {}),
+      parent,
+      unlockEpoch,
+    };
+
+    return this.generateBrotliSignature(tokenLockBody, publicKey, privateKey);
+  }
+
+  async getSignedAllowSpend(
+    body: {
+      source: string;
+      destination: string;
+      approvers: string[];
+      amount: number;
+      fee: number;
+      currencyId?: string;
+      parent: { hash: string; ordinal: number };
+      lastValidEpochProgress: number;
+    },
+    keys: {
+      publicKey: string;
+      privateKey: string;
+    }
+  ) {
+    const { source, destination, approvers, amount, fee, currencyId, parent, lastValidEpochProgress } = body;
+    const { publicKey, privateKey } = keys;
+
+    const allowSpendBody = {
+      source,
+      destination,
+      approvers,
+      amount,
+      fee,
+      ...(currencyId ? { currencyId } : {}),
+      parent,
+      lastValidEpochProgress,
+    };
+
+    return this.generateBrotliSignature(allowSpendBody, publicKey, privateKey);
+  }
+
+  async generateBrotliSignature(body: any, publicKey: string, privateKey: string) {
+    const serializedTx = await serializeBrotli(body);
+    const messageHash = this.sha256(Buffer.from(serializedTx, "hex"));
+    const signature = await this.sign(privateKey, messageHash);
+
+    return {
+      value: body,
+      proofs: [{ id: publicKey, signature }],
     };
   }
 
