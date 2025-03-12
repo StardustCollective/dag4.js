@@ -20,6 +20,7 @@ import { BigNumber } from "bignumber.js";
 import { Subject } from "rxjs";
 import { networkConfig } from "./network-config";
 import { MetagraphTokenClient } from "./metagraph-token-client";
+import { normalizePublicKey, validateArray, validateObject } from "./utils";
 
 export class DagAccount {
   private m_keyTrio: KeyTrio;
@@ -409,6 +410,132 @@ export class DagAccount {
     return hashes;
   }
 
+  async postAllowSpend(body: {
+    source: string;
+    destination: string;
+    approvers: string[];
+    amount: number;
+    fee: number;
+    currencyId?: string;
+    validUntilEpoch: number;
+    tokenL1Url: string;
+  }) {
+    const {
+      source,
+      destination,
+      approvers,
+      amount,
+      fee,
+      currencyId,
+      validUntilEpoch,
+      tokenL1Url,
+    } = body;
+
+    validateObject(
+      body,
+      {
+        source: {
+          type: "string",
+          required: true,
+          dagAddress: true,
+        },
+        destination: {
+          type: "string",
+          required: true,
+          dagAddress: true,
+        },
+        approvers: {
+          type: "array",
+          required: true,
+        },
+        amount: {
+          type: "number",
+          required: true,
+          positive: true,
+          nonZero: true,
+        },
+        fee: {
+          type: "number",
+          required: true,
+          positive: true,
+        },
+        currencyId: {
+          type: "string",
+          required: false,
+          dagAddress: true,
+        },
+        validUntilEpoch: {
+          type: "number",
+          required: true,
+          positive: true,
+        },
+        tokenL1Url: {
+          type: "string",
+          required: true,
+        },
+      },
+      true
+    );
+
+    validateArray(
+      approvers,
+      {
+        type: "string",
+        required: true,
+        dagAddress: true,
+      },
+      true
+    );
+
+    if (source !== this.address) {
+      throw new Error('"source" must be the same as the account address');
+    }
+
+    try {
+      // Get allow spend last reference
+      const allowSpendLastRef = await this.network.l1Api.getAllowSpendLastRef(
+        tokenL1Url,
+        this.address
+      );
+
+      if (!allowSpendLastRef) {
+        throw new Error("Unable to find allow spend last reference");
+      }
+
+      // Generate signed allow spend body
+      const signedAllowSpend = await keyStore.getSignedAllowSpend(
+        {
+          source,
+          destination,
+          approvers,
+          amount,
+          fee,
+          currencyId,
+          parent: allowSpendLastRef,
+          lastValidEpochProgress: validUntilEpoch,
+        },
+        {
+          publicKey: normalizePublicKey(this.publicKey),
+          privateKey: this.m_keyTrio.privateKey,
+        }
+      );
+
+      if (!signedAllowSpend) {
+        throw new Error("Unable to generate signed allow spend");
+      }
+
+      // Post signed allow spend body
+      const allowSpendResponse = await this.network.l1Api.postAllowSpend(
+        tokenL1Url,
+        signedAllowSpend
+      );
+
+      return allowSpendResponse;
+    } catch (err) {
+      throw new Error("There was an error sending the allow spend transaction", err);
+    }
+  }
+
   async transferDagBatch(
     transfers: TransferBatchItem[],
     lastRef?: TransactionReference
@@ -418,9 +545,7 @@ export class DagAccount {
     return this.sendBatchTransactions(txns);
   }
 
-  createMetagraphTokenClient(
-    networkInfo: MetagraphNetworkInfo
-  ) {
+  createMetagraphTokenClient(networkInfo: MetagraphNetworkInfo) {
     return new MetagraphTokenClient(this, networkInfo);
   }
 }

@@ -12,7 +12,7 @@ import {bip39} from './bip39/bip39';
 import {KDFParamsPhrase, KDFParamsPrivateKey, V3Keystore} from './v3-keystore';
 import { AddressLastRef } from "./transaction";
 import { PostTransactionV2, AddressLastRefV2 } from "./transaction-v2";
-import { serializeBrotli } from "utils";
+import { normalizeObject, serializeBrotli } from "./utils";
 
 // Use @noble in newer env, fallback to elliptic in older env
 const useFallbackLib = typeof BigInt === 'undefined';
@@ -377,26 +377,27 @@ export class KeyStore {
     const { publicKey, privateKey } = keys;
 
     const allowSpendBody = {
-      source,
-      destination,
-      approvers,
       amount,
+      approvers,
+      ...(currencyId ? { currency: currencyId } : {}),
+      destination,
       fee,
-      ...(currencyId ? { currencyId } : {}),
-      parent,
       lastValidEpochProgress,
+      parent,
+      source,
     };
 
     return this.generateBrotliSignature(allowSpendBody, publicKey, privateKey);
   }
 
   async generateBrotliSignature(body: any, publicKey: string, privateKey: string) {
+    const normalizedBody = normalizeObject(body);
     const serializedTx = await serializeBrotli(body);
-    const messageHash = this.sha256(Buffer.from(serializedTx, "hex"));
+    const messageHash = this.sha256(serializedTx);
     const signature = await this.sign(privateKey, messageHash);
 
     return {
-      value: body,
+      value: normalizedBody,
       proofs: [{ id: publicKey, signature }],
     };
   }

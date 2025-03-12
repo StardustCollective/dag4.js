@@ -4,7 +4,8 @@
     "rootDir": "src",
     "baseUrl": "src",
     "outDir": "dist/esm",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "lib": ["dom", "es2015"]
   },
   "include": [
     "src"

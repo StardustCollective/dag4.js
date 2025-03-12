@@ -4,7 +4,8 @@
     "outDir": "dist/cjs",
     "declarationDir": "dist/types",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "lib": ["dom", "es2022"]
   },
   "include": [
     "src"

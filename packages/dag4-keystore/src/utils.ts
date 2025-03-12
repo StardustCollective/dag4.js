@@ -1,4 +1,22 @@
-import { compress } from "brotli";
+// // Initialize the compression function
+const initBrotli = async () => {
+  // In browser environments, use the bundled version
+  if (typeof self !== 'undefined') {
+    // Dynamic import for browser
+    const brotliModule = require('brotli-wasm');
+    return brotliModule.default || brotliModule;
+  } else {
+    // In Node.js, use the regular brotli package
+    return require('brotli-wasm');
+  }
+};
+
+// Promise to hold the compress function once initialized
+const brotliPromise = initBrotli();
+
+// Conditional import based on environment
+const TextEncoderPolyfill = typeof TextEncoder === "undefined" ? require("util").TextEncoder : TextEncoder;
+
 
 const removeNulls = (obj: any | null) => {
   const processValue = (value: any) => {
@@ -38,16 +56,24 @@ const sortObjectKeys = (obj: any | null) => {
     }, {});
 };
 
+export const normalizeObject = (obj: any | null, sort = true, remove = true) => {
+  const sorted = sort ? sortObjectKeys(obj) : obj;
+  const removedNulls = remove ? removeNulls(sorted) : sorted;
+  return removedNulls;
+};
+
 export const serializeBrotli = async (
   content: any | null,
-  shouldSort = true,
-  shouldRemoveNulls = true,
   compressionLevel = 2
 ) => {
-  const sorted = shouldSort ? sortObjectKeys(content) : content;
-  const removedNulls = shouldRemoveNulls ? removeNulls(sorted) : sorted;
-  const jsonString = JSON.stringify(removedNulls);
-  const encoder = new TextEncoder();
-  const utf8Bytes = encoder.encode(jsonString);
+  // Get the brotli module
+  const brotliModule = await brotliPromise;
+  const compress = brotliModule.compress;
+
+  const normalized = normalizeObject(content);
+  const normalizedJson = JSON.stringify(normalized);
+
+  const encoder = new TextEncoderPolyfill();
+  const utf8Bytes = encoder.encode(normalizedJson);
   return compress(utf8Bytes, { quality: compressionLevel });
 };
