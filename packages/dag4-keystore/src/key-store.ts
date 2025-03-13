@@ -332,7 +332,6 @@ export class KeyStore {
     body: {
       source: string;
       amount: number;
-      fee: number;
       currencyId?: string;
       parent: { hash: string; ordinal: number };
       unlockEpoch: number;
@@ -342,15 +341,14 @@ export class KeyStore {
       privateKey: string;
     }
   ) {
-    const { source, amount, fee, currencyId, parent, unlockEpoch } = body;
+    const { source, amount, currencyId, parent, unlockEpoch } = body;
     const { publicKey, privateKey } = keys;
 
     const tokenLockBody = {
-      source,
       amount,
-      fee,
       ...(currencyId ? { currencyId } : {}),
       parent,
+      source,
       unlockEpoch,
     };
 

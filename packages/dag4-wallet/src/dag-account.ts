@@ -491,19 +491,28 @@ export class DagAccount {
       throw new Error('"source" must be the same as the account address');
     }
 
+    let allowSpendLastRef: TransactionReference | null = null;
+    let signedAllowSpend: any | null = null;
+    let allowSpendResponse: { hash: string} | null = null;
+
     try {
       // Get allow spend last reference
-      const allowSpendLastRef = await this.network.l1Api.getAllowSpendLastRef(
+      allowSpendLastRef = await this.network.l1Api.getAllowSpendLastRef(
         tokenL1Url,
         this.address
       );
 
-      if (!allowSpendLastRef) {
-        throw new Error("Unable to find allow spend last reference");
-      }
+    } catch (err) {
+      throw new Error("There was an error getting the allow spend last reference");
+    }
 
+    if (!allowSpendLastRef) {
+      throw new Error("Unable to find allow spend last reference");
+    }
+
+    try {
       // Generate signed allow spend body
-      const signedAllowSpend = await keyStore.getSignedAllowSpend(
+      signedAllowSpend = await keyStore.getSignedAllowSpend(
         {
           source,
           destination,
@@ -519,21 +528,138 @@ export class DagAccount {
           privateKey: this.m_keyTrio.privateKey,
         }
       );
+    } catch (err) {
+      throw new Error("There was an error generating the signed allow spend");
+    }
 
-      if (!signedAllowSpend) {
-        throw new Error("Unable to generate signed allow spend");
-      }
+    if (!signedAllowSpend) {
+      throw new Error("Unable to generate signed allow spend");
+    }
 
+    try {
       // Post signed allow spend body
-      const allowSpendResponse = await this.network.l1Api.postAllowSpend(
+      allowSpendResponse = await this.network.l1Api.postAllowSpend(
         tokenL1Url,
         signedAllowSpend
       );
-
-      return allowSpendResponse;
     } catch (err) {
       throw new Error("There was an error sending the allow spend transaction", err);
     }
+
+    if (!allowSpendResponse) {
+      throw new Error("Unable to get allow spend response");
+    }
+
+    return allowSpendResponse;
+  }
+
+  async postTokenLock(body: {
+    source: string;
+    amount: number;
+    unlockEpoch: number;
+    tokenL1Url: string;
+    currencyId?: string;
+  }) {
+    const {
+      amount,
+      currencyId,
+      source,
+      tokenL1Url,
+      unlockEpoch,
+    } = body;
+
+    validateObject(
+      body,
+      {
+        source: {
+          type: "string",
+          required: true,
+          dagAddress: true,
+        },
+        amount: {
+          type: "number",
+          required: true,
+          positive: true,
+          nonZero: true,
+        },
+        currencyId: {
+          type: "string",
+          required: false,
+          dagAddress: true,
+        },
+        unlockEpoch: {
+          type: "number",
+          required: true,
+          positive: true,
+        },
+        tokenL1Url: {
+          type: "string",
+          required: true,
+        },
+      },
+      true
+    );
+
+    if (source !== this.address) {
+      throw new Error('"source" must be the same as the account address');
+    }
+
+    let tokenLockLastRef: TransactionReference | null = null;
+    let signedTokenLock: any | null = null;
+    let tokenLockResponse: { hash: string} | null = null;
+
+    try {
+      // Get allow spend last reference
+      tokenLockLastRef = await this.network.l1Api.getTokenLockLastRef(
+        tokenL1Url,
+        this.address
+      );
+    } catch (err) {
+      throw new Error("There was an error getting the token lock last reference");
+    }
+
+    if (!tokenLockLastRef) {
+      throw new Error("Unable to find token lock last reference");
+    }
+
+    try {
+      // Generate signed token lock body
+      signedTokenLock = await keyStore.getSignedTokenLock(
+        {
+          source,
+          amount,
+          currencyId,
+          parent: tokenLockLastRef,
+          unlockEpoch,
+        },
+        {
+          publicKey: normalizePublicKey(this.publicKey),
+          privateKey: this.m_keyTrio.privateKey,
+        }
+      );
+    } catch (err) {
+      throw new Error("There was an error generating the signed token lock");
+    }
+
+    if (!signedTokenLock) {
+      throw new Error("Unable to generate signed token lock");
+    }
+
+    try {
+      // Post signed token lock body
+      tokenLockResponse = await this.network.l1Api.postTokenLock(
+        tokenL1Url,
+        signedTokenLock
+      );
+    } catch (err) {
+      throw new Error("There was an error sending the token lock transaction");
+    }
+
+    if (!tokenLockResponse) {
+      throw new Error("Unable to get token lock response");
+    }
+
+    return tokenLockResponse;
   }
 
   async transferDagBatch(
