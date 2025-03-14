@@ -5,6 +5,7 @@ import {
   ClusterInfoV2,
   ClusterPeerInfoV2,
   L0AddressBalance,
+  SnapshotL0,
   SnapshotOrdinal,
   TotalSupplyV2,
 } from "../../dto/v2";
@@ -88,7 +89,7 @@ class L0Api {
 
   // Global Snapshot
   async getLatestSnapshot() {
-    return this.service.$get<string>(
+    return this.service.$get<SnapshotL0>(
       `/global-snapshots/latest`,
       {},
       { headers: { Accept: "application/json" } }

@@ -3,8 +3,8 @@ import { Proof, TransactionReference } from "./transaction";
 export type TokenLockBody = {
   source: string;
   amount: number;
-  fee: number;
-  currencyId: string;
+  fee?: number;
+  currencyId?: string;
   parent: TransactionReference;
   unlockEpoch: number;
 };
@@ -19,7 +19,7 @@ export type AllowSpendBody = {
   destination: string;
   approvers: string[];
   amount: number;
-  fee: number;
+  fee?: number;
   currencyId?: string;
   parent: TransactionReference;
   lastValidEpochProgress: number;

@@ -333,6 +333,7 @@ export class KeyStore {
       source: string;
       amount: number;
       currencyId?: string;
+      fee?: number;
       parent: { hash: string; ordinal: number };
       unlockEpoch: number;
     },
@@ -341,12 +342,13 @@ export class KeyStore {
       privateKey: string;
     }
   ) {
-    const { source, amount, currencyId, parent, unlockEpoch } = body;
+    const { source, amount, currencyId, fee, parent, unlockEpoch } = body;
     const { publicKey, privateKey } = keys;
 
     const tokenLockBody = {
       amount,
       ...(currencyId ? { currencyId } : {}),
+      fee: fee ?? 0,
       parent,
       source,
       unlockEpoch,
@@ -361,17 +363,17 @@ export class KeyStore {
       destination: string;
       approvers: string[];
       amount: number;
-      fee: number;
+      fee?: number;
       currencyId?: string;
       parent: { hash: string; ordinal: number };
-      lastValidEpochProgress: number;
+      validUntilEpoch: number;
     },
     keys: {
       publicKey: string;
       privateKey: string;
     }
   ) {
-    const { source, destination, approvers, amount, fee, currencyId, parent, lastValidEpochProgress } = body;
+    const { source, destination, approvers, amount, fee, currencyId, parent, validUntilEpoch } = body;
     const { publicKey, privateKey } = keys;
 
     const allowSpendBody = {
@@ -379,8 +381,8 @@ export class KeyStore {
       approvers,
       ...(currencyId ? { currency: currencyId } : {}),
       destination,
-      fee,
-      lastValidEpochProgress,
+      fee: fee ?? 0,
+      lastValidEpochProgress: validUntilEpoch,
       parent,
       source,
     };

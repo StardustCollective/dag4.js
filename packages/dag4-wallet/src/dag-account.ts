@@ -493,7 +493,7 @@ export class DagAccount {
 
     let allowSpendLastRef: TransactionReference | null = null;
     let signedAllowSpend: any | null = null;
-    let allowSpendResponse: { hash: string} | null = null;
+    let allowSpendResponse: { hash: string } | null = null;
 
     try {
       // Get allow spend last reference
@@ -501,9 +501,10 @@ export class DagAccount {
         tokenL1Url,
         this.address
       );
-
     } catch (err) {
-      throw new Error("There was an error getting the allow spend last reference");
+      throw new Error(
+        "There was an error getting the allow spend last reference"
+      );
     }
 
     if (!allowSpendLastRef) {
@@ -521,7 +522,7 @@ export class DagAccount {
           fee,
           currencyId,
           parent: allowSpendLastRef,
-          lastValidEpochProgress: validUntilEpoch,
+          validUntilEpoch,
         },
         {
           publicKey: normalizePublicKey(this.publicKey),
@@ -543,7 +544,10 @@ export class DagAccount {
         signedAllowSpend
       );
     } catch (err) {
-      throw new Error("There was an error sending the allow spend transaction", err);
+      throw new Error(
+        "There was an error sending the allow spend transaction",
+        err
+      );
     }
 
     if (!allowSpendResponse) {
@@ -559,14 +563,9 @@ export class DagAccount {
     unlockEpoch: number;
     tokenL1Url: string;
     currencyId?: string;
+    fee?: number;
   }) {
-    const {
-      amount,
-      currencyId,
-      source,
-      tokenL1Url,
-      unlockEpoch,
-    } = body;
+    const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch } = body;
 
     validateObject(
       body,
@@ -581,6 +580,11 @@ export class DagAccount {
           required: true,
           positive: true,
           nonZero: true,
+        },
+        fee: {
+          type: "number",
+          required: false,
+          positive: true,
         },
         currencyId: {
           type: "string",
@@ -606,7 +610,7 @@ export class DagAccount {
 
     let tokenLockLastRef: TransactionReference | null = null;
     let signedTokenLock: any | null = null;
-    let tokenLockResponse: { hash: string} | null = null;
+    let tokenLockResponse: { hash: string } | null = null;
 
     try {
       // Get allow spend last reference
@@ -615,7 +619,9 @@ export class DagAccount {
         this.address
       );
     } catch (err) {
-      throw new Error("There was an error getting the token lock last reference");
+      throw new Error(
+        "There was an error getting the token lock last reference"
+      );
     }
 
     if (!tokenLockLastRef) {
@@ -629,6 +635,7 @@ export class DagAccount {
           source,
           amount,
           currencyId,
+          fee,
           parent: tokenLockLastRef,
           unlockEpoch,
         },
