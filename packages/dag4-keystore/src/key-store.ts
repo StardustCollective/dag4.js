@@ -328,68 +328,6 @@ export class KeyStore {
     };
   }
 
-  async getSignedTokenLock(
-    body: {
-      source: string;
-      amount: number;
-      currencyId?: string;
-      fee?: number;
-      parent: { hash: string; ordinal: number };
-      unlockEpoch: number;
-    },
-    keys: {
-      publicKey: string;
-      privateKey: string;
-    }
-  ) {
-    const { source, amount, currencyId, fee, parent, unlockEpoch } = body;
-    const { publicKey, privateKey } = keys;
-
-    const tokenLockBody = {
-      amount,
-      ...(currencyId ? { currencyId } : {}),
-      fee: fee ?? 0,
-      parent,
-      source,
-      unlockEpoch,
-    };
-
-    return this.generateBrotliSignature(tokenLockBody, publicKey, privateKey);
-  }
-
-  async getSignedAllowSpend(
-    body: {
-      source: string;
-      destination: string;
-      approvers: string[];
-      amount: number;
-      fee?: number;
-      currencyId?: string;
-      parent: { hash: string; ordinal: number };
-      validUntilEpoch: number;
-    },
-    keys: {
-      publicKey: string;
-      privateKey: string;
-    }
-  ) {
-    const { source, destination, approvers, amount, fee, currencyId, parent, validUntilEpoch } = body;
-    const { publicKey, privateKey } = keys;
-
-    const allowSpendBody = {
-      amount,
-      approvers,
-      ...(currencyId ? { currency: currencyId } : {}),
-      destination,
-      fee: fee ?? 0,
-      lastValidEpochProgress: validUntilEpoch,
-      parent,
-      source,
-    };
-
-    return this.generateBrotliSignature(allowSpendBody, publicKey, privateKey);
-  }
-
   async generateBrotliSignature(body: any, publicKey: string, privateKey: string) {
     const normalizedBody = normalizeObject(body);
     const serializedTx = await serializeBrotli(body);

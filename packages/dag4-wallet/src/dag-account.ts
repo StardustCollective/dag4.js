@@ -513,21 +513,19 @@ export class DagAccount {
 
     try {
       // Generate signed allow spend body
-      signedAllowSpend = await keyStore.getSignedAllowSpend(
+      signedAllowSpend = await keyStore.generateBrotliSignature(
         {
-          source,
-          destination,
-          approvers,
           amount,
-          fee,
-          currencyId,
+          approvers,
+          ...(currencyId ? { currency: currencyId } : {}),
+          destination,
+          fee: fee ?? 0,
+          lastValidEpochProgress: validUntilEpoch,
           parent: allowSpendLastRef,
-          validUntilEpoch,
+          source,
         },
-        {
-          publicKey: normalizePublicKey(this.publicKey),
-          privateKey: this.m_keyTrio.privateKey,
-        }
+        normalizePublicKey(this.publicKey),
+        this.m_keyTrio.privateKey
       );
     } catch (err) {
       throw new Error("There was an error generating the signed allow spend");
@@ -630,19 +628,17 @@ export class DagAccount {
 
     try {
       // Generate signed token lock body
-      signedTokenLock = await keyStore.getSignedTokenLock(
+      signedTokenLock = await keyStore.generateBrotliSignature(
         {
-          source,
           amount,
-          currencyId,
-          fee,
+          ...(currencyId ? { currencyId } : {}),
+          fee: fee ?? 0,
           parent: tokenLockLastRef,
+          source,
           unlockEpoch,
         },
-        {
-          publicKey: normalizePublicKey(this.publicKey),
-          privateKey: this.m_keyTrio.privateKey,
-        }
+        normalizePublicKey(this.publicKey),
+        this.m_keyTrio.privateKey
       );
     } catch (err) {
       throw new Error("There was an error generating the signed token lock");
@@ -667,6 +663,174 @@ export class DagAccount {
     }
 
     return tokenLockResponse;
+  }
+
+  async postDelegatedStake(body: {
+    source: string;
+    nodeId: string;
+    amount: number;
+    fee?: number;
+    tokenLockRef: string;
+  }) {
+    const { source, nodeId, amount, fee, tokenLockRef } = body;
+
+    validateObject(
+      body,
+      {
+        source: {
+          type: "string",
+          required: true,
+          dagAddress: true,
+        },
+        nodeId: {
+          type: "string",
+          required: true,
+        },
+        amount: {
+          type: "number",
+          required: true,
+          positive: true,
+          nonZero: true,
+        },
+        fee: {
+          type: "number",
+          required: false,
+          positive: true,
+        },
+        tokenLockRef: {
+          type: "string",
+          required: true,
+        },
+      },
+      true
+    );
+
+    if (source !== this.address) {
+      throw new Error('"source" must be the same as the account address');
+    }
+
+    let delegatedStakeLastRef: TransactionReference | null = null;
+    let signedDelegatedStake: any | null = null;
+    let delegatedStakeResponse: { hash: string } | null = null;
+
+    try {
+      // Get delegated stake last reference
+      delegatedStakeLastRef = await this.network.l0Api.getDelegatedStakeLastRef(
+        this.address
+      );
+    } catch (err) {
+      throw new Error(
+        "There was an error getting the delegated stake last reference"
+      );
+    }
+
+    if (!delegatedStakeLastRef) {
+      throw new Error("Unable to find delegated stake last reference");
+    }
+
+    try {
+      // Generate signed delegated stake body
+      signedDelegatedStake = await keyStore.generateBrotliSignature(
+        {
+          nodeId,
+          amount,
+          fee: fee ?? 0,
+          tokenLockRef,
+          parent: delegatedStakeLastRef,
+        },
+        normalizePublicKey(this.publicKey),
+        this.m_keyTrio.privateKey
+      );
+    } catch (err) {
+      throw new Error(
+        "There was an error generating the signed delegated stake"
+      );
+    }
+
+    if (!signedDelegatedStake) {
+      throw new Error("Unable to generate signed delegated stake");
+    }
+
+    try {
+      // Post signed delegated stake body
+      delegatedStakeResponse = await this.network.l0Api.postDelegatedStake(
+        signedDelegatedStake
+      );
+    } catch (err) {
+      throw new Error(
+        "There was an error sending the delegated stake transaction"
+      );
+    }
+
+    if (!delegatedStakeResponse) {
+      throw new Error("Unable to get delegated stake response");
+    }
+
+    return delegatedStakeResponse;
+  }
+
+  async putWithdrawDelegatedStake(body: { source: string; stakeRef: string }) {
+    const { source, stakeRef } = body;
+
+    validateObject(
+      body,
+      {
+        source: {
+          type: "string",
+          required: true,
+          dagAddress: true,
+        },
+        stakeRef: {
+          type: "string",
+          required: true,
+        },
+      },
+      true
+    );
+
+    if (source !== this.address) {
+      throw new Error('"source" must be the same as the account address');
+    }
+
+    let signedWithdrawDelegatedStake: any | null = null;
+    let withdrawDelegatedStakeResponse: { hash: string } | null = null;
+
+    try {
+      // Generate signed withdraw delegated stake body
+      signedWithdrawDelegatedStake = await keyStore.generateBrotliSignature(
+        {
+          stakeRef,
+        },
+        normalizePublicKey(this.publicKey),
+        this.m_keyTrio.privateKey
+      );
+    } catch (err) {
+      throw new Error(
+        "There was an error generating the withdraw delegated stake"
+      );
+    }
+
+    if (!signedWithdrawDelegatedStake) {
+      throw new Error("Unable to generate signed withdraw delegated stake");
+    }
+
+    try {
+      // Post signed withdraw delegated stake body
+      withdrawDelegatedStakeResponse =
+        await this.network.l0Api.putWithdrawDelegatedStake(
+          signedWithdrawDelegatedStake
+        );
+    } catch (err) {
+      throw new Error(
+        "There was an error sending the withdraw delegated stake transaction"
+      );
+    }
+
+    if (!withdrawDelegatedStakeResponse) {
+      throw new Error("Unable to get withdraw delegated stake response");
+    }
+
+    return withdrawDelegatedStakeResponse;
   }
 
   async transferDagBatch(
