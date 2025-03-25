@@ -732,6 +732,7 @@ export class DagAccount {
       // Generate signed delegated stake body
       signedDelegatedStake = await keyStore.generateBrotliSignature(
         {
+          source,
           nodeId,
           amount,
           fee: fee ?? 0,
@@ -799,6 +800,7 @@ export class DagAccount {
       // Generate signed withdraw delegated stake body
       signedWithdrawDelegatedStake = await keyStore.generateBrotliSignature(
         {
+          source,
           stakeRef,
         },
         normalizePublicKey(this.publicKey),
