@@ -73,22 +73,24 @@ class L0Api {
 
   async getDelegatedStakeLastRef(address: string) {
     return this.service.$get<TransactionReference>(
-      `/delegated-stake/last-reference/${address}`
+      `/delegated-stakes/last-reference/${address}`
     );
   }
 
-  async postDelegatedStake(signedDelegatedStake: SignedDelegatedStake) {
-    return this.service.$post<TransactionReference>(
-      `/delegated-stake`,
+  async postDelegatedStake(
+    signedDelegatedStake: SignedDelegatedStake
+  ): Promise<{ hash: string }> {
+    return this.service.$post<{ hash: string }>(
+      `/delegated-stakes`,
       signedDelegatedStake
     );
   }
 
   async putWithdrawDelegatedStake(
     signedWithdrawDelegatedStake: SignedWithdrawDelegatedStake
-  ) {
-    return this.service.$put<TransactionReference>(
-      `/delegated-stake`,
+  ): Promise<{ hash: string }> {
+    return this.service.$put<{ hash: string }>(
+      `/delegated-stakes`,
       signedWithdrawDelegatedStake
     );
   }

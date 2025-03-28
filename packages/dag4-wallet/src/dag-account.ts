@@ -502,9 +502,7 @@ export class DagAccount {
         this.address
       );
     } catch (err) {
-      throw new Error(
-        "There was an error getting the allow spend last reference"
-      );
+      throw new Error("Error getting the allow spend last reference");
     }
 
     if (!allowSpendLastRef) {
@@ -513,22 +511,23 @@ export class DagAccount {
 
     try {
       // Generate signed allow spend body
+      const allowSpendBody = {
+        source,
+        amount,
+        destination,
+        approvers,
+        parent: allowSpendLastRef,
+        lastValidEpochProgress: validUntilEpoch,
+        ...(currencyId ? { currency: currencyId } : {}),
+        fee: fee ?? 0,
+      };
       signedAllowSpend = await keyStore.generateBrotliSignature(
-        {
-          amount,
-          approvers,
-          ...(currencyId ? { currency: currencyId } : {}),
-          destination,
-          fee: fee ?? 0,
-          lastValidEpochProgress: validUntilEpoch,
-          parent: allowSpendLastRef,
-          source,
-        },
+        allowSpendBody,
         normalizePublicKey(this.publicKey),
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error("There was an error generating the signed allow spend");
+      throw new Error("Error generating the signed allow spend");
     }
 
     if (!signedAllowSpend) {
@@ -542,10 +541,7 @@ export class DagAccount {
         signedAllowSpend
       );
     } catch (err) {
-      throw new Error(
-        "There was an error sending the allow spend transaction",
-        err
-      );
+      throw new Error("Error sending the allow spend transaction");
     }
 
     if (!allowSpendResponse) {
@@ -558,8 +554,8 @@ export class DagAccount {
   async postTokenLock(body: {
     source: string;
     amount: number;
-    unlockEpoch: number;
     tokenL1Url: string;
+    unlockEpoch?: number;
     currencyId?: string;
     fee?: number;
   }) {
@@ -591,7 +587,7 @@ export class DagAccount {
         },
         unlockEpoch: {
           type: "number",
-          required: true,
+          required: false,
           positive: true,
         },
         tokenL1Url: {
@@ -611,15 +607,13 @@ export class DagAccount {
     let tokenLockResponse: { hash: string } | null = null;
 
     try {
-      // Get allow spend last reference
+      // Get token lock last reference
       tokenLockLastRef = await this.network.l1Api.getTokenLockLastRef(
         tokenL1Url,
         this.address
       );
     } catch (err) {
-      throw new Error(
-        "There was an error getting the token lock last reference"
-      );
+      throw new Error("Error getting the token lock last reference");
     }
 
     if (!tokenLockLastRef) {
@@ -628,20 +622,21 @@ export class DagAccount {
 
     try {
       // Generate signed token lock body
+      const tokenLockBody = {
+        source,
+        amount,
+        parent: tokenLockLastRef,
+        ...(currencyId ? { currencyId } : {}),
+        fee: fee ?? 0,
+        unlockEpoch: unlockEpoch ?? null,
+      };
       signedTokenLock = await keyStore.generateBrotliSignature(
-        {
-          amount,
-          ...(currencyId ? { currencyId } : {}),
-          fee: fee ?? 0,
-          parent: tokenLockLastRef,
-          source,
-          unlockEpoch,
-        },
+        tokenLockBody,
         normalizePublicKey(this.publicKey),
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error("There was an error generating the signed token lock");
+      throw new Error("Error generating the signed token lock");
     }
 
     if (!signedTokenLock) {
@@ -655,7 +650,7 @@ export class DagAccount {
         signedTokenLock
       );
     } catch (err) {
-      throw new Error("There was an error sending the token lock transaction");
+      throw new Error("Error sending the token lock transaction");
     }
 
     if (!tokenLockResponse) {
@@ -719,9 +714,7 @@ export class DagAccount {
         this.address
       );
     } catch (err) {
-      throw new Error(
-        "There was an error getting the delegated stake last reference"
-      );
+      throw new Error("Error getting the delegated stake last reference");
     }
 
     if (!delegatedStakeLastRef) {
@@ -730,22 +723,21 @@ export class DagAccount {
 
     try {
       // Generate signed delegated stake body
+      const delegateStakeBody = {
+        source,
+        nodeId,
+        amount,
+        tokenLockRef,
+        parent: delegatedStakeLastRef,
+        fee: fee ?? 0,
+      };
       signedDelegatedStake = await keyStore.generateBrotliSignature(
-        {
-          source,
-          nodeId,
-          amount,
-          fee: fee ?? 0,
-          tokenLockRef,
-          parent: delegatedStakeLastRef,
-        },
+        delegateStakeBody,
         normalizePublicKey(this.publicKey),
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error(
-        "There was an error generating the signed delegated stake"
-      );
+      throw new Error("Error generating the signed delegated stake");
     }
 
     if (!signedDelegatedStake) {
@@ -758,13 +750,7 @@ export class DagAccount {
         signedDelegatedStake
       );
     } catch (err) {
-      throw new Error(
-        "There was an error sending the delegated stake transaction"
-      );
-    }
-
-    if (!delegatedStakeResponse) {
-      throw new Error("Unable to get delegated stake response");
+      throw new Error("Error sending the delegated stake transaction");
     }
 
     return delegatedStakeResponse;
@@ -798,18 +784,17 @@ export class DagAccount {
 
     try {
       // Generate signed withdraw delegated stake body
+      const withdrawDelegatedStakeBody = {
+        source,
+        stakeRef,
+      };
       signedWithdrawDelegatedStake = await keyStore.generateBrotliSignature(
-        {
-          source,
-          stakeRef,
-        },
+        withdrawDelegatedStakeBody,
         normalizePublicKey(this.publicKey),
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error(
-        "There was an error generating the withdraw delegated stake"
-      );
+      throw new Error("Error generating the withdraw delegated stake");
     }
 
     if (!signedWithdrawDelegatedStake) {
@@ -823,13 +808,7 @@ export class DagAccount {
           signedWithdrawDelegatedStake
         );
     } catch (err) {
-      throw new Error(
-        "There was an error sending the withdraw delegated stake transaction"
-      );
-    }
-
-    if (!withdrawDelegatedStakeResponse) {
-      throw new Error("Unable to get withdraw delegated stake response");
+      throw new Error("Error sending the withdraw delegated stake transaction");
     }
 
     return withdrawDelegatedStakeResponse;
