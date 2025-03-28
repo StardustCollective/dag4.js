@@ -518,7 +518,7 @@ export class DagAccount {
         approvers,
         parent: allowSpendLastRef,
         lastValidEpochProgress: validUntilEpoch,
-        ...(currencyId ? { currency: currencyId } : {}),
+        ...(currencyId ? { currencyId } : {}),
         fee: fee ?? 0,
       };
       signedAllowSpend = await keyStore.generateBrotliSignature(
