@@ -15,17 +15,34 @@ class ValidationError extends Error {
  */
 const validators = {
   type: (value, type, key) => {
-    if (type === "array") {
-      if (!Array.isArray(value)) {
-        throw new ValidationError(`"${key}" must be an array.`);
+    // Handle array of types
+    if (Array.isArray(type)) {
+      const isValid = type.some((t) => {
+        if (t === "null" && value === null) return true;
+        if (t === "undefined" && value === undefined) return true;
+        return typeof value === t;
+      });
+
+      if (!isValid) {
+        const typeString = type.join(" | ");
+        throw new ValidationError(`"${key}" must be of type ${typeString}.`);
       }
-    } else if (typeof value !== type) {
-      throw new ValidationError(`"${key}" must be of type ${type}.`);
+    } else {
+      // Handle single type for backward compatibility
+      if (type === "null" && value !== null) {
+        throw new ValidationError(`"${key}" must be null.`);
+      }
+      if (type === "undefined" && value !== undefined) {
+        throw new ValidationError(`"${key}" must be undefined.`);
+      }
+      if (typeof value !== type && value !== null && value !== undefined) {
+        throw new ValidationError(`"${key}" must be of type ${type}.`);
+      }
     }
   },
 
   required: (value, key) => {
-    if (value === undefined || value === null) {
+    if (value === undefined) {
       throw new ValidationError(`"${key}" is required.`);
     }
   },
@@ -101,10 +118,8 @@ export function validateObject(obj, schema, checkNotEmpty = false) {
     }
 
     // Skip validation for undefined optional values
-    if (value === undefined || value === null) {
-      if (!rules.required) {
-        return;
-      }
+    if (value === undefined && !rules.required) {
+      return;
     }
 
     // Validate type
@@ -112,17 +127,19 @@ export function validateObject(obj, schema, checkNotEmpty = false) {
       validators.type(value, rules.type, key);
     }
 
-    // Apply custom validations
-    Object.keys(rules).forEach((rule) => {
-      if (
-        rule !== "type" &&
-        rule !== "required" &&
-        validators[rule] &&
-        rules[rule]
-      ) {
-        validators[rule](value, key);
-      }
-    });
+    // Apply custom validations only if value is not null or undefined
+    if (value !== null && value !== undefined) {
+      Object.keys(rules).forEach((rule) => {
+        if (
+          rule !== "type" &&
+          rule !== "required" &&
+          validators[rule] &&
+          rules[rule]
+        ) {
+          validators[rule](value, key);
+        }
+      });
+    }
   });
 }
 
@@ -157,20 +174,22 @@ export function validateArray(arr, itemSchema, checkNotEmpty = false) {
       }
     }
 
-    // Apply custom validations
-    Object.keys(itemSchema).forEach((rule) => {
-      if (rule !== "type" && validators[rule] && itemSchema[rule]) {
-        try {
-          validators[rule](item, `item[${index}]`);
-        } catch (error) {
-          throw new ValidationError(
-            `Item at index ${index} ${error.message.substring(
-              error.message.indexOf(" ")
-            )}`
-          );
+    // Apply custom validations only if value is not null or undefined
+    if (item !== null && item !== undefined) {
+      Object.keys(itemSchema).forEach((rule) => {
+        if (rule !== "type" && validators[rule] && itemSchema[rule]) {
+          try {
+            validators[rule](item, `item[${index}]`);
+          } catch (error) {
+            throw new ValidationError(
+              `Item at index ${index} ${error.message.substring(
+                error.message.indexOf(" ")
+              )}`
+            );
+          }
         }
-      }
-    });
+      });
+    }
   });
 }
 
@@ -198,13 +217,12 @@ export function validateParams(params, schema, checkNotEmpty = false) {
   }
 }
 
-
 export const normalizePublicKey = (publicKey: string): string => {
   if (publicKey.length === 130) {
-      return publicKey.substring(2);
+    return publicKey.substring(2);
   } else if (publicKey.length === 128) {
-      return publicKey;
+    return publicKey;
   } else {
-      throw new Error("Public key has wrong length");
+    throw new Error("Public key has wrong length");
   }
 };

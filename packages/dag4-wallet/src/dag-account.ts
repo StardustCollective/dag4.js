@@ -416,7 +416,7 @@ export class DagAccount {
     approvers: string[];
     amount: number;
     fee: number;
-    currencyId?: string;
+    currencyId: string | null;
     validUntilEpoch: number;
     tokenL1Url: string;
   }) {
@@ -444,10 +444,6 @@ export class DagAccount {
           required: true,
           dagAddress: true,
         },
-        approvers: {
-          type: "array",
-          required: true,
-        },
         amount: {
           type: "number",
           required: true,
@@ -460,8 +456,8 @@ export class DagAccount {
           positive: true,
         },
         currencyId: {
-          type: "string",
-          required: false,
+          type: ["string", "null"],
+          required: true,
           dagAddress: true,
         },
         validUntilEpoch: {
@@ -518,7 +514,7 @@ export class DagAccount {
         approvers,
         parent: allowSpendLastRef,
         lastValidEpochProgress: validUntilEpoch,
-        ...(currencyId ? { currencyId } : {}),
+        currencyId: currencyId ?? null,
         fee: fee ?? 0,
       };
       signedAllowSpend = await keyStore.generateBrotliSignature(
@@ -555,8 +551,8 @@ export class DagAccount {
     source: string;
     amount: number;
     tokenL1Url: string;
-    unlockEpoch?: number;
-    currencyId?: string;
+    unlockEpoch: number | null;
+    currencyId: string | null;
     fee?: number;
   }) {
     const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch } = body;
@@ -581,13 +577,13 @@ export class DagAccount {
           positive: true,
         },
         currencyId: {
-          type: "string",
-          required: false,
+          type: ["string", "null"],
+          required: true,
           dagAddress: true,
         },
         unlockEpoch: {
-          type: "number",
-          required: false,
+          type: ["number", "null"],
+          required: true,
           positive: true,
         },
         tokenL1Url: {
@@ -626,7 +622,7 @@ export class DagAccount {
         source,
         amount,
         parent: tokenLockLastRef,
-        ...(currencyId ? { currencyId } : {}),
+        currencyId: currencyId ?? null,
         fee: fee ?? 0,
         unlockEpoch: unlockEpoch ?? null,
       };

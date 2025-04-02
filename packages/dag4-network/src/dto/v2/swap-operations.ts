@@ -6,9 +6,9 @@ export type TokenLockBody = {
   source: string;
   amount: number;
   fee?: number;
-  currencyId?: string;
+  currencyId: string | null;
   parent: TransactionReference;
-  unlockEpoch: number;
+  unlockEpoch: number | null;
 };
 
 export type SignedTokenLock = {
@@ -24,7 +24,7 @@ export type AllowSpendBody = {
   approvers: string[];
   amount: number;
   fee?: number;
-  currencyId?: string;
+  currencyId: string | null;
   parent: TransactionReference;
   lastValidEpochProgress: number;
 };
