@@ -1,4 +1,3 @@
-
 import {Buffer} from 'buffer';
 import * as bs58 from 'bs58';
 import * as jsSha256 from "js-sha256";
@@ -8,18 +7,51 @@ import {EcdsaAccount} from './ecdsa-account';
 const BASE58_ALPHABET = /['123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+/;
 const PKCS_PREFIX = '3056301006072a8648ce3d020106052b8104000a034200';
 
+/**
+ * DagAccount implementation.
+ * Extends EcdsaAccount to provide Constellation-specific functionality.
+ * Handles DAG-specific address formats and transaction signing.
+ */
 export class DagAccount extends EcdsaAccount implements IKeyringAccount {
 
+  /**
+   * Number of decimal places for DAG.
+   */
   decimals = 8;
+
+  /**
+   * The network this account belongs to.
+   */
   network = KeyringNetwork.Constellation;
+
+  /**
+   * Whether this account supports tokens.
+   */
   hasTokenSupport = false;
+
+  /**
+   * The types of assets supported by this account.
+   */
   supportedAssets = [KeyringAssetType.DAG];
-  tokens = null;//dagAssetLibrary.getDefaultAssets();
 
+  /**
+   * List of token addresses associated with this account.
+   */
+  tokens = null;
+
+  /**
+   * Signs a Constellation transaction.
+   * @param tx - The transaction to sign
+   */
   signTransaction (tx) {
-
+    // Implementation to be added
   }
 
+  /**
+   * Validates a Constellation address.
+   * @param address - The address to validate
+   * @returns True if the address is valid, false otherwise
+   */
   validateAddress (address: string) {
     if (!address) return false;
 
@@ -33,25 +65,42 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
     return validLen && validPrefix && validParity && validBase58;
   }
 
+  /**
+   * Gets the account's address.
+   * @returns The Constellation address
+   */
   getAddress (): string {
     return this.getAddressFromPublicKey(this.getPublicKey());
   }
 
+  /**
+   * Verifies a signed message.
+   * @param msg - The original message
+   * @param signature - The signature to verify
+   * @param saysAddress - The address that claims to have signed the message
+   * @returns True if the signature is valid, false otherwise
+   */
   verifyMessage(msg: string, signature: string, saysAddress: string) {
-
     const publicKey = this.recoverSignedMsgPublicKey(msg, signature);
-
     const actualAddress = this.getAddressFromPublicKey(publicKey);
-
     return saysAddress === actualAddress;
   }
 
+  /**
+   * Computes the SHA-256 hash of the input.
+   * @param hash - The input to hash (string or Buffer)
+   * @returns The SHA-256 hash as a hex string
+   */
   private sha256 (hash: string | Buffer) {
     return jsSha256.sha256(hash);
   }
 
+  /**
+   * Derives a Constellation address from a public key.
+   * @param publicKeyHex - The public key in hex format
+   * @returns The derived Constellation address
+   */
   private getAddressFromPublicKey (publicKeyHex: string) {
-
     //PKCS standard requires a prefix '04' for an uncompressed Public Key
     // An uncompressed public key is a 64-byte number; in hex this gives a string length of 128
     // Check to see if prefix is missing
@@ -72,5 +121,4 @@ export class DagAccount extends EcdsaAccount implements IKeyringAccount {
 
     return ('DAG' + par + end);
   }
-
 }

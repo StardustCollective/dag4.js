@@ -14,26 +14,25 @@ import {IKeyringAccount} from './kcs';
 import * as dag4 from '@stardust-collective/dag4-core';
 import {Bip39Helper} from './bip39-helper';
 
-
-// type WalletState = {
-//   type: KeyringWalletType, data: any
-// }
-
-// type VaultEncrypted = {
-//   salt: string, iv: string, vault: string
-// }
-
-//TODO - migration support for persisted state
-
+/**
+ * Type representing the serialized vault data.
+ */
 type VaultSerialized = {
   wallets: KeyringWalletSerialized[]
 }
 
+/**
+ * Type representing the state of the keyring vault.
+ */
 export type KeyringVaultState = {
   isUnlocked: boolean
   wallets: KeyringWalletState[]
 };
 
+/**
+ * Main class for managing wallets and accounts.
+ * Handles wallet creation, encryption, and persistence.
+ */
 export class KeyringManager extends SafeEventEmitter  {
 
   //Encrypted State
@@ -45,6 +44,11 @@ export class KeyringManager extends SafeEventEmitter  {
   private memStore: ObservableStore<KeyringVaultState>;
   private password: string;
 
+  /**
+   * Creates a new instance of the KeyringManager.
+   * @param options - Configuration options
+   * @param options.encryptor - Optional custom encryptor instance
+   */
   constructor ({ encryptor }) {
     super()
 
@@ -58,29 +62,52 @@ export class KeyringManager extends SafeEventEmitter  {
     this.wallets = []
   }
 
+  /**
+   * Checks if the keyring is unlocked.
+   * @returns True if the keyring is unlocked, false otherwise
+   */
   isUnlocked () {
     return !!this.password;
   }
 
+  /**
+   * Generates a new BIP39 seed phrase.
+   * @returns The generated seed phrase
+   */
   generateSeedPhrase () {
     return Bip39Helper.generateMnemonic();
   }
 
+  /**
+   * Updates all wallets and persists them to storage.
+   */
   private async fullUpdate () {
     await this.persistAllWallets(this.password);
     this.updateMemStoreWallets();
     this.notifyUpdate();
   }
 
+  /**
+   * Notifies listeners of state updates.
+   */
   notifyUpdate () {
     this.emit('update', this.memStore.getState())
   }
 
+  /**
+   * Sets the label for a wallet.
+   * @param walletId - The ID of the wallet
+   * @param label - The new label
+   */
   setWalletLabel(walletId: string, label: string) {
     this.getWalletById(walletId).setLabel(label);
     this.fullUpdate();
   }
 
+  /**
+   * Removes a wallet by its ID.
+   * @param id - The ID of the wallet to remove
+   */
   async removeWalletById (id: string) {
     const keep = this.wallets.filter(w => w.id !== id);
 
@@ -93,6 +120,13 @@ export class KeyringManager extends SafeEventEmitter  {
     }
   }
 
+  /**
+   * Creates a new vault or restores an existing one.
+   * @param label - The label for the vault
+   * @param seed - Optional seed phrase for restoring
+   * @param password - Optional password for the vault
+   * @returns The created or restored wallet
+   */
   async createOrRestoreVault (label: string, seed?: string, password?: string) {
 
     if (password) {
@@ -116,12 +150,14 @@ export class KeyringManager extends SafeEventEmitter  {
     return wallet;
   }
 
-  // - creates a single wallet with multiple chains, creates first account by default, one per chain.
-  private createCrossChainHdWallet(seed: string) {
-
-  }
-
-  // - creates a multiple account wallet with one chain, creates first account by default.
+  /**
+   * Creates a multi-account wallet for a specific chain.
+   * @param label - The wallet label
+   * @param seed - The seed phrase
+   * @param chain - The blockchain network
+   * @param numOfAccounts - Number of accounts to create (default: 1)
+   * @returns The created wallet
+   */
   async createMultiAccountWallet(label: string, seed: string, chain: KeyringNetwork, numOfAccounts = 1) {
     const wallet = new MultiAccountWallet();
     label = label || 'Wallet #' + (this.wallets.length+1);
@@ -133,6 +169,12 @@ export class KeyringManager extends SafeEventEmitter  {
     return wallet;
   }
 
+  /**
+   * Creates a multi-key wallet for a specific chain.
+   * @param label - The wallet label
+   * @param chain - The blockchain network
+   * @returns The created wallet
+   */
   async createMultiKeyWallet(label: string, chain: KeyringNetwork) {
     const wallet = new MultiKeyWallet();
     label = label || 'Wallet #' + (this.wallets.length+1);
@@ -144,18 +186,27 @@ export class KeyringManager extends SafeEventEmitter  {
     return wallet;
   }
 
-  // - creates a single wallet with multiple chains, each with their own account.
+  /**
+   * Creates a multi-chain HD wallet.
+   * @param label - The wallet label
+   * @param seed - Optional seed phrase
+   * @returns The created wallet
+   */
   async createMultiChainHdWallet(label: string, seed?: string) {
     const wallet = this.newMultiChainHdWallet(label, seed);
-
-    //this.emit('newWallet', wallet);
 
     await this.fullUpdate();
 
     return wallet;
   }
 
-  // - creates a single wallet with one chain, creates first account by default, one per chain.
+  /**
+   * Creates a single account wallet.
+   * @param label - The wallet label
+   * @param network - The blockchain network
+   * @param privateKey - Optional private key
+   * @returns The created wallet
+   */
   async createSingleAccountWallet(label: string, network: KeyringNetwork, privateKey?: string) {
 
     const wallet = new SingleAccountWallet();
@@ -163,13 +214,18 @@ export class KeyringManager extends SafeEventEmitter  {
     wallet.create(network, privateKey, label);
     this.wallets.push(wallet);
 
-    //this.emit('newAccount', wallet.getAccounts()[0]);
-
     await this.fullUpdate();
 
     return wallet;
   }
 
+  /**
+   * Adds a token to an account.
+   * @param walletId - The wallet ID
+   * @param accountAddress - The account address
+   * @param address - The token address
+   * @returns The updated account
+   */
   addTokenToAccount(walletId: string, accountAddress: string, address: string) {
     const account = this.getWalletById(walletId).getAccountByAddress(accountAddress);
     account.saveTokenInfo(address);
@@ -177,6 +233,12 @@ export class KeyringManager extends SafeEventEmitter  {
     return account;
   }
 
+  /**
+   * Creates a new multi-chain HD wallet.
+   * @param label - The wallet label
+   * @param seed - Optional seed phrase
+   * @returns The created wallet
+   */
   private newMultiChainHdWallet(label: string, seed?: string) {
     const wallet = new MultiChainWallet();
     label = label || 'Wallet #' + (this.wallets.length+1);
@@ -185,6 +247,9 @@ export class KeyringManager extends SafeEventEmitter  {
     return wallet;
   }
 
+  /**
+   * Logs out and locks the keyring.
+   */
   logout () {
     // Reset ID counter that used to enumerate wallet IDs.
     MultiChainWallet.prototype.resetSid();
@@ -195,36 +260,56 @@ export class KeyringManager extends SafeEventEmitter  {
     this.notifyUpdate();
   }
 
+  /**
+   * Logs in and unlocks the keyring.
+   * @param password - The password to unlock with
+   */
   async login (password: string) {
     this.wallets = await this.unlockWallets(password);
     this.updateUnlocked();
     this.notifyUpdate();
   }
 
+  /**
+   * Sets the password for the keyring.
+   * @param password - The new password
+   */
   setPassword (password) {
     this.password = password;
   }
 
+  /**
+   * Checks if the provided password matches the current password.
+   * @param password - The password to check
+   * @returns True if the password matches, false otherwise
+   */
   checkPassword (password) {
     return this.password === password;
   }
 
-  // async verifyPassword (password) {
-  //   const encryptedVault = this.store.getState().vault;
-  //   if (!encryptedVault) {
-  //     throw new Error('Cannot unlock without a previous vault.')
-  //   }
-  //   await this.encryptor.decrypt(password, encryptedVault)
-  // }
-
+  /**
+   * Removes wallets that have no accounts.
+   */
   removeEmptyWallets () {
     this.wallets = this.wallets.filter(keyring => keyring.getAccounts().length > 0);
   }
 
+  /**
+   * Exports the private key for an account.
+   * @param address - The account address
+   * @returns The private key
+   */
   exportAccountPrivateKey (address: string) {
     return this.findAccount(address).getPrivateKey()
   }
 
+  /**
+   * Imports an account using a private key.
+   * @param walletId - The wallet ID
+   * @param secret - The private key
+   * @param label - The account label
+   * @returns The imported account
+   */
   async importAccountPrivateKey (walletId: string, secret: string, label: string) {
     const wallet = this.wallets.find(w => w.id === walletId);
 
@@ -237,6 +322,11 @@ export class KeyringManager extends SafeEventEmitter  {
     return account;
   }
 
+  /**
+   * Exports the secret key or seed phrase for a wallet.
+   * @param walletId - The wallet ID
+   * @returns The secret key or seed phrase
+   */
   exportWalletSecretKeyOrPhrase (walletId: string) {
     const wallet = this.wallets.find(w => w.id === walletId);
 
@@ -244,6 +334,10 @@ export class KeyringManager extends SafeEventEmitter  {
 
   }
 
+  /**
+   * Removes an account.
+   * @param address - The account address
+   */
   async removeAccount (address) {
     const walletForAccount = this.getWalletForAccount(address)
 
@@ -260,14 +354,33 @@ export class KeyringManager extends SafeEventEmitter  {
     this.notifyUpdate();
   }
 
+  /**
+   * Signs a transaction.
+   * @param tx - The transaction to sign
+   * @param fromAddress - The address to sign from
+   * @param opts - Additional options
+   */
   signTransaction (tx, fromAddress: string, opts = {}) {
     this.findAccount(fromAddress).signTransaction(fromAddress, tx, opts);
   }
 
+  /**
+   * Signs a message.
+   * @param msgParams - Message parameters
+   * @param msgParams.from - The address to sign from
+   * @param msgParams.data - The message data
+   * @param opts - Additional options
+   * @returns The signature
+   */
   signMessage (msgParams: { from: string, data: string }, opts?: any) {
     return this.findAccount(msgParams.from).signMessage(msgParams.from, msgParams.data, opts);
   }
 
+  /**
+   * Unlocks wallets using a password.
+   * @param password - The password to unlock with
+   * @returns The unlocked wallets
+   */
   private async unlockWallets (password: string) {
     const encryptedVault = await this.storage.get('vault');
     if (!encryptedVault) {
@@ -284,10 +397,19 @@ export class KeyringManager extends SafeEventEmitter  {
     return this.wallets;
   }
 
+  /**
+   * Gets all accounts from all wallets.
+   * @returns An array of accounts
+   */
   getAccounts () {
     return this.wallets.reduce<IKeyringAccount[]>((res, kr) => res.concat(kr.getAccounts()), []);
   }
 
+  /**
+   * Gets all wallets, optionally filtered by type.
+   * @param filterByType - Optional wallet type to filter by
+   * @returns An array of wallets
+   */
   getWallets (filterByType?: KeyringWalletType) {
     if (filterByType) {
       return this.wallets.filter(w => w.type === filterByType);
@@ -296,6 +418,12 @@ export class KeyringManager extends SafeEventEmitter  {
     return this.wallets;
   }
 
+  /**
+   * Gets a wallet by its ID.
+   * @param id - The wallet ID
+   * @returns The wallet
+   * @throws Error if the wallet is not found
+   */
   getWalletById (id: string) {
     const wallet = this.wallets.find(w => w.id === id);
     if (wallet) {
@@ -304,6 +432,12 @@ export class KeyringManager extends SafeEventEmitter  {
     throw new Error('No wallet found with the id: ' + id);
   }
 
+  /**
+   * Gets the wallet that contains a specific account.
+   * @param address - The account address
+   * @returns The wallet
+   * @throws Error if the wallet is not found
+   */
   getWalletForAccount (address: string) {
 
     const winner = this.wallets.find((keyring) => {
@@ -317,10 +451,19 @@ export class KeyringManager extends SafeEventEmitter  {
     throw new Error('No keyring found for the requested account.')
   }
 
+  /**
+   * Finds an account by its address.
+   * @param address - The account address
+   * @returns The account
+   */
   findAccount (address: string) {
     return this.getWalletForAccount(address).getAccountByAddress(address);
   }
 
+  /**
+   * Persists all wallets to storage.
+   * @param password - The password to encrypt with
+   */
   private async persistAllWallets (password = this.password) {
 
     if (typeof password !== 'string') {
@@ -336,6 +479,12 @@ export class KeyringManager extends SafeEventEmitter  {
     await this.storage.set('vault', encryptedString);
   }
 
+  /**
+   * Restores a wallet from serialized data.
+   * @param wData - The serialized wallet data
+   * @returns The restored wallet
+   * @throws Error if the wallet type is unknown
+   */
   private async _restoreWallet (wData: KeyringWalletSerialized) {
 
     let wallet: IKeyringWallet;
@@ -365,11 +514,17 @@ export class KeyringManager extends SafeEventEmitter  {
     return wallet;
   }
 
+  /**
+   * Updates the unlocked state.
+   */
   private updateUnlocked () {
     this.memStore.updateState({ isUnlocked: true });
     this.emit('unlock');
   }
 
+  /**
+   * Clears all wallets from memory.
+   */
   private clearWallets () {
     // clear wallets from memory
     this.wallets = []
@@ -378,11 +533,12 @@ export class KeyringManager extends SafeEventEmitter  {
     })
   }
 
+  /**
+   * Updates the memory store with current wallet states.
+   */
   private updateMemStoreWallets () {
     const wallets = this.wallets.map(w => w.getState());
     return this.memStore.updateState({ wallets })
   }
-
-
 }
 
