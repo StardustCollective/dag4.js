@@ -1,10 +1,27 @@
+/**
+ * Utility class for array operations
+ * Provides methods for sorting, finding, and processing arrays
+ */
 export class ArrayUtils {
 
+  /**
+   * Flags for sorting operations
+   */
   FLAGS = {
+    /** Case-insensitive sorting */
     CASE_INSENSITIVE: { caseInsensitive: true },
+    /** Numeric sorting */
     NUMERIC: { 'numeric': true }
   }
 
+  /**
+   * Sorts an array by a specified field
+   * @param {T[]} arr - The array to sort
+   * @param {string} [fieldName] - The field to sort by
+   * @param {Flags} [flags] - Sorting flags
+   * @param {Function} [sortProcessCall] - Optional function to process values before sorting
+   * @returns {T[]} The sorted array
+   */
   sortBy<T>(arr: T[], fieldName?: string, flags?: Flags, sortProcessCall?): T[] {
     if (!flags) {
       flags = new Flags();
@@ -52,6 +69,14 @@ export class ArrayUtils {
     });
   }
 
+  /**
+   * Finds an item in an array by a field value
+   * @param {T[]} arr - The array to search
+   * @param {string} fieldName - The field to search by
+   * @param {any} fieldValue - The value to search for
+   * @param {T} [defaultValue] - Default value to return if not found
+   * @returns {T} The found item or the default value
+   */
   findItemByFieldValue<T> (arr: T[], fieldName: string, fieldValue: any, defaultValue?: T) {
 
     let result = defaultValue;
@@ -68,6 +93,13 @@ export class ArrayUtils {
     return result;
   }
 
+  /**
+   * Finds the index of an item in an array by a field value
+   * @param {T[]} arr - The array to search
+   * @param {string} fieldName - The field to search by
+   * @param {any} fieldValue - The value to search for
+   * @returns {number} The index of the found item, or -1 if not found
+   */
   findIndexByFieldValue<T> (arr: T[], fieldName: string, fieldValue: any) {
 
     let result = -1;
@@ -84,6 +116,12 @@ export class ArrayUtils {
     return result;
   }
 
+  /**
+   * Calls a function on each item in an array asynchronously
+   * @param {I[]} array - The array to process
+   * @param {Function} callback - The function to call on each item
+   * @returns {Promise<T[]>} A promise that resolves with the results
+   */
   async asyncCallEach<T, I>(array: I[], callback: (item: I, index?: number) => Promise<T>): Promise<T[]> {
     if (!array || array.length === 0) {
       return;
@@ -93,6 +131,12 @@ export class ArrayUtils {
     return await Promise.all(promises);
   }
 
+  /**
+   * Calls a function on each item in an array synchronously
+   * @param {T[]} array - The array to process
+   * @param {Function} callback - The function to call on each item
+   * @param {ArraySyncOptions} [options] - Options for the operation
+   */
   async syncCallEach<T>(array: T[], callback: (item: T, index?: number, options?: ArraySyncOptions) => void, options = { stopProcessing: false }) {
     if (!array || array.length === 0) {
       return;
@@ -106,6 +150,11 @@ export class ArrayUtils {
     }
   }
 
+  /**
+   * Returns a promise that resolves with the first promise in the iterable to resolve
+   * @param {Iterable<Promise<T>>} iterable - The iterable of promises
+   * @returns {Promise<T>} A promise that resolves with the first resolved promise
+   */
   promiseAny<T> (iterable): Promise<T> {
 
     //Promise.reject returns on first call, reverse to get first one to settle
@@ -118,13 +167,22 @@ export class ArrayUtils {
   };
 }
 
+/**
+ * Options for synchronous array operations
+ */
 type ArraySyncOptions = {
+  /** Whether to stop processing after the current item */
   stopProcessing: boolean
 }
 
-export const arrayUtils = new ArrayUtils();
-
+/**
+ * Flags for sorting operations
+ */
 class Flags {
+  /** Whether to perform case-insensitive sorting */
   caseInsensitive? = false;
+  /** Whether to perform numeric sorting */
   numeric? = false;
 }
+
+export const arrayUtils = new ArrayUtils();
