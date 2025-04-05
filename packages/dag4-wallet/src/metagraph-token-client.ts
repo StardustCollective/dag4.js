@@ -76,13 +76,14 @@ class MetagraphTokenClient {
     toAddress: string,
     amount: number,
     fee = 0,
-    autoEstimateFee = false
+    autoEstimateFee = false,
+    lastRef?: TransactionReference
   ): Promise<PendingTx> {
     let normalizedAmount = Math.floor(
       new BigNumber(amount).multipliedBy(this.tokenDecimals).toNumber()
     );
-    const lastRef: any =
-      await this.network.getAddressLastAcceptedTransactionRef(this.address);
+    lastRef = lastRef ??
+      (await this.network.getAddressLastAcceptedTransactionRef(this.address));
 
     if (fee === 0 && autoEstimateFee) {
       const tx = await this.network.getPendingTransaction(
