@@ -3,11 +3,17 @@ import randomBytes from 'randombytes';
 //Enforce a minimum complexity in resulting hash: 8725724278030335
 const MIN_SALT = Number.MAX_SAFE_INTEGER - 2**48;
 
+/**
+ * Represents a reference to the last transaction for an address.
+ */
 export type AddressLastRef ={
   prevHash: string,
   ordinal: number
 };
 
+/**
+ * Properties for creating a new transaction.
+ */
 export type TransactionProps = {
   fromAddress?: string,
   toAddress?: string,
@@ -18,6 +24,9 @@ export type TransactionProps = {
   signedObservationEdge?: any
 };
 
+/**
+ * Represents a signature element in a transaction.
+ */
 export type SignatureElt = {
   signature: string,
   id: {
@@ -25,6 +34,9 @@ export type SignatureElt = {
   }
 }
 
+/**
+ * Represents a complete transaction ready to be posted to the network.
+ */
 export type PostTransaction = {
   edge: {
     observationEdge: {
@@ -61,6 +73,9 @@ export type PostTransaction = {
   isTest: boolean,
 }
 
+/**
+ * Interface defining the required methods for a transaction implementation.
+ */
 export interface TransactionInterface {
   getPostTransaction(): any;
   getEncoded(hashReference: boolean): string;
@@ -69,6 +84,11 @@ export interface TransactionInterface {
   addSignature(signature: Record<string, any>): void;
 }
 
+/**
+ * A class representing a transaction in the Constellation network.
+ * Implements the TransactionInterface and provides methods for creating,
+ * encoding, and managing transactions.
+ */
 export class Transaction implements TransactionInterface {
   private tx: PostTransaction = {
     edge: {
@@ -108,6 +128,10 @@ export class Transaction implements TransactionInterface {
     isTest: false
   };
   
+  /**
+   * Creates a new transaction instance.
+   * @param props - The transaction properties
+   */
   constructor({fromAddress, toAddress, amount, fee, lastTxRef, salt, signedObservationEdge}: TransactionProps) {
     if (signedObservationEdge) {
       this.tx.edge.signedObservationEdge = signedObservationEdge;
@@ -141,6 +165,11 @@ export class Transaction implements TransactionInterface {
     this.tx.edge.data.salt = salt;
   }
 
+  /**
+   * Creates a new transaction instance from a post-transaction object.
+   * @param tx - The post-transaction object
+   * @returns A new Transaction instance
+   */
   static fromPostTransaction(tx: PostTransaction): Transaction {
     return new Transaction({
       amount: tx.edge.data.amount,
@@ -151,10 +180,19 @@ export class Transaction implements TransactionInterface {
     });
   }
 
+  /**
+   * Gets the post-transaction object.
+   * @returns The post-transaction object
+   */
   getPostTransaction() {
     return this.tx;
   }
 
+  /**
+   * Gets the encoded transaction string.
+   * @param hashReference - Whether to include hash reference
+   * @returns The encoded transaction string
+   */
   getEncoded(hashReference?: boolean) {
     let parentsTx = '';
 
@@ -209,14 +247,25 @@ export class Transaction implements TransactionInterface {
     return encodedTx;
   }
 
+  /**
+   * Sets the encoded hash reference for the transaction.
+   */
   setEncodedHashReference() {
     this.tx.edge.observationEdge.data.hashReference = this.getEncoded(true);
   }
 
+  /**
+   * Sets the signature batch hash for the transaction.
+   * @param hash - The hash to set
+   */
   setSignatureBatchHash(hash: string) {
     this.tx.edge.signedObservationEdge.signatureBatch.hash = hash;
   }
 
+  /**
+   * Adds a signature to the transaction.
+   * @param signatureElt - The signature element to add
+   */
   addSignature(signatureElt: SignatureElt) {
     this.tx.edge.signedObservationEdge.signatureBatch.signatures.push(signatureElt);
   }

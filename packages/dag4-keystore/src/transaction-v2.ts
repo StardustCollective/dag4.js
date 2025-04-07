@@ -5,11 +5,17 @@ import { BigNumber } from "bignumber.js";
 // Enforce a minimum complexity in resulting hash: 8725724278030335
 const MIN_SALT = Number.MAX_SAFE_INTEGER - 2**48;
 
+/**
+ * Represents a reference to the last transaction for an address in V2 format.
+ */
 export type AddressLastRefV2 = {
   hash: string,
   ordinal: number
 };
 
+/**
+ * Properties for creating a new V2 transaction.
+ */
 export type TransactionPropsV2 = {
   fromAddress?: string,
   toAddress?: string,
@@ -19,11 +25,17 @@ export type TransactionPropsV2 = {
   salt?: string | BigNumber
 };
 
+/**
+ * Represents a proof (signature) in a V2 transaction.
+ */
 export type Proof = {
   signature: string,
   id: string
 };
 
+/**
+ * Represents a complete V2 transaction ready to be posted to the network.
+ */
 export type PostTransactionV2 = {
   value: {
      source: string,
@@ -36,6 +48,11 @@ export type PostTransactionV2 = {
   proofs: Proof[]
 };
 
+/**
+ * A class representing a V2 transaction in the Constellation network.
+ * Implements the TransactionInterface and provides methods for creating,
+ * encoding, and managing V2 transactions.
+ */
 export class TransactionV2 implements TransactionInterface {
   private tx: PostTransactionV2 = {
     value: {
@@ -49,6 +66,10 @@ export class TransactionV2 implements TransactionInterface {
     proofs: []
   };
   
+  /**
+   * Creates a new V2 transaction instance.
+   * @param props - The transaction properties
+   */
   constructor({fromAddress, toAddress, amount, fee, lastTxRef, salt}: TransactionPropsV2) {
     if (fromAddress) {
       this.tx.value.source = fromAddress;
@@ -77,6 +98,11 @@ export class TransactionV2 implements TransactionInterface {
     this.tx.value.salt = salt;
   }
 
+  /**
+   * Creates a new V2 transaction instance from a post-transaction object.
+   * @param tx - The post-transaction object
+   * @returns A new TransactionV2 instance
+   */
   static fromPostTransaction(tx: PostTransactionV2): TransactionV2 {
     return new TransactionV2({
       amount: tx.value.amount,
@@ -88,6 +114,11 @@ export class TransactionV2 implements TransactionInterface {
     });
   }
 
+  /**
+   * Converts a BigNumber or string to a hexadecimal string.
+   * @param val - The value to convert
+   * @returns The hexadecimal string representation
+   */
   static toHexString(val: BigNumber | string) {
     val = new BigNumber(val);
     let bInt;
@@ -100,6 +131,10 @@ export class TransactionV2 implements TransactionInterface {
     return bInt.toString(16)
   }
 
+  /**
+   * Gets the post-transaction object.
+   * @returns The post-transaction object
+   */
   getPostTransaction() {
     return { 
       value: {
@@ -110,6 +145,10 @@ export class TransactionV2 implements TransactionInterface {
     };
   }
 
+  /**
+   * Gets the encoded transaction string.
+   * @returns The encoded transaction string
+   */
   getEncoded() {    
     const parentCount = '2';  // Always 2 parents
     const sourceAddress = this.tx.value.source;
@@ -139,14 +178,27 @@ export class TransactionV2 implements TransactionInterface {
     ].join('');
   }
 
+  /**
+   * Sets the encoded hash reference for the transaction.
+   * This is a no-op in V2 transactions.
+   */
   setEncodedHashReference() {
     // NOOP
   }
 
+  /**
+   * Sets the signature batch hash for the transaction.
+   * This is a no-op in V2 transactions.
+   * @param hash - The hash to set
+   */
   setSignatureBatchHash(hash: string) {
     // NOOP
   }
 
+  /**
+   * Adds a proof (signature) to the transaction.
+   * @param proof - The proof to add
+   */
   addSignature(proof: Proof) {
     this.tx.proofs.push(proof);
   }
