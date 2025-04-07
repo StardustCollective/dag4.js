@@ -20,7 +20,16 @@ import { BigNumber } from "bignumber.js";
 import { Subject } from "rxjs";
 import { networkConfig } from "./network-config";
 import { MetagraphTokenClient } from "./metagraph-token-client";
-import { normalizePublicKey, validateArray, validateObject } from "./utils";
+import { normalizePublicKey } from "./utils";
+import {
+  validateWithZod,
+  validateArrayWithZod,
+  postAllowSpendSchema,
+  postTokenLockSchema,
+  postDelegatedStakeSchema,
+  putWithdrawDelegatedStakeSchema,
+  dagAddressValidator,
+} from "./validationSchemas";
 
 export class DagAccount {
   private m_keyTrio: KeyTrio;
@@ -431,57 +440,10 @@ export class DagAccount {
       tokenL1Url,
     } = body;
 
-    validateObject(
-      body,
-      {
-        source: {
-          type: "string",
-          required: true,
-          dagAddress: true,
-        },
-        destination: {
-          type: "string",
-          required: true,
-          dagAddress: true,
-        },
-        amount: {
-          type: "number",
-          required: true,
-          positive: true,
-          nonZero: true,
-        },
-        fee: {
-          type: "number",
-          required: true,
-          positive: true,
-        },
-        currencyId: {
-          type: ["string", "null"],
-          required: true,
-          dagAddress: true,
-        },
-        validUntilEpoch: {
-          type: "number",
-          required: true,
-          positive: true,
-        },
-        tokenL1Url: {
-          type: "string",
-          required: true,
-        },
-      },
-      true
-    );
+    validateWithZod(body, postAllowSpendSchema, true);
 
-    validateArray(
-      approvers,
-      {
-        type: "string",
-        required: true,
-        dagAddress: true,
-      },
-      true
-    );
+    // Validate approvers array
+    validateArrayWithZod(approvers, dagAddressValidator, true);
 
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
@@ -557,42 +519,7 @@ export class DagAccount {
   }) {
     const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch } = body;
 
-    validateObject(
-      body,
-      {
-        source: {
-          type: "string",
-          required: true,
-          dagAddress: true,
-        },
-        amount: {
-          type: "number",
-          required: true,
-          positive: true,
-          nonZero: true,
-        },
-        fee: {
-          type: "number",
-          required: false,
-          positive: true,
-        },
-        currencyId: {
-          type: ["string", "null"],
-          required: true,
-          dagAddress: true,
-        },
-        unlockEpoch: {
-          type: ["number", "null"],
-          required: true,
-          positive: true,
-        },
-        tokenL1Url: {
-          type: "string",
-          required: true,
-        },
-      },
-      true
-    );
+    validateWithZod(body, postTokenLockSchema, true);
 
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
@@ -665,36 +592,7 @@ export class DagAccount {
   }) {
     const { source, nodeId, amount, fee, tokenLockRef } = body;
 
-    validateObject(
-      body,
-      {
-        source: {
-          type: "string",
-          required: true,
-          dagAddress: true,
-        },
-        nodeId: {
-          type: "string",
-          required: true,
-        },
-        amount: {
-          type: "number",
-          required: true,
-          positive: true,
-          nonZero: true,
-        },
-        fee: {
-          type: "number",
-          required: false,
-          positive: true,
-        },
-        tokenLockRef: {
-          type: "string",
-          required: true,
-        },
-      },
-      true
-    );
+    validateWithZod(body, postDelegatedStakeSchema, true);
 
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
@@ -755,21 +653,7 @@ export class DagAccount {
   async putWithdrawDelegatedStake(body: { source: string; stakeRef: string }) {
     const { source, stakeRef } = body;
 
-    validateObject(
-      body,
-      {
-        source: {
-          type: "string",
-          required: true,
-          dagAddress: true,
-        },
-        stakeRef: {
-          type: "string",
-          required: true,
-        },
-      },
-      true
-    );
+    validateWithZod(body, putWithdrawDelegatedStakeSchema, true);
 
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
