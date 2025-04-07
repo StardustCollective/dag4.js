@@ -100,7 +100,7 @@ export function validateWithZod<T>(
   schema: z.ZodType<T>,
   checkNotEmpty = false
 ): T {
-  if (checkNotEmpty && Object.keys(obj as object).length === 0) {
+  if (checkNotEmpty && Object.keys(obj).length === 0) {
     throw new Error("Object cannot be empty");
   }
 
