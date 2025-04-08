@@ -17,7 +17,8 @@
     "prerelease": "npm run build && npm version patch",
     "release": "node ../../scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
-    "release:preflight": "npm pack ./dist --dry-run"
+    "release:preflight": "npm pack ./dist --dry-run",
+    "yalcpush": "yalc push --sig"
   },
   "dependencies": {
     "@stardust-collective/dag4": "2.3.0",

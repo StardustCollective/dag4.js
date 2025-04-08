@@ -20,7 +20,8 @@
     "prerelease": "npm run build && npm version patch --no-git-tag-version",
     "release": "node ./scripts/package/copy && npm run release:npm",
     "release:npm": "npm publish ./dist -access public",
-    "release:preflight": "npm pack ./dist --dry-run"
+    "release:preflight": "npm pack ./dist --dry-run",
+    "yalcpush": "npm run yalcpush --workspaces"
   },
   "repository": {
     "type": "git",
@@ -48,14 +49,13 @@
   },
   "workspaces": [
     "packages/dag4-core",
-    "packages/dag4-network",
-    "packages/dag4-keyring",
     "packages/dag4-keystore",
+    "packages/dag4-keyring",
+    "packages/dag4-network",
     "packages/dag4-wallet",
-    "packages/dag4-xchain-ethereum",
     "packages/dag4",
     "packages/dag4-ledger",
-    "packages/scratch"
+    "packages/dag4-xchain-ethereum"
   ],
   "dependencies": {
     "npm": "^8.10.0"
