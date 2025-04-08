@@ -6,13 +6,13 @@ import * as jsSha512 from "js-sha512";
 import * as bs58 from 'bs58';
 import {Buffer} from 'buffer';
 import Wallet, {hdkey} from 'ethereumjs-wallet';
-
 import {KeyTrio} from './key-trio';
 import {txEncode} from './tx-encode';
 import {bip39} from './bip39/bip39';
 import {KDFParamsPhrase, KDFParamsPrivateKey, V3Keystore} from './v3-keystore';
-import { PostTransaction, AddressLastRef } from "./transaction";
+import { AddressLastRef } from "./transaction";
 import { PostTransactionV2, AddressLastRefV2 } from "./transaction-v2";
+import { normalizeObject, serializeBrotli } from "./utils";
 
 // Use @noble in newer env, fallback to elliptic in older env
 const useFallbackLib = typeof BigInt === 'undefined';
@@ -325,6 +325,18 @@ export class KeyStore {
     return {
       hash,
       transaction: transaction.getPostTransaction()
+    };
+  }
+
+  async generateBrotliSignature(body: any, publicKey: string, privateKey: string) {
+    const normalizedBody = normalizeObject(body);
+    const serializedTx = await serializeBrotli(body);
+    const messageHash = this.sha256(serializedTx);
+    const signature = await this.sign(privateKey, messageHash);
+
+    return {
+      value: normalizedBody,
+      proofs: [{ id: publicKey, signature }],
     };
   }
 

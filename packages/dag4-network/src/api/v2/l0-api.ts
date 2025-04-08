@@ -5,8 +5,12 @@ import {
   ClusterInfoV2,
   ClusterPeerInfoV2,
   L0AddressBalance,
+  SignedDelegatedStake,
+  SignedWithdrawDelegatedStake,
+  SnapshotL0,
   SnapshotOrdinal,
   TotalSupplyV2,
+  TransactionReference,
 } from "../../dto/v2";
 
 class L0Api {
@@ -67,6 +71,30 @@ class L0Api {
     return this.service.$get<string>("/metric");
   }
 
+  async getDelegatedStakeLastRef(address: string) {
+    return this.service.$get<TransactionReference>(
+      `/delegated-stakes/last-reference/${address}`
+    );
+  }
+
+  async postDelegatedStake(
+    signedDelegatedStake: SignedDelegatedStake
+  ): Promise<{ hash: string }> {
+    return this.service.$post<{ hash: string }>(
+      `/delegated-stakes`,
+      signedDelegatedStake
+    );
+  }
+
+  async putWithdrawDelegatedStake(
+    signedWithdrawDelegatedStake: SignedWithdrawDelegatedStake
+  ): Promise<{ hash: string }> {
+    return this.service.$put<{ hash: string }>(
+      `/delegated-stakes`,
+      signedWithdrawDelegatedStake
+    );
+  }
+
   // DAG
   async getTotalSupply() {
     return this.service.$get<TotalSupplyV2>("/dag/total-supply");
@@ -88,7 +116,7 @@ class L0Api {
 
   // Global Snapshot
   async getLatestSnapshot() {
-    return this.service.$get<string>(
+    return this.service.$get<SnapshotL0>(
       `/global-snapshots/latest`,
       {},
       { headers: { Accept: "application/json" } }
