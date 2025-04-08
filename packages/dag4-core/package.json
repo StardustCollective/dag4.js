@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-core",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "Constellation HyperGraph JavaScript API",
   "author": "Frank Fox",
   "license": "MIT",
