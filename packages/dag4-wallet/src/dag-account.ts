@@ -46,8 +46,8 @@ export class DagAccount {
   ) {
     let baseConfig = {};
 
-    if (useDefaultConfig && networkInfo.networkVersion) {
-      const version = networkInfo.networkVersion.split(".")[0];
+    if (useDefaultConfig) {
+      const version = 2; // Defaults to network version 2.0
       const networkType = networkInfo.testnet ? "testnet" : "mainnet";
 
       baseConfig = networkConfig[version][networkType];

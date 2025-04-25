@@ -9,7 +9,14 @@ import {PostTransactionV2, PendingTransaction, TransactionV2, SnapshotV2} from '
 import {PostTransaction, CbTransaction, Transaction, Snapshot} from './dto/v1';
 
 export class DagNetwork {
-  private connectedNetwork: NetworkInfo = { id: 'main', beUrl: '', lbUrl: '', l0Url: '', l1Url: ''};
+  private connectedNetwork: NetworkInfo = { 
+    id: 'main', 
+    networkVersion: '2.0', 
+    beUrl: '', 
+    lbUrl: '', 
+    l0Url: '', 
+    l1Url: ''
+  };
 
   private networkChange$ = new Subject<NetworkInfo>();
 
@@ -38,19 +45,14 @@ export class DagNetwork {
     return this.networkChange$;
   }
 
-  //Configure the network of the global instances: blockExplorerApi and loadBalancerApi
   setNetwork(netInfo: NetworkInfo) {
     if (this.connectedNetwork !== netInfo) {
       this.connectedNetwork = netInfo;
 
-      if (netInfo.networkVersion === '2.0') {
-        this.blockExplorerV2Api.config().baseUrl(netInfo.beUrl);
-        this.l0Api.config().baseUrl(netInfo.l0Url);
-        this.l1Api.config().baseUrl(netInfo.l1Url);
-      } else { // v1
-        this.blockExplorerApi.config().baseUrl(netInfo.beUrl);
-        this.loadBalancerApi.config().baseUrl(netInfo.lbUrl);
-      }
+      // Connects to network 2.0 by default
+      this.blockExplorerV2Api.config().baseUrl(netInfo.beUrl);
+      this.l0Api.config().baseUrl(netInfo.l0Url);
+      this.l1Api.config().baseUrl(netInfo.l1Url);
 
       this.networkChange$.next(netInfo);
     }
