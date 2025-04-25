@@ -54,8 +54,7 @@
     "packages/dag4-network",
     "packages/dag4-wallet",
     "packages/dag4",
-    "packages/dag4-ledger",
-    "packages/dag4-xchain-ethereum"
+    "packages/dag4-ledger"
   ],
   "dependencies": {
     "npm": "^8.10.0"
