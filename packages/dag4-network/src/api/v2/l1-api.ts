@@ -9,6 +9,7 @@ import {
   PostTransactionResponseV2,
   SignedTokenLock,
   SignedAllowSpend,
+  HashResponse,
 } from "../../dto/v2";
 
 class L1Api {
@@ -35,14 +36,23 @@ class L1Api {
     );
   }
 
-  async getAllowSpendLastRef(l1Url: string, address: string) {
+  /**
+   * @deprecated Use getAllowSpendLastRef() instead. This method will be removed in the next major version.
+   */
+  async getAllowSpendLastRefDeprecated(l1Url: string, address: string) {
     const l1Service = new RestApi(l1Url);
     return l1Service.$get<TransactionReference>(
       `/allow-spends/last-reference/${address}`
     );
   }
 
-  async postAllowSpend(l1Url: string, signedAllowSpend: SignedAllowSpend) {
+  /**
+   * @deprecated Use postAllowSpend() instead. This method will be removed in the next major version.
+   */
+  async postAllowSpendDeprecated(
+    l1Url: string,
+    signedAllowSpend: SignedAllowSpend
+  ) {
     const l1Service = new RestApi(l1Url);
     return l1Service.$post<TransactionReference>(
       `/allow-spends`,
@@ -50,19 +60,48 @@ class L1Api {
     );
   }
 
-  async getTokenLockLastRef(l1Url: string, address: string) {
+  /**
+   * @deprecated Use getTokenLockLastRef() instead. This method will be removed in the next major version.
+   */
+  async getTokenLockLastRefDeprecated(l1Url: string, address: string) {
     const l1Service = new RestApi(l1Url);
     return l1Service.$get<TransactionReference>(
       `/token-locks/last-reference/${address}`
     );
   }
 
-  async postTokenLock(l1Url: string, signedTokenLock: SignedTokenLock) {
+  /**
+   * @deprecated Use postTokenLock() instead. This method will be removed in the next major version.
+   */
+  async postTokenLockDeprecated(
+    l1Url: string,
+    signedTokenLock: SignedTokenLock
+  ) {
     const l1Service = new RestApi(l1Url);
     return l1Service.$post<TransactionReference>(
       `/token-locks`,
       signedTokenLock
     );
+  }
+
+  async getAllowSpendLastRef(address: string) {
+    return this.service.$get<TransactionReference>(
+      `/allow-spends/last-reference/${address}`
+    );
+  }
+
+  async postAllowSpend(signedAllowSpend: SignedAllowSpend) {
+    return this.service.$post<HashResponse>(`/allow-spends`, signedAllowSpend);
+  }
+
+  async getTokenLockLastRef(address: string) {
+    return this.service.$get<TransactionReference>(
+      `/token-locks/last-reference/${address}`
+    );
+  }
+
+  async postTokenLock(signedTokenLock: SignedTokenLock) {
+    return this.service.$post<HashResponse>(`/token-locks`, signedTokenLock);
   }
 
   async getPendingTransaction(hash: string) {

@@ -4,6 +4,7 @@ import { DNC } from "../../DNC";
 import {
   ClusterInfoV2,
   ClusterPeerInfoV2,
+  HashResponse,
   L0AddressBalance,
   SignedDelegatedStake,
   SignedWithdrawDelegatedStake,
@@ -77,10 +78,8 @@ class L0Api {
     );
   }
 
-  async postDelegatedStake(
-    signedDelegatedStake: SignedDelegatedStake
-  ): Promise<{ hash: string }> {
-    return this.service.$post<{ hash: string }>(
+  async postDelegatedStake(signedDelegatedStake: SignedDelegatedStake) {
+    return this.service.$post<HashResponse>(
       `/delegated-stakes`,
       signedDelegatedStake
     );
@@ -88,8 +87,8 @@ class L0Api {
 
   async putWithdrawDelegatedStake(
     signedWithdrawDelegatedStake: SignedWithdrawDelegatedStake
-  ): Promise<{ hash: string }> {
-    return this.service.$put<{ hash: string }>(
+  ) {
+    return this.service.$put<HashResponse>(
       `/delegated-stakes`,
       signedWithdrawDelegatedStake
     );

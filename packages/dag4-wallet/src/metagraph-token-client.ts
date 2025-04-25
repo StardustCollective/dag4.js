@@ -5,10 +5,14 @@ import {
   TransactionReference,
   MetagraphTokenNetwork,
   MetagraphNetworkInfo,
-  PendingTransaction,
+  AllowSpend,
+  AllowSpendWithCurrencyId,
+  TokenLock,
+  TokenLockWithCurrencyId,
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import type { DagAccount } from "./dag-account";
+import { executeOperation } from "./shared/operations";
 
 class MetagraphTokenClient {
   private network: MetagraphTokenNetwork;
@@ -208,6 +212,42 @@ class MetagraphTokenClient {
     const txns = await this.generateBatchTransactions(transfers, lastRef);
 
     return this.sendBatchTransactions(txns);
+  }
+
+  async createAllowSpend(body: AllowSpend) {
+    if (!body || typeof body !== "object") {
+      throw new Error("body must be a valid object");
+    }
+
+    const bodyWithCurrencyId: AllowSpendWithCurrencyId = {
+      ...body,
+      currencyId: this.networkInfo.metagraphId,
+    };
+
+    return executeOperation(
+      "allowSpend",
+      bodyWithCurrencyId,
+      this.network,
+      this.account
+    );
+  }
+
+  async createTokenLock(body: TokenLock) {
+    if (!body || typeof body !== "object") {
+      throw new Error("body must be a valid object");
+    }
+
+    const bodyWithCurrencyId: TokenLockWithCurrencyId = {
+      ...body,
+      currencyId: this.networkInfo.metagraphId,
+    };
+
+    return executeOperation(
+      "tokenLock",
+      bodyWithCurrencyId,
+      this.network,
+      this.account
+    );
   }
 }
 

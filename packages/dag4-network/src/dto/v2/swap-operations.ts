@@ -1,61 +1,76 @@
 import { Proof, TransactionReference } from "./transaction";
 
-// Token Lock
-
-export type TokenLockBody = {
-  source: string;
-  amount: number;
-  fee?: number;
+/**
+ * Base type for all operations that include a currency ID
+ */
+export type WithCurrencyId<T> = T & {
   currencyId: string | null;
-  parent: TransactionReference;
-  unlockEpoch: number | null;
 };
 
-export type SignedTokenLock = {
-  value: TokenLockBody;
+/**
+ * Base type for all operations that include a parent transaction reference
+ */
+export type WithParent<T> = T & {
+  parent: TransactionReference;
+};
+
+/**
+ * Base type for all signed operations
+ */
+export type SignedOperation<T> = {
+  value: T;
   proofs: Proof[];
 };
 
-// Allow Spend
+// Token Lock
+export type TokenLock = {
+  source: string;
+  amount: number;
+  fee?: number;
+  unlockEpoch: number | null;
+};
 
-export type AllowSpendBody = {
+export type TokenLockWithCurrencyId = WithCurrencyId<TokenLock>;
+export type TokenLockWithParent = WithParent<TokenLockWithCurrencyId>;
+export type SignedTokenLock = SignedOperation<TokenLockWithParent>;
+
+// Allow Spend
+export type AllowSpend = {
   source: string;
   destination: string;
   approvers: string[];
   amount: number;
   fee?: number;
-  currencyId: string | null;
-  parent: TransactionReference;
-  lastValidEpochProgress: number;
+  validUntilEpoch: number;
 };
 
-export type SignedAllowSpend = {
-  value: AllowSpendBody;
-  proofs: Proof[];
-};
+export type AllowSpendWithCurrencyId = WithCurrencyId<AllowSpend>;
+export type AllowSpendWithParent = WithParent<AllowSpendWithCurrencyId>;
+export type SignedAllowSpend = SignedOperation<AllowSpendWithParent>;
 
 // Delegated Stake
-
-export type DelegatedStakeBody = {
+export type DelegatedStake = {
+  source: string;
   nodeId: string;
   amount: number;
   fee?: number;
   tokenLockRef: string;
-  parent: TransactionReference;
 };
 
-export type SignedDelegatedStake = {
-  value: DelegatedStakeBody;
-  proofs: Proof[];
-};
+export type DelegatedStakeWithParent = WithParent<DelegatedStake>;
+export type SignedDelegatedStake = SignedOperation<DelegatedStakeWithParent>;
 
 // Withdraw Delegated Stake
-
-export type WithdrawDelegatedStakeBody = {
-  stakeRef: TransactionReference;
+export type WithdrawDelegatedStake = {
+  source: string;
+  stakeRef: string;
 };
 
-export type SignedWithdrawDelegatedStake = {
-  value: WithdrawDelegatedStakeBody;
-  proofs: Proof[];
+export type SignedWithdrawDelegatedStake =
+  SignedOperation<WithdrawDelegatedStake>;
+
+// Operation response
+
+export type HashResponse = {
+  hash: string;
 };

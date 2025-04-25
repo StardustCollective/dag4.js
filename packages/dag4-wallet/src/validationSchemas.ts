@@ -40,40 +40,54 @@ export const currencyIdValidator = z
   });
 
 /**
- * Schema for validating post allow spend body
+ * Schema for validating allow spend body
  */
-export const postAllowSpendSchema = z.object({
+export const allowSpendSchema = z.object({
   source: dagAddressValidator,
   destination: dagAddressValidator,
   amount: nonZeroNumber,
   fee: zeroPositive,
-  currencyId: currencyIdValidator,
   validUntilEpoch: z
     .number()
     .positive("Valid until epoch must be greater than zero"),
-  tokenL1Url: nonEmptyString,
 });
 
 /**
- * Schema for validating post token lock body
+ * @deprecated Use allowSpendSchema instead. This schema will be removed in the next major version.
+ * Schema for validating post allow spend body
  */
-export const postTokenLockSchema = z.object({
+export const postAllowSpendSchema = allowSpendSchema.extend({
+  tokenL1Url: nonEmptyString,
+  currencyId: currencyIdValidator,
+});
+
+/**
+ * Schema for validating token lock body
+ */
+export const tokenLockSchema = z.object({
   source: dagAddressValidator,
   amount: nonZeroNumber,
   fee: zeroPositive,
-  currencyId: currencyIdValidator,
   unlockEpoch: z
     .union([z.number(), z.null()])
     .refine((value) => value === null || value > 0, {
       message: "Unlock epoch must be greater than zero or null",
     }),
-  tokenL1Url: nonEmptyString,
 });
 
 /**
- * Schema for validating post delegated stake body
+ * @deprecated Use tokenLockSchema instead. This schema will be removed in the next major version.
+ * Schema for validating post token lock body
  */
-export const postDelegatedStakeSchema = z.object({
+export const postTokenLockSchema = tokenLockSchema.extend({
+  tokenL1Url: nonEmptyString,
+  currencyId: currencyIdValidator,
+});
+
+/**
+ * Schema for validating delegated stake body
+ */
+export const delegatedStakeSchema = z.object({
   source: dagAddressValidator,
   nodeId: nonEmptyString,
   amount: nonZeroNumber,
@@ -82,9 +96,9 @@ export const postDelegatedStakeSchema = z.object({
 });
 
 /**
- * Schema for validating put withdraw delegated stake body
+ * Schema for validating withdraw delegated stake body
  */
-export const putWithdrawDelegatedStakeSchema = z.object({
+export const withdrawDelegatedStakeSchema = z.object({
   source: dagAddressValidator,
   stakeRef: nonEmptyString,
 });
@@ -95,7 +109,7 @@ export const putWithdrawDelegatedStakeSchema = z.object({
  * @param schema - The Zod schema to validate against
  * @param checkNotEmpty - Whether to check if the object is not empty
  */
-export function validateWithZod<T>(
+export function validateSchema<T>(
   obj: T,
   schema: z.ZodType<T>,
   checkNotEmpty = false
@@ -113,7 +127,7 @@ export function validateWithZod<T>(
  * @param schema - The Zod schema to validate against
  * @param checkNotEmpty - Whether to check if the array is not empty
  */
-export function validateArrayWithZod<T>(
+export function validateArraySchema<T>(
   arr: T[],
   schema: z.ZodType<T>,
   checkNotEmpty = false
