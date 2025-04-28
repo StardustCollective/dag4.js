@@ -28,8 +28,8 @@ export const allowSpend = async (
   network: SharedNetwork,
   account: DagAccount
 ): Promise<HashResponse> => {
-  account.accountIsActive();
-  account.validatePrivateKey();
+  account.assertAccountIsActive();
+  account.assertValidPrivateKey();
 
   validateSchema(body, allowSpendSchema, true);
 
@@ -101,8 +101,8 @@ export const tokenLock = async (
   network: SharedNetwork,
   account: DagAccount
 ): Promise<HashResponse> => {
-  account.accountIsActive();
-  account.validatePrivateKey();
+  account.assertAccountIsActive();
+  account.assertValidPrivateKey();
 
   validateSchema(body, tokenLockSchema, true);
 

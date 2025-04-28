@@ -460,8 +460,8 @@ export class DagAccount {
     console.warn(
       "postAllowSpend() is deprecated. Use createAllowSpend() instead."
     );
-    this.accountIsActive();
-    this.validatePrivateKey();
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
 
     validateSchema(body, postAllowSpendSchema, true);
 
@@ -574,8 +574,8 @@ export class DagAccount {
     console.warn(
       "postTokenLock() is deprecated. Use createTokenLock() instead."
     );
-    this.accountIsActive();
-    this.validatePrivateKey();
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
 
     validateSchema(body, postTokenLockSchema, true);
 
@@ -670,8 +670,8 @@ export class DagAccount {
   }
 
   async createDelegatedStake(body: DelegatedStake) {
-    this.accountIsActive();
-    this.validatePrivateKey();
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
 
     validateSchema(body, delegatedStakeSchema, true);
 
@@ -747,8 +747,8 @@ export class DagAccount {
   }
 
   async withdrawDelegatedStake(body: WithdrawDelegatedStake) {
-    this.accountIsActive();
-    this.validatePrivateKey();
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
 
     validateSchema(body, withdrawDelegatedStakeSchema, true);
 
