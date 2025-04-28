@@ -1,4 +1,4 @@
-import { keyStore } from "@stardust-collective/dag4-keystore";
+import { keyStore, KeyTrio } from "@stardust-collective/dag4-keystore";
 import {
   AllowSpendWithCurrencyId,
   DagNetwork,
@@ -19,24 +19,20 @@ import {
   validateArraySchema,
   validateSchema,
 } from "../validationSchemas";
-import { DagAccount } from "../dag-account";
 
 type SharedNetwork = DagNetwork | GlobalDagNetwork | MetagraphTokenNetwork;
 
 export const allowSpend = async (
   body: AllowSpendWithCurrencyId,
   network: SharedNetwork,
-  account: DagAccount
+  keyTrio: KeyTrio
 ): Promise<HashResponse> => {
-  account.assertAccountIsActive();
-  account.assertValidPrivateKey();
-
   validateSchema(body, allowSpendSchema, true);
 
   // Validate approvers array
   validateArraySchema(body.approvers, dagAddressValidator, true);
 
-  if (body.source !== account.address) {
+  if (body.source !== keyTrio.address) {
     throw new Error('"source" must be the same as the account address');
   }
 
@@ -47,7 +43,7 @@ export const allowSpend = async (
   try {
     // Get allow spend last reference
     allowSpendLastRef = await network.l1Api.getAllowSpendLastRef(
-      account.address
+      keyTrio.address
     );
   } catch (err) {
     console.error("Error getting the allow spend last reference");
@@ -69,8 +65,8 @@ export const allowSpend = async (
     };
     signedAllowSpend = await keyStore.generateBrotliSignature(
       allowSpendBody,
-      normalizePublicKey(account.publicKey),
-      account.keyTrio.privateKey
+      normalizePublicKey(keyTrio.publicKey),
+      keyTrio.privateKey
     );
   } catch (err) {
     console.error("Error generating the signed allow spend");
@@ -99,14 +95,11 @@ export const allowSpend = async (
 export const tokenLock = async (
   body: TokenLockWithCurrencyId,
   network: SharedNetwork,
-  account: DagAccount
+  keyTrio: KeyTrio
 ): Promise<HashResponse> => {
-  account.assertAccountIsActive();
-  account.assertValidPrivateKey();
-
   validateSchema(body, tokenLockSchema, true);
 
-  if (body.source !== account.address) {
+  if (body.source !== keyTrio.address) {
     throw new Error('"source" must be the same as the account address');
   }
 
@@ -116,7 +109,7 @@ export const tokenLock = async (
 
   try {
     // Get token lock last reference
-    tokenLockLastRef = await network.l1Api.getTokenLockLastRef(account.address);
+    tokenLockLastRef = await network.l1Api.getTokenLockLastRef(keyTrio.address);
   } catch (err) {
     console.error("Error getting the token lock last reference");
     throw err;
@@ -137,8 +130,8 @@ export const tokenLock = async (
     };
     signedTokenLock = await keyStore.generateBrotliSignature(
       tokenLockBody,
-      normalizePublicKey(account.publicKey),
-      account.keyTrio.privateKey
+      normalizePublicKey(keyTrio.publicKey),
+      keyTrio.privateKey
     );
   } catch (err) {
     console.error("Error generating the signed token lock");

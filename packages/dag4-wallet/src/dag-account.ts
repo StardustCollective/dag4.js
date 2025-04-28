@@ -548,6 +548,9 @@ export class DagAccount {
   }
 
   async createAllowSpend(body: AllowSpend) {
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
+
     if (!body || typeof body !== "object") {
       throw new Error("body must be a valid object");
     }
@@ -557,7 +560,7 @@ export class DagAccount {
       currencyId: null,
     };
 
-    return allowSpend(bodyWithCurrencyId, this.network, this);
+    return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio);
   }
 
   /**
@@ -647,6 +650,9 @@ export class DagAccount {
   }
 
   async createTokenLock(body: TokenLock) {
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
+
     if (!body || typeof body !== "object") {
       throw new Error("body must be a valid object");
     }
@@ -656,7 +662,7 @@ export class DagAccount {
       currencyId: null,
     };
 
-    return tokenLock(bodyWithCurrencyId, this.network, this);
+    return tokenLock(bodyWithCurrencyId, this.network, this.keyTrio);
   }
 
   /**

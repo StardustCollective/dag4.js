@@ -215,6 +215,9 @@ class MetagraphTokenClient {
   }
 
   async createAllowSpend(body: AllowSpend) {
+    this.account.assertAccountIsActive();
+    this.account.assertValidPrivateKey();
+
     if (!body || typeof body !== "object") {
       throw new Error("body must be a valid object");
     }
@@ -224,10 +227,13 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return allowSpend(bodyWithCurrencyId, this.network, this.account);
+    return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio);
   }
 
   async createTokenLock(body: TokenLock) {
+    this.account.assertAccountIsActive();
+    this.account.assertValidPrivateKey();
+
     if (!body || typeof body !== "object") {
       throw new Error("body must be a valid object");
     }
@@ -237,7 +243,7 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return tokenLock(bodyWithCurrencyId, this.network, this.account);
+    return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio);
   }
 }
 
