@@ -148,7 +148,7 @@ export class DagAccount {
     );
   }
 
-  validatePrivateKey() {
+  assertValidPrivateKey() {
     if (!this.m_keyTrio.privateKey) {
       throw new Error(
         "Private key not found. Make sure to login with dag4.account.loginPrivateKey() or dag4.account.loginSeedPhrase()"
