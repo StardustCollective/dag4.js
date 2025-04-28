@@ -12,7 +12,7 @@ import {
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import type { DagAccount } from "./dag-account";
-import { executeOperation } from "./shared/operations";
+import { allowSpend, tokenLock } from "./shared/operations";
 
 class MetagraphTokenClient {
   private network: MetagraphTokenNetwork;
@@ -224,12 +224,7 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return executeOperation(
-      "allowSpend",
-      bodyWithCurrencyId,
-      this.network,
-      this.account
-    );
+    return allowSpend(bodyWithCurrencyId, this.network, this.account);
   }
 
   async createTokenLock(body: TokenLock) {
@@ -242,12 +237,7 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return executeOperation(
-      "tokenLock",
-      bodyWithCurrencyId,
-      this.network,
-      this.account
-    );
+    return tokenLock(bodyWithCurrencyId, this.network, this.account);
   }
 }
 

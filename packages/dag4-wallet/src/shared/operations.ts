@@ -1,4 +1,4 @@
-import { keyStore, KeyTrio } from "@stardust-collective/dag4-keystore";
+import { keyStore } from "@stardust-collective/dag4-keystore";
 import {
   AllowSpendWithCurrencyId,
   DagNetwork,
@@ -22,50 +22,21 @@ import {
 import { DagAccount } from "../dag-account";
 
 type SharedNetwork = DagNetwork | GlobalDagNetwork | MetagraphTokenNetwork;
-type OperationType = "allowSpend" | "tokenLock";
-type BodyType = AllowSpendWithCurrencyId | TokenLockWithCurrencyId;
 
-export const executeOperation = async (
-  type: OperationType,
-  body: BodyType,
-  network: SharedNetwork,
-  account: DagAccount
-) => {
-  if (!account.isActive() || !account.address) {
-    throw new Error(
-      "Account is not active. Make sure to login before executing this operation"
-    );
-  }
-
-  switch (type) {
-    case "allowSpend":
-      return allowSpend(
-        body as AllowSpendWithCurrencyId,
-        network,
-        account.keyTrio
-      );
-    case "tokenLock":
-      return tokenLock(
-        body as TokenLockWithCurrencyId,
-        network,
-        account.keyTrio
-      );
-    default:
-      throw new Error(`Invalid operation type: ${type}`);
-  }
-};
-
-const allowSpend = async (
+export const allowSpend = async (
   body: AllowSpendWithCurrencyId,
   network: SharedNetwork,
-  keyTrio: KeyTrio
+  account: DagAccount
 ): Promise<HashResponse> => {
+  account.accountIsActive();
+  account.validatePrivateKey();
+
   validateSchema(body, allowSpendSchema, true);
 
   // Validate approvers array
   validateArraySchema(body.approvers, dagAddressValidator, true);
 
-  if (body.source !== keyTrio.address) {
+  if (body.source !== account.address) {
     throw new Error('"source" must be the same as the account address');
   }
 
@@ -76,10 +47,11 @@ const allowSpend = async (
   try {
     // Get allow spend last reference
     allowSpendLastRef = await network.l1Api.getAllowSpendLastRef(
-      keyTrio.address
+      account.address
     );
   } catch (err) {
-    throw new Error("Error getting the allow spend last reference");
+    console.error("Error getting the allow spend last reference");
+    throw err;
   }
 
   if (!allowSpendLastRef) {
@@ -97,11 +69,12 @@ const allowSpend = async (
     };
     signedAllowSpend = await keyStore.generateBrotliSignature(
       allowSpendBody,
-      normalizePublicKey(keyTrio.publicKey),
-      keyTrio.privateKey
+      normalizePublicKey(account.publicKey),
+      account.keyTrio.privateKey
     );
   } catch (err) {
-    throw new Error("Error generating the signed allow spend");
+    console.error("Error generating the signed allow spend");
+    throw err;
   }
 
   if (!signedAllowSpend) {
@@ -112,7 +85,8 @@ const allowSpend = async (
     // Post signed allow spend body
     allowSpendResponse = await network.l1Api.postAllowSpend(signedAllowSpend);
   } catch (err) {
-    throw new Error("Error sending the allow spend transaction");
+    console.error("Error sending the allow spend transaction");
+    throw err;
   }
 
   if (!allowSpendResponse || !allowSpendResponse.hash) {
@@ -122,14 +96,17 @@ const allowSpend = async (
   return allowSpendResponse;
 };
 
-const tokenLock = async (
+export const tokenLock = async (
   body: TokenLockWithCurrencyId,
   network: SharedNetwork,
-  keyTrio: KeyTrio
+  account: DagAccount
 ): Promise<HashResponse> => {
+  account.accountIsActive();
+  account.validatePrivateKey();
+
   validateSchema(body, tokenLockSchema, true);
 
-  if (body.source !== keyTrio.address) {
+  if (body.source !== account.address) {
     throw new Error('"source" must be the same as the account address');
   }
 
@@ -139,9 +116,10 @@ const tokenLock = async (
 
   try {
     // Get token lock last reference
-    tokenLockLastRef = await network.l1Api.getTokenLockLastRef(keyTrio.address);
+    tokenLockLastRef = await network.l1Api.getTokenLockLastRef(account.address);
   } catch (err) {
-    throw new Error("Error getting the token lock last reference");
+    console.error("Error getting the token lock last reference");
+    throw err;
   }
 
   if (!tokenLockLastRef) {
@@ -159,11 +137,12 @@ const tokenLock = async (
     };
     signedTokenLock = await keyStore.generateBrotliSignature(
       tokenLockBody,
-      normalizePublicKey(keyTrio.publicKey),
-      keyTrio.privateKey
+      normalizePublicKey(account.publicKey),
+      account.keyTrio.privateKey
     );
   } catch (err) {
-    throw new Error("Error generating the signed token lock");
+    console.error("Error generating the signed token lock");
+    throw err;
   }
 
   if (!signedTokenLock) {
@@ -174,7 +153,8 @@ const tokenLock = async (
     // Post signed token lock body
     tokenLockResponse = await network.l1Api.postTokenLock(signedTokenLock);
   } catch (err) {
-    throw new Error("Error sending the token lock transaction");
+    console.error("Error sending the token lock transaction");
+    throw err;
   }
 
   if (!tokenLockResponse || !tokenLockResponse.hash) {
