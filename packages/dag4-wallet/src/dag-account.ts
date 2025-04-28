@@ -118,7 +118,7 @@ export class DagAccount {
     return !!this.m_keyTrio;
   }
 
-  accountIsActive() {
+  assertAccountIsActive() {
     if (!this.isActive() || !this.address) {
       throw new Error(
         "Account is not active. Make sure to login before calling this method"
