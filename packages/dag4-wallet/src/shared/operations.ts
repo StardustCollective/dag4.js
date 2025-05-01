@@ -57,7 +57,10 @@ export const allowSpend = async (
   try {
     // Generate signed allow spend body
     const allowSpendBody = {
-      ...body,
+      source: body.source,
+      destination: body.destination,
+      approvers: body.approvers,
+      amount: body.amount,
       parent: allowSpendLastRef,
       lastValidEpochProgress: body.validUntilEpoch,
       currencyId: body.currencyId ?? null,
@@ -122,7 +125,8 @@ export const tokenLock = async (
   try {
     // Generate signed token lock body
     const tokenLockBody: TokenLockWithParent = {
-      ...body,
+      source: body.source,
+      amount: body.amount,
       parent: tokenLockLastRef,
       currencyId: body.currencyId ?? null,
       fee: body.fee ?? 0,
