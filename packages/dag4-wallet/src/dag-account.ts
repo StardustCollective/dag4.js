@@ -12,9 +12,17 @@ import {
   NetworkInfo,
   PendingTx,
   TransactionReference,
-  Transaction,
-  TransactionV2,
   MetagraphNetworkInfo,
+  AllowSpendWithCurrencyId,
+  AllowSpend,
+  TokenLock,
+  TokenLockWithCurrencyId,
+  DelegatedStake,
+  WithdrawDelegatedStake,
+  HashResponse,
+  SignedDelegatedStake,
+  SignedWithdrawDelegatedStake,
+  DelegatedStakeWithParent,
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import { Subject } from "rxjs";
@@ -22,14 +30,15 @@ import { networkConfig } from "./network-config";
 import { MetagraphTokenClient } from "./metagraph-token-client";
 import { normalizePublicKey } from "./utils";
 import {
-  validateWithZod,
-  validateArrayWithZod,
+  validateSchema,
+  delegatedStakeSchema,
+  withdrawDelegatedStakeSchema,
   postAllowSpendSchema,
-  postTokenLockSchema,
-  postDelegatedStakeSchema,
-  putWithdrawDelegatedStakeSchema,
+  validateArraySchema,
   dagAddressValidator,
+  postTokenLockSchema,
 } from "./validationSchemas";
+import { allowSpend, tokenLock } from "./shared/operations";
 
 export class DagAccount {
   private m_keyTrio: KeyTrio;
@@ -46,8 +55,8 @@ export class DagAccount {
   ) {
     let baseConfig = {};
 
-    if (useDefaultConfig && networkInfo.networkVersion) {
-      const version = networkInfo.networkVersion.split(".")[0];
+    if (useDefaultConfig) {
+      const version = 2; // Defaults to network version 2.0
       const networkType = networkInfo.testnet ? "testnet" : "mainnet";
 
       baseConfig = networkConfig[version][networkType];
@@ -109,6 +118,14 @@ export class DagAccount {
     return !!this.m_keyTrio;
   }
 
+  assertAccountIsActive() {
+    if (!this.isActive() || !this.address) {
+      throw new Error(
+        "Account is not active. Make sure to login before calling this method"
+      );
+    }
+  }
+
   logout() {
     this.m_keyTrio = null;
     this.sessionChange$.next(true);
@@ -129,6 +146,14 @@ export class DagAccount {
       limit,
       searchAfter
     );
+  }
+
+  assertValidPrivateKey() {
+    if (!this.m_keyTrio.privateKey) {
+      throw new Error(
+        "Private key not found. Make sure to login with dag4.account.loginPrivateKey() or dag4.account.loginSeedPhrase()"
+      );
+    }
   }
 
   validateDagAddress(address: string) {
@@ -419,6 +444,9 @@ export class DagAccount {
     return hashes;
   }
 
+  /**
+   * @deprecated Use createAllowSpend() instead. This method will be removed in the next major version.
+   */
   async postAllowSpend(body: {
     source: string;
     destination: string;
@@ -429,6 +457,17 @@ export class DagAccount {
     validUntilEpoch: number;
     tokenL1Url: string;
   }) {
+    console.warn(
+      "postAllowSpend() is deprecated. Use createAllowSpend() instead."
+    );
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
+
+    validateSchema(body, postAllowSpendSchema, true);
+
+    // Validate approvers array
+    validateArraySchema(body.approvers, dagAddressValidator, true);
+
     const {
       source,
       destination,
@@ -440,11 +479,6 @@ export class DagAccount {
       tokenL1Url,
     } = body;
 
-    validateWithZod(body, postAllowSpendSchema, true);
-
-    // Validate approvers array
-    validateArrayWithZod(approvers, dagAddressValidator, true);
-
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
     }
@@ -455,12 +489,14 @@ export class DagAccount {
 
     try {
       // Get allow spend last reference
-      allowSpendLastRef = await this.network.l1Api.getAllowSpendLastRef(
-        tokenL1Url,
-        this.address
-      );
+      allowSpendLastRef =
+        await this.network.l1Api.getAllowSpendLastRefDeprecated(
+          tokenL1Url,
+          this.address
+        );
     } catch (err) {
-      throw new Error("Error getting the allow spend last reference");
+      console.error("Error getting the allow spend last reference");
+      throw err;
     }
 
     if (!allowSpendLastRef) {
@@ -485,7 +521,8 @@ export class DagAccount {
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error("Error generating the signed allow spend");
+      console.error("Error generating the signed allow spend");
+      throw err;
     }
 
     if (!signedAllowSpend) {
@@ -494,12 +531,13 @@ export class DagAccount {
 
     try {
       // Post signed allow spend body
-      allowSpendResponse = await this.network.l1Api.postAllowSpend(
+      allowSpendResponse = await this.network.l1Api.postAllowSpendDeprecated(
         tokenL1Url,
         signedAllowSpend
       );
     } catch (err) {
-      throw new Error("Error sending the allow spend transaction");
+      console.error("Error sending the allow spend transaction");
+      throw err;
     }
 
     if (!allowSpendResponse) {
@@ -509,6 +547,25 @@ export class DagAccount {
     return allowSpendResponse;
   }
 
+  async createAllowSpend(body: AllowSpend) {
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
+
+    if (!body || typeof body !== "object") {
+      throw new Error("body must be a valid object");
+    }
+
+    const bodyWithCurrencyId: AllowSpendWithCurrencyId = {
+      ...body,
+      currencyId: null,
+    };
+
+    return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio);
+  }
+
+  /**
+   * @deprecated Use createTokenLock() instead. This method will be removed in the next major version.
+   */
   async postTokenLock(body: {
     source: string;
     amount: number;
@@ -517,9 +574,15 @@ export class DagAccount {
     currencyId: string | null;
     fee?: number;
   }) {
-    const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch } = body;
+    console.warn(
+      "postTokenLock() is deprecated. Use createTokenLock() instead."
+    );
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
 
-    validateWithZod(body, postTokenLockSchema, true);
+    validateSchema(body, postTokenLockSchema, true);
+
+    const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch } = body;
 
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
@@ -531,12 +594,13 @@ export class DagAccount {
 
     try {
       // Get token lock last reference
-      tokenLockLastRef = await this.network.l1Api.getTokenLockLastRef(
+      tokenLockLastRef = await this.network.l1Api.getTokenLockLastRefDeprecated(
         tokenL1Url,
         this.address
       );
     } catch (err) {
-      throw new Error("Error getting the token lock last reference");
+      console.error("Error getting the token lock last reference");
+      throw err;
     }
 
     if (!tokenLockLastRef) {
@@ -559,7 +623,8 @@ export class DagAccount {
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error("Error generating the signed token lock");
+      console.error("Error generating the signed token lock");
+      throw err;
     }
 
     if (!signedTokenLock) {
@@ -568,12 +633,13 @@ export class DagAccount {
 
     try {
       // Post signed token lock body
-      tokenLockResponse = await this.network.l1Api.postTokenLock(
+      tokenLockResponse = await this.network.l1Api.postTokenLockDeprecated(
         tokenL1Url,
         signedTokenLock
       );
     } catch (err) {
-      throw new Error("Error sending the token lock transaction");
+      console.error("Error sending the token lock transaction");
+      throw err;
     }
 
     if (!tokenLockResponse) {
@@ -583,24 +649,47 @@ export class DagAccount {
     return tokenLockResponse;
   }
 
-  async postDelegatedStake(body: {
-    source: string;
-    nodeId: string;
-    amount: number;
-    fee?: number;
-    tokenLockRef: string;
-  }) {
-    const { source, nodeId, amount, fee, tokenLockRef } = body;
+  async createTokenLock(body: TokenLock) {
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
 
-    validateWithZod(body, postDelegatedStakeSchema, true);
+    if (!body || typeof body !== "object") {
+      throw new Error("body must be a valid object");
+    }
+
+    const bodyWithCurrencyId: TokenLockWithCurrencyId = {
+      ...body,
+      currencyId: null,
+    };
+
+    return tokenLock(bodyWithCurrencyId, this.network, this.keyTrio);
+  }
+
+  /**
+   * @deprecated Use createDelegatedStake() instead. This method will be removed in the next major version.
+   */
+  async postDelegatedStake(body: DelegatedStake) {
+    console.warn(
+      "postDelegatedStake() is deprecated. Use createDelegatedStake() instead."
+    );
+    return this.createDelegatedStake(body);
+  }
+
+  async createDelegatedStake(body: DelegatedStake) {
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
+
+    validateSchema(body, delegatedStakeSchema, true);
+
+    const { source, nodeId, amount, fee, tokenLockRef } = body;
 
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
     }
 
     let delegatedStakeLastRef: TransactionReference | null = null;
-    let signedDelegatedStake: any | null = null;
-    let delegatedStakeResponse: { hash: string } | null = null;
+    let signedDelegatedStake: SignedDelegatedStake | null = null;
+    let delegatedStakeResponse: HashResponse | null = null;
 
     try {
       // Get delegated stake last reference
@@ -608,7 +697,8 @@ export class DagAccount {
         this.address
       );
     } catch (err) {
-      throw new Error("Error getting the delegated stake last reference");
+      console.error("Error getting the delegated stake last reference");
+      throw err;
     }
 
     if (!delegatedStakeLastRef) {
@@ -617,7 +707,7 @@ export class DagAccount {
 
     try {
       // Generate signed delegated stake body
-      const delegateStakeBody = {
+      const delegateStakeBody: DelegatedStakeWithParent = {
         source,
         nodeId,
         amount,
@@ -631,7 +721,8 @@ export class DagAccount {
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error("Error generating the signed delegated stake");
+      console.error("Error generating the signed delegated stake");
+      throw err;
     }
 
     if (!signedDelegatedStake) {
@@ -644,37 +735,46 @@ export class DagAccount {
         signedDelegatedStake
       );
     } catch (err) {
-      throw new Error("Error sending the delegated stake transaction");
+      console.error("Error sending the delegated stake transaction");
+      throw err;
     }
 
     return delegatedStakeResponse;
   }
 
-  async putWithdrawDelegatedStake(body: { source: string; stakeRef: string }) {
-    const { source, stakeRef } = body;
+  /**
+   * @deprecated Use withdrawDelegatedStake() instead. This method will be removed in the next major version.
+   */
+  async putWithdrawDelegatedStake(body: WithdrawDelegatedStake) {
+    console.warn(
+      "putWithdrawDelegatedStake() is deprecated. Use withdrawDelegatedStake() instead."
+    );
+    return this.withdrawDelegatedStake(body);
+  }
 
-    validateWithZod(body, putWithdrawDelegatedStakeSchema, true);
+  async withdrawDelegatedStake(body: WithdrawDelegatedStake) {
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
 
-    if (source !== this.address) {
+    validateSchema(body, withdrawDelegatedStakeSchema, true);
+
+    if (body.source !== this.address) {
       throw new Error('"source" must be the same as the account address');
     }
 
-    let signedWithdrawDelegatedStake: any | null = null;
-    let withdrawDelegatedStakeResponse: { hash: string } | null = null;
+    let signedWithdrawDelegatedStake: SignedWithdrawDelegatedStake | null =
+      null;
+    let withdrawDelegatedStakeResponse: HashResponse | null = null;
 
     try {
-      // Generate signed withdraw delegated stake body
-      const withdrawDelegatedStakeBody = {
-        source,
-        stakeRef,
-      };
       signedWithdrawDelegatedStake = await keyStore.generateBrotliSignature(
-        withdrawDelegatedStakeBody,
+        body,
         normalizePublicKey(this.publicKey),
         this.m_keyTrio.privateKey
       );
     } catch (err) {
-      throw new Error("Error generating the withdraw delegated stake");
+      console.error("Error generating the withdraw delegated stake");
+      throw err;
     }
 
     if (!signedWithdrawDelegatedStake) {
@@ -688,7 +788,8 @@ export class DagAccount {
           signedWithdrawDelegatedStake
         );
     } catch (err) {
-      throw new Error("Error sending the withdraw delegated stake transaction");
+      console.error("Error sending the withdraw delegated stake transaction");
+      throw err;
     }
 
     return withdrawDelegatedStakeResponse;
