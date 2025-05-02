@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-ledger",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Ledger hardware integration for signing DAG transactions",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -21,7 +21,7 @@
     "yalcpush": "yalc push --sig"
   },
   "dependencies": {
-    "@stardust-collective/dag4": "2.3.0",
+    "@stardust-collective/dag4": "2.4.0",
     "bignumber.js": "^9.0.1"
   }
 }
