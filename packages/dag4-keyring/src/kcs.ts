@@ -13,7 +13,8 @@ export enum KeyringWalletType {
   SingleAccountWallet = 'SAW',  //Single Chain, Single Key account, SKW
   MultiKeyWallet = 'MKW',       //Single Chain, Multiple Key accounts, MKW
   LedgerAccountWallet = "LAW",
-  BitfiAccountWallet  = "BAW"
+  BitfiAccountWallet  = "BAW",
+  CypherockAccountWallet = "CAW"
 }
 
 export enum KeyringAssetType {
@@ -35,6 +36,7 @@ export type KeyringWalletSerialized = {
 export type KeyringWalletState = {
   id: string;
   bipIndex?: number;
+  cypherockId?: string;
   label: string;
   type: KeyringWalletType;
   supportedAssets: KeyringAssetType[];
