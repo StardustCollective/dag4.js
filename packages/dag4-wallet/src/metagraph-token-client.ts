@@ -245,6 +245,14 @@ class MetagraphTokenClient {
 
     return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio);
   }
+
+  async getDataFeeEstimate(data: any) {
+    return this.network.dl1Api.getDataFeeEstimate(data);
+  }
+
+  async sendDataTransaction(data: any) {
+    return this.network.dl1Api.postDataTransaction(data);
+  }
 }
 
 type TransferBatchItem = {
