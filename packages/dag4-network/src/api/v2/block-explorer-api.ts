@@ -30,24 +30,40 @@ export class BlockExplorerV2Api {
     return this.service.$get<SnapshotV2>(`/global-snapshots/${id}`);
   }
 
-  async getTransactionsBySnapshot (id: HashOrOrdinal) {
-    return this.service.$get<TransactionV2[]>(`/global-snapshots/${id}/transactions`);
+  async getTransactionsBySnapshot (id: HashOrOrdinal, limit: number = 0, searchAfter = '', searchBefore = '') {
+    const basePath = `/global-snapshots/${id}/transactions  `;
+    
+    const {path, params} = this._getTransactionSearchPathAndParams(basePath, limit, searchAfter, false, false, searchBefore);
+
+    return this.service.$get<TransactionV2[]>(path, params);
   }
 
-  async getRewardsBySnapshot(id: HashOrOrdinal) {
-    return this.service.$get<RewardTransaction>(`/global-snapshots/${id}/rewards`);
+  async getRewardsBySnapshot(id: HashOrOrdinal, limit: number = 0, searchAfter = '', searchBefore = '') {
+    const basePath = `/global-snapshots/${id}/rewards`;
+    
+    const {path, params} = this._getTransactionSearchPathAndParams(basePath, limit, searchAfter, false, false, searchBefore);
+    
+    return this.service.$get<RewardTransaction>(path, params);
   }
 
   async getLatestSnapshot () {
     return this.service.$get<SnapshotV2>('/global-snapshots/latest');
   }
 
-  async getLatestSnapshotTransactions() {
-    return this.service.$get<TransactionV2>('/global-snapshots/latest/transactions');
+  async getLatestSnapshotTransactions(limit: number = 0, searchAfter = '', searchBefore = '') {
+    const basePath = `/global-snapshots/latest/transactions`;
+    
+    const {path, params} = this._getTransactionSearchPathAndParams(basePath, limit, searchAfter, false, false, searchBefore);
+    
+    return this.service.$get<TransactionV2[]>(path, params);
   }
 
-  async getLatestSnapshotRewards() {
-    return this.service.$get<RewardTransaction>('/global-snapshots/latest/rewards');
+  async getLatestSnapshotRewards(limit: number = 0, searchAfter = '', searchBefore = '') {
+    const basePath = `/global-snapshots/latest/rewards`;
+    
+    const {path, params} = this._getTransactionSearchPathAndParams(basePath, limit, searchAfter, false, false, searchBefore);
+    
+    return this.service.$get<RewardTransaction>(path, params);
   }
 
   // Transactions
@@ -59,7 +75,7 @@ export class BlockExplorerV2Api {
     }
   }
 
-  _getTransactionSearchPathAndParams (basePath: string, limit, searchAfter, sentOnly, receivedOnly, searchBefore) {
+  _getTransactionSearchPathAndParams (basePath: string, limit: number = 0, searchAfter = '', sentOnly = false, receivedOnly = false, searchBefore = '') {
     let params, path = basePath;
 
     if (limit || searchAfter || searchBefore) {
@@ -86,7 +102,7 @@ export class BlockExplorerV2Api {
     return {path, params};
   }
 
-  async getTransactions (limit, searchAfter, searchBefore) {
+  async getTransactions (limit: number = 0, searchAfter = '', searchBefore = '') {
     const basePath = `/transactions`;
     
     const {path, params} = this._getTransactionSearchPathAndParams(basePath, limit, searchAfter, false, false, searchBefore);
@@ -145,7 +161,7 @@ export class BlockExplorerV2Api {
     return this.service.$get<GetTransactionResponseV2>(`/currency/${metagraphId}/transactions/${hash}`);
   }
 
-  async getCurrencyTransactions (metagraphId: string, limit, searchAfter, searchBefore) {
+  async getCurrencyTransactions (metagraphId: string, limit: number = 0, searchAfter = '', searchBefore = '') {
     const basePath = `/currency/${metagraphId}/transactions`;
     
     const {path, params} = this._getTransactionSearchPathAndParams(basePath, limit, searchAfter, false, false, searchBefore);
