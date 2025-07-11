@@ -35,8 +35,6 @@ export type KeyringWalletSerialized = {
 
 export type KeyringWalletState = {
   id: string;
-  bipIndex?: number;
-  cypherockId?: string;
   label: string;
   type: KeyringWalletType;
   supportedAssets: KeyringAssetType[];
