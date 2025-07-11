@@ -2,12 +2,14 @@ import { Proof } from "./transaction";
 
 export type SnapshotV2 = {
   hash: string;
-  timestamp: string;
   ordinal: number;
   height: number;
   subHeight: number;
   lastSnapshotHash: string;
   blocks: string[];
+  epochProgress: number;
+  timestamp: string;
+  metagraphSnapshotCount: number;
 };
 
 export type StateProof = {
@@ -66,3 +68,18 @@ export type SnapshotL0 = {
   value: SnapshotL0Value;
   proofs: Proof[];
 };
+
+export type CurrencySnapshotV2 = {
+  hash: string;
+  ordinal: number;
+  height: number;
+  subHeight: number;
+  lastSnapshotHash: string;
+  blocks: string[];
+  epochProgress: number;
+  timestamp: string;
+  fee: number;
+  stakingAddress: string | null;
+  ownerAddress: string;
+  sizeInKB: number;
+}

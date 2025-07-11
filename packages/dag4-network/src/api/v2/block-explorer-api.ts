@@ -3,14 +3,15 @@ import {DNC} from '../../DNC';
 import {
   SnapshotV2, 
   TransactionV2, 
-  GetTransactionResponseV2, 
   RewardTransaction, 
   AddressBalanceV2, 
   BlockV2,
-  CurrencySnapshot
+  CurrencySnapshotV2
 } from '../../dto/v2';
 
 type HashOrOrdinal = string | number;
+export type Response<T> = { data: T }; 
+export type ResponseWithMetadata<T> = Response<T> & { meta?: { next: string } };
 
 export class BlockExplorerV2Api {
   private service = new RestApi(DNC.BLOCK_EXPLORER_URL);
@@ -26,43 +27,42 @@ export class BlockExplorerV2Api {
   }
 
   // Snapshots
-  async getSnapshot(id: HashOrOrdinal) {
-    return this.service.$get<SnapshotV2>(`/global-snapshots/${id}`);
+  async getSnapshot(hash: HashOrOrdinal) {
+    return this.service.$get<Response<SnapshotV2>>(`/global-snapshots/${hash}`);
   }
 
-
-  async getTransactionsBySnapshot (id: HashOrOrdinal, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+  async getTransactionsBySnapshot (hash: HashOrOrdinal, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<TransactionV2[]>(`/global-snapshots/${id}/transactions`, params);
+    return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/global-snapshots/${hash}/transactions`, params);
   }
 
-  async getRewardsBySnapshot(id: HashOrOrdinal, limit?: number, next?: string) {
+  async getRewardsBySnapshot(hash: HashOrOrdinal, limit?: number, next?: string) {
     const params = this.buildRequestParams({ limit, next });
     
-    return this.service.$get<RewardTransaction>(`/global-snapshots/${id}/rewards`, params);
+    return this.service.$get<ResponseWithMetadata<RewardTransaction>>(`/global-snapshots/${hash}/rewards`, params);
   }
 
   async getSnapshots(limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {    
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<SnapshotV2[]>('/global-snapshots', params);
+    return this.service.$get<ResponseWithMetadata<SnapshotV2[]>>(`/global-snapshots`, params);
   }
 
   async getLatestSnapshot () {
-    return this.service.$get<SnapshotV2>('/global-snapshots/latest');
+    return this.service.$get<Response<SnapshotV2>>('/global-snapshots/latest');
   }
 
   async getLatestSnapshotTransactions(limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<TransactionV2[]>(`/global-snapshots/latest/transactions`, params);
+    return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/global-snapshots/latest/transactions`, params);
   }
 
   async getLatestSnapshotRewards(limit?: number, next?: string) {
     const params = this.buildRequestParams({ limit, next });
     
-    return this.service.$get<RewardTransaction>(`/global-snapshots/latest/rewards`, params);
+    return this.service.$get<ResponseWithMetadata<RewardTransaction>>(`/global-snapshots/latest/rewards`, params);
   }
 
    // Private method
@@ -103,80 +103,80 @@ export class BlockExplorerV2Api {
   async getTransactions(limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<TransactionV2[]>(`/transactions`, params);
+    return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/transactions`, params);
   }
 
   async getTransactionsByAddress(address: string, limit?: number, searchAfter?: string, sentOnly?: boolean, receivedOnly?: boolean, searchBefore?: string, next?: string) {
     const searchPath = sentOnly ? '/sent' : receivedOnly ? '/received' : ''; 
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<TransactionV2[]>(`/addresses/${address}/transactions${searchPath}`, params);
+    return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/addresses/${address}/transactions${searchPath}`, params);
   }
 
   async getTransaction(hash: string) {
-    return this.service.$get<GetTransactionResponseV2>(`/transactions/${hash}`);
+    return this.service.$get<Response<TransactionV2>>(`/transactions/${hash}`);
   }
 
   // Addresses
-  async getAddressBalance(hash: string) {
-    return this.service.$get<AddressBalanceV2>(`/addresses/${hash}/balance`);
+  async getAddressBalance(address: string) {
+    return this.service.$get<Response<AddressBalanceV2>>(`/addresses/${address}/balance`);
   }
 
   // Blocks
   async getCheckpointBlock(hash: string) {
-    return this.service.$get<BlockV2>(`/blocks/${hash}`);
+    return this.service.$get<Response<BlockV2>>(`/blocks/${hash}`);
   }
 
   // Metagraphs
   async getLatestCurrencySnapshot(metagraphId: string) {
-    return this.service.$get<CurrencySnapshot>(`/currency/${metagraphId}/snapshots/latest`);
+    return this.service.$get<Response<CurrencySnapshotV2>>(`/currency/${metagraphId}/snapshots/latest`);
   }
 
   async getCurrencySnapshot(metagraphId: string, hashOrOrdinal: string) {
-    return this.service.$get<CurrencySnapshot>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}`);
+    return this.service.$get<Response<CurrencySnapshotV2>>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}`);
   }
 
   async getLatestCurrencySnapshotRewards(metagraphId: string, limit?: number, next?: string) {
     const params = this.buildRequestParams({ limit, next });
     
-    return this.service.$get<RewardTransaction>(`/currency/${metagraphId}/snapshots/latest/rewards`, params);
+    return this.service.$get<ResponseWithMetadata<RewardTransaction>>(`/currency/${metagraphId}/snapshots/latest/rewards`, params);
   }
 
   async getCurrencySnapshotRewards(metagraphId: string, hashOrOrdinal: string, limit?: number, next?: string) {
     const params = this.buildRequestParams({ limit, next });
     
-    return this.service.$get<RewardTransaction>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}/rewards`, params);
+    return this.service.$get<ResponseWithMetadata<RewardTransaction>>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}/rewards`, params);
   }
 
   async getCurrencyBlock(metagraphId: string, hash: string) {
-    return this.service.$get<BlockV2>(`/currency/${metagraphId}/blocks/${hash}`);
+    return this.service.$get<Response<BlockV2>>(`/currency/${metagraphId}/blocks/${hash}`);
   }
 
-  async getCurrencyAddressBalance(metagraphId: string, hash: string) {
-    return this.service.$get<AddressBalanceV2>(`/currency/${metagraphId}/addresses/${hash}/balance`);
+  async getCurrencyAddressBalance(metagraphId: string, address: string) {
+    return this.service.$get<Response<AddressBalanceV2>>(`/currency/${metagraphId}/addresses/${address}/balance`);
   }
 
   async getCurrencyTransaction(metagraphId: string, hash: string) {
-    return this.service.$get<GetTransactionResponseV2>(`/currency/${metagraphId}/transactions/${hash}`);
+    return this.service.$get<Response<TransactionV2>>(`/currency/${metagraphId}/transactions/${hash}`);
   }
 
   async getCurrencyTransactions(metagraphId: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<TransactionV2[]>(`/currency/${metagraphId}/transactions`, params);
+    return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/transactions`, params);
   }
 
   async getCurrencyTransactionsByAddress(metagraphId: string, address: string, limit?: number, searchAfter?: string, sentOnly?: boolean, receivedOnly?: boolean, searchBefore?: string, next?: string) {
     const searchPath = sentOnly ? '/sent' : receivedOnly ? '/received' : ''; 
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<TransactionV2[]>(`/currency/${metagraphId}/addresses/${address}/transactions${searchPath}`, params);
+    return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/addresses/${address}/transactions${searchPath}`, params);
   }
 
   async getCurrencyTransactionsBySnapshot(metagraphId: string, hashOrOrdinal: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
-    return this.service.$get<TransactionV2[]>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}/transactions`, params);
+    return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}/transactions`, params);
   }
 }
 

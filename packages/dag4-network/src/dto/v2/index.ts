@@ -5,5 +5,4 @@ export * from './address-balance';
 export * from './block';
 export * from './peer';
 export * from './total-supply';
-export * from './currency-snapshot';
 export * from './swap-operations';
