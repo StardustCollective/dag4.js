@@ -1,0 +1,36 @@
+name: Block Explorer API v2 Tests
+
+on:
+  push:
+    branches: [ main, development, development/** ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [16.x]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build packages
+      run: npm run build
+    
+    - name: Run Block Explorer API v2 Tests
+      run: |
+        cd packages/dag4-network
+        npm test -- --grep "BlockExplorerV2Api" --timeout 60000
+      env:
+        CI: true

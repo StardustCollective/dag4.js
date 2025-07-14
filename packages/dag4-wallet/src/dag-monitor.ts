@@ -123,10 +123,14 @@ export class DagMonitor {
         amount, 
         fee, 
         parent: { ordinal, hash: '' },
-        snapshot: '',
-        block: '',
+        snapshotHash: '',
+        blockHash: '',
         timestamp: new Date(timestamp).toISOString(),
-        transactionOriginal: { ordinal, hash },
+        transactionOriginal: { value: {}, proofs: [] },
+        snapshotOrdinal: 0,
+        globalSnapshotHash: '',
+        globalSnapshotOrdinal: 0,
+        salt: 0,
       } as TransactionV2;
     }
 

@@ -16,15 +16,23 @@ type TransactionValueV2 = {
 
 export type TransactionV2 = {
   hash: string
+  ordinal: number
   source: string
   destination: string
   amount: number
   fee: number
-  parent: TransactionReference 
-  snapshot: string
-  block: string
+  parent: TransactionReference
+  salt: number
+  blockHash: string
+  snapshotHash: string
+  snapshotOrdinal: number
+  transactionOriginal?: {
+    value: TransactionValueV2,
+    proofs: Proof[]
+  } | null
   timestamp: string
-  transactionOriginal: TransactionReference
+  globalSnapshotHash: string
+  globalSnapshotOrdinal: number
 }
 
 export type PendingTransaction = {
@@ -46,7 +54,3 @@ export type PostTransactionV2 = {
 export type PostTransactionResponseV2 = {
   hash: string
 };
-
-export type GetTransactionResponseV2 = {
-  data: TransactionV2
-}

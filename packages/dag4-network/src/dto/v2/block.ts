@@ -1,19 +1,15 @@
-// TODO: confirm through API, not defined in API doc
-export type HeightV2 = {
-  min: number
-  max: number
-}
 
 export type BlockReference = {
   hash: string
-  height: HeightV2
+  height: number
 }
 
 export type BlockV2 = {
   hash: string
+  height: number
+  parents: BlockReference[]
   timestamp: string
-  snapshot: string
-  height: HeightV2
   transactions: string[]
-  parent: BlockReference
+  snapshotHash: string
+  snapshotOrdinal: number
 }
