@@ -1,8 +1,15 @@
 import { expect } from 'chai';
+import { z } from 'zod';
 import { BlockExplorerV2Api, type ResponseWithMetadata, type Response } from '../src/api/v2/block-explorer-api';
 import { crossPlatformDi } from '@stardust-collective/dag4-core';
 import { FetchRestService } from '@stardust-collective/dag4-core/dist/cjs/cross-platform/clients/fetch.http';
 import type { AddressBalanceV2, CurrencySnapshotV2, RewardTransaction, SnapshotV2, TransactionV2 } from '../src/dto/v2';
+import { 
+  DATA_SCHEMAS, 
+  type DataSchemaKeys, 
+  ResponseSchema, 
+  ResponseWithMetadataSchema 
+} from './be-api-v2.schemas';
 
 // Initialize DI system for Node.js environment
 const fetch = require('node-fetch');
@@ -14,7 +21,7 @@ const MAINNET_URL = 'https://be-mainnet.constellationnetwork.io';
 const DAG_ADDRESS = 'DAG77zerQ2BUVhtVgkmseihkEfLXieBBm57vqA4J';
 const METAGRAPH_ID = 'DAG0CyySf35ftDQDQBnd1bdQ9aPyUdacMghpnCuM'; // DOR metagraph on Mainnet
 const LIMIT = 5;
-const TIMEOUT = 15000;
+const TIMEOUT = 60000;
 
 // Hashes storage
 let HASHES: {
@@ -23,142 +30,22 @@ let HASHES: {
   currencySnapshotHash?: string;
 } = {};
 
-// Type schemas for validation
-const TYPE_SCHEMAS = {
-  TransactionV2: {
-    hash: 'string',
-    source: 'string',
-    destination: 'string',
-    amount: 'number',
-    fee: 'number',
-    parent: 'object',
-    salt: 'number',
-    blockHash: 'string',
-    snapshotHash: 'string',
-    snapshotOrdinal: 'number',
-    transactionOriginal: ['object', 'null'],
-    timestamp: 'string',
-    globalSnapshotHash: 'string',
-    globalSnapshotOrdinal: 'number'
-  },
-  SnapshotV2: {
-    hash: 'string',
-    ordinal: 'number',
-    height: 'number',
-    subHeight: 'number',
-    lastSnapshotHash: 'string',
-    blocks: 'array',
-    epochProgress: 'number',
-    timestamp: 'string',
-    metagraphSnapshotCount: 'number'
-  },
-  RewardTransaction: {
-    destination: 'string',
-    amount: 'number'
-  },
-  AddressBalanceV2: {
-    balance: 'number',
-    address: 'string',
-    ordinal: 'number'
-  },
-  CurrencySnapshotV2: {
-    hash: 'string',
-    ordinal: 'number',
-    height: 'number',
-    subHeight: 'number',
-    lastSnapshotHash: 'string',
-    blocks: 'array',
-    epochProgress: 'number',
-    timestamp: 'string',
-    fee: 'number',
-    stakingAddress: ['string', 'null'],
-    ownerAddress: 'string',
-    sizeInKB: 'number'
-  },
-  BlockV2: {
-    hash: 'string',
-    height: 'number',
-    parent: 'object',
-    transactions: 'array',
-    timestamp: 'string'
-  }
-};
 
 /**
- * Generic type-based validation function
+ * Validates that a response has the expected Response<T> structure using Zod
  */
-function validateTypeStructure<T>(obj: any, schema: Record<string, string | string[]>, typeName: string): asserts obj is T {
-  expect(obj).to.exist;
-  
-  if (Array.isArray(obj) && obj.length === 0) {
-    console.warn(`API returned empty array for ${typeName}, skipping validation`);
-    return;
-  }
-  
-  if (Array.isArray(obj) && obj.length > 0) {
-    if (Array.isArray(obj[0])) {
-      obj = obj[0];
-    } else {
-      obj = obj[0];
-    }
-  }
-  
-  if (obj === null) {
-    console.warn(`API returned null for ${typeName}, skipping validation`);
-    return;
-  }
-  
-  expect(obj).to.be.an('object');
-  
-  for (const [key, expectedType] of Object.entries(schema)) {
-    expect(obj).to.have.property(key);
-    
-    if (Array.isArray(expectedType)) {
-      const actualType = obj[key] === null ? 'null' : typeof obj[key];
-      expect(expectedType).to.include(actualType, `Property '${key}' in ${typeName} should be one of ${expectedType.join(' | ')}, but got ${actualType}`);
-    } else if (expectedType === 'object') {
-      expect(obj[key]).to.be.an('object');
-    } else {
-      expect(obj[key]).to.be.a(expectedType, `Property '${key}' in ${typeName} should be ${expectedType}, but got ${typeof obj[key]}`);
-    }
-  }
-}
-
-/**
- * Validates that a response has the expected Response<T> structure
- */
-function validateResponse<T>(result: any, schemaKey?: keyof typeof TYPE_SCHEMAS): asserts result is Response<T> {
+function validateResponse<T>(result: any, schemaKey?: DataSchemaKeys): asserts result is Response<T> {
   expect(result).to.exist;
   expect(result).to.have.property('data');
   
-  if (Array.isArray(result.data) && result.data.length === 0) {
-    console.warn('API returned empty array, skipping detailed validation');
+  if (!schemaKey) {
     return;
   }
   
+  // Handle edge cases that should skip validation
   if (result.data === null) {
     console.warn('API returned null data, skipping detailed validation');
     return;
-  }
-  
-  if (schemaKey) {
-    const schema = TYPE_SCHEMAS[schemaKey];
-    validateTypeStructure<T>(result.data, schema, schemaKey);
-  }
-}
-
-/**
- * Validates that a response has the expected ResponseWithMetadata<T> structure
- */
-function validateResponseWithMetadata<T>(result: any, schemaKey?: keyof typeof TYPE_SCHEMAS): asserts result is ResponseWithMetadata<T> {
-  expect(result).to.exist;
-  expect(result).to.have.property('data');
-  
-  if (result.meta) {
-    expect(result.meta).to.be.an('object');
-    if (result.meta.next) {
-      expect(result.meta.next).to.be.a('string');
-    }
   }
   
   if (Array.isArray(result.data) && result.data.length === 0) {
@@ -166,14 +53,53 @@ function validateResponseWithMetadata<T>(result: any, schemaKey?: keyof typeof T
     return;
   }
   
+  const dataSchema = DATA_SCHEMAS[schemaKey];
+  const responseSchema = ResponseSchema(dataSchema);
+  
+  try {
+    responseSchema.parse(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error(`Response validation failed for ${schemaKey}:`, error.errors);
+      throw new Error(`Invalid Response<${schemaKey}> structure: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validates that a response has the expected ResponseWithMetadata<T> structure using Zod
+ */
+function validateResponseWithMetadata<T>(result: any, schemaKey?: DataSchemaKeys): asserts result is ResponseWithMetadata<T> {
+  expect(result).to.exist;
+  expect(result).to.have.property('data');
+  
+  if (!schemaKey) {
+    return;
+  }
+  
+  // Handle edge cases that should skip validation
   if (result.data === null) {
     console.warn('API returned null data, skipping detailed validation');
     return;
   }
   
-  if (schemaKey && Array.isArray(result.data) && result.data.length > 0) {
-    const schema = TYPE_SCHEMAS[schemaKey];
-    validateTypeStructure<T>(result.data[0], schema, schemaKey);
+  if (Array.isArray(result.data) && result.data.length === 0) {
+    console.warn('API returned empty array, skipping detailed validation');
+    return;
+  }
+  
+  const dataSchema = DATA_SCHEMAS[schemaKey];
+  const responseSchema = ResponseWithMetadataSchema(dataSchema);
+  
+  try {
+    responseSchema.parse(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error(`ResponseWithMetadata validation failed for ${schemaKey}:`, error.errors);
+      throw new Error(`Invalid ResponseWithMetadata<${schemaKey}> structure: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`);
+    }
+    throw error;
   }
 }
 
