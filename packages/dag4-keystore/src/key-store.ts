@@ -328,14 +328,19 @@ export class KeyStore {
     };
   }
 
+  async brotliCompress(body: any) {
+    const normalized = normalizeObject(body);
+    const compressed = await serializeBrotli(body);
+    return { normalized, compressed };
+  }
+
   async generateBrotliSignature(body: any, publicKey: string, privateKey: string) {
-    const normalizedBody = normalizeObject(body);
-    const serializedTx = await serializeBrotli(body);
-    const messageHash = this.sha256(serializedTx);
+    const { normalized, compressed } = await this.brotliCompress(body);
+    const messageHash = this.sha256(compressed);
     const signature = await this.sign(privateKey, messageHash);
 
     return {
-      value: normalizedBody,
+      value: normalized,
       proofs: [{ id: publicKey, signature }],
     };
   }
