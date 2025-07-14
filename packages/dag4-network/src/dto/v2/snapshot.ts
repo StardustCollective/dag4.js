@@ -7,9 +7,9 @@ export type SnapshotV2 = {
   subHeight: number;
   lastSnapshotHash: string;
   blocks: string[];
-  epochProgress: number;
+  epochProgress?: number | null;
   timestamp: string;
-  metagraphSnapshotCount: number;
+  metagraphSnapshotCount?: number | null;
 };
 
 export type StateProof = {
@@ -78,8 +78,8 @@ export type CurrencySnapshotV2 = {
   blocks: string[];
   epochProgress: number;
   timestamp: string;
-  fee: number;
-  stakingAddress: string | null;
-  ownerAddress: string;
-  sizeInKB: number;
+  fee?: number | null;
+  stakingAddress?: string | null;
+  ownerAddress?: string | null;
+  sizeInKB?: number | null;
 }

@@ -26,7 +26,7 @@ export type TransactionV2 = {
   blockHash: string
   snapshotHash: string
   snapshotOrdinal: number
-  transactionOriginal: {
+  transactionOriginal?: {
     value: TransactionValueV2,
     proofs: Proof[]
   } | null

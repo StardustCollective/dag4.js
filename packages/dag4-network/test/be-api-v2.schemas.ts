@@ -54,9 +54,9 @@ export const SnapshotV2Schema = z.object({
   subHeight: z.number(),
   lastSnapshotHash: z.string(),
   blocks: z.array(z.string()),
-  epochProgress: z.number(),
+  epochProgress: z.number().nullable().optional(),
   timestamp: z.string(),
-  metagraphSnapshotCount: z.number()
+  metagraphSnapshotCount: z.number().nullable().optional()
 });
 
 export const RewardTransactionSchema = z.object({
@@ -79,10 +79,10 @@ export const CurrencySnapshotV2Schema = z.object({
   blocks: z.array(z.string()),
   epochProgress: z.number(),
   timestamp: z.string(),
-  fee: z.number(),
-  stakingAddress: z.string().nullable(),
-  ownerAddress: z.string(),
-  sizeInKB: z.number()
+  fee: z.number().nullable().optional(),
+  stakingAddress: z.string().nullable().optional(),
+  ownerAddress: z.string().nullable().optional(),
+  sizeInKB: z.number().nullable().optional()
 });
 
 export const BlockV2Schema = z.object({
