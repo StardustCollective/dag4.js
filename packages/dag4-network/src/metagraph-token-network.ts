@@ -3,7 +3,7 @@ import {
   PostTransactionV2,
   PendingTransaction,
   TransactionV2,
-  CurrencySnapshot
+  CurrencySnapshotV2
 } from "./dto/v2";
 import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
 import { MetagraphTokenL0Api } from "./api/metagraph-token/l0-api";
@@ -87,7 +87,7 @@ class MetagraphTokenNetwork {
     return response.data ? response.data.hash : response.hash;
   }
 
-  async getLatestSnapshot(): Promise<CurrencySnapshot> {
+  async getLatestSnapshot(): Promise<CurrencySnapshotV2> {
     const response = (await this.beApi.getLatestCurrencySnapshot(this.connectedNetwork.metagraphId)) as any;
 
     return response.data;

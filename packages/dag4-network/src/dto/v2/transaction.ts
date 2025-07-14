@@ -11,11 +11,12 @@ type TransactionValueV2 = {
     amount: number,
     fee: number,
     parent: TransactionReference,
-    salt: number
+    salt: BigNumber | string
 }
 
 export type TransactionV2 = {
   hash: string
+  ordinal: number
   source: string
   destination: string
   amount: number
@@ -28,7 +29,7 @@ export type TransactionV2 = {
   transactionOriginal: {
     value: TransactionValueV2,
     proofs: Proof[]
-  }
+  } | null
   timestamp: string
   globalSnapshotHash: string
   globalSnapshotOrdinal: number
