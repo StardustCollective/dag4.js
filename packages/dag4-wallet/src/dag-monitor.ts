@@ -1,7 +1,7 @@
-import {crossPlatformDi} from '@stardust-collective/dag4-core';
-import {loadBalancerApi, Transaction, PendingTx, CbTransaction, TransactionV2} from '@stardust-collective/dag4-network';
-import {DagAccount} from './dag-account';
-import {Subject} from 'rxjs';
+import { crossPlatformDi } from '@stardust-collective/dag4-core';
+import { type CbTransaction, type DagTransaction, loadBalancerApi, type PendingTx, type Transaction, type TransactionV2 } from '@stardust-collective/dag4-network';
+import { Subject } from 'rxjs';
+import { DagAccount } from './dag-account';
 
 const TWELVE_MINUTES = 12 * 60 * 1000;
 
@@ -56,17 +56,11 @@ export class DagMonitor {
     return this.transformPendingToTransaction(tx);
   }
 
-  async getLatestTransactions (address: string, limit?: number, searchAfter?: string): Promise<(Transaction | TransactionV2)[]> {
-    const cTxs = await this.dagAccount.networkInstance.getTransactionsByAddress(address, limit, searchAfter);    
+  async getLatestTransactions (address: string, limit?: number, searchAfter?: string): Promise<DagTransaction[]> {
+    const transactions = await this.dagAccount.networkInstance.getTransactionsByAddress(address, limit, searchAfter);  
+    const allTxs = await this.concatPendingTransactions(transactions) as DagTransaction[];
 
-    const { pendingTxs } = await this.processPendingTxs();
-    const pendingTransactions = pendingTxs.map(pending => this.transformPendingToTransaction(pending));
-
-    if (cTxs && cTxs.length) {
-    return pendingTransactions.concat(cTxs);
-    }
-
-    return pendingTransactions;
+    return allTxs
   }
 
   async getMemPoolFromMonitor(address?: string): Promise<PendingTx[]> {
@@ -109,6 +103,17 @@ export class DagMonitor {
 
   startMonitor () {
     this.pollPendingTxs();
+  }
+
+  private async concatPendingTransactions(transactions: DagTransaction[]): Promise<DagTransaction[]> {
+    const { pendingTxs } = await this.processPendingTxs();
+    const pendingTransactions: DagTransaction[] = pendingTxs.map(pending => this.transformPendingToTransaction(pending));
+
+    if (transactions && transactions.length) {
+      return [...pendingTransactions, ...transactions];
+    }
+
+    return pendingTransactions;
   }
 
   private transformPendingToTransaction (pending: PendingTx): Transaction | TransactionV2 {

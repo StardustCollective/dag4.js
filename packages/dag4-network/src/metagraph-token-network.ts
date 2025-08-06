@@ -1,14 +1,16 @@
-import { MetagraphNetworkInfo } from "./types/network-info";
-import {
-  PostTransactionV2,
-  PendingTransaction,
-  TransactionV2,
-  CurrencySnapshotV2
-} from "./dto/v2";
-import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
+import { MetagraphTokenDataL1Api } from "./api/metagraph-token/data-l1-api";
 import { MetagraphTokenL0Api } from "./api/metagraph-token/l0-api";
 import { MetagraphTokenL1Api } from "./api/metagraph-token/l1-api";
-import { MetagraphTokenDataL1Api } from "./api/metagraph-token/data-l1-api";
+import { BlockExplorerV2Api } from './api/v2/block-explorer-api';
+import {
+  ActionType,
+  ActionV2,
+  CurrencySnapshotV2,
+  PendingTransaction,
+  PostTransactionV2,
+  TransactionV2
+} from "./dto/v2";
+import { MetagraphNetworkInfo } from "./types/network-info";
 
 class MetagraphTokenNetwork {
   private connectedNetwork: MetagraphNetworkInfo;
@@ -67,6 +69,21 @@ class MetagraphTokenNetwork {
       // NOOP 404
     }
     return response ? response.data : null;
+  }
+
+  async getActionsByAddress(
+    address: string,
+    actionType?: ActionType,
+    limit?: number,
+    searchAfter?: string,
+    searchBefore?: string,
+    next?: string
+  ): Promise<ActionV2[]> {
+    const actions = await this.beApi.getCurrencyActionsByAddress(this.connectedNetwork.metagraphId, address, actionType, limit, searchAfter, searchBefore, next);
+
+    if (!actions?.data?.length) return [];
+
+    return actions.data;
   }
 
   async getTransaction(

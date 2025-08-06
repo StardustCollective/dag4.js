@@ -1,12 +1,16 @@
-import {RestApi} from '@stardust-collective/dag4-core';
-import {DNC} from '../../DNC';
+import { RestApi } from '@stardust-collective/dag4-core';
+import { DNC } from '../../DNC';
 import {
-  SnapshotV2, 
-  TransactionV2, 
-  RewardTransaction, 
-  AddressBalanceV2, 
+  ActionType,
+  ActionV2,
+  AddressBalanceV2,
+  AllowSpendV2,
   BlockV2,
-  CurrencySnapshotV2
+  CurrencySnapshotV2,
+  RewardTransaction,
+  SnapshotV2,
+  TokenLockV2,
+  TransactionV2
 } from '../../dto/v2';
 
 type HashOrOrdinal = string | number;
@@ -70,12 +74,14 @@ export class BlockExplorerV2Api {
     limit = null, 
     searchAfter = null, 
     searchBefore = null,
-    next = null
+    next = null,
+    actionType = null
   } : {
     limit?: number, 
     searchAfter?: string, 
     searchBefore?: string,
-    next?: string
+    next?: string,
+    actionType?: ActionType
   }) {
     let params;
 
@@ -84,6 +90,10 @@ export class BlockExplorerV2Api {
 
       if (limit && limit > 0) {
         params.limit = limit;
+      }
+
+      if (actionType) {
+        params.transactionType = actionType;
       }
 
       // search_after, search_before and next are mutually exclusive
@@ -173,10 +183,34 @@ export class BlockExplorerV2Api {
     return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/addresses/${address}/transactions${searchPath}`, params);
   }
 
+  async getCurrencyActionsByAddress(metagraphId: string, address: string, actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, actionType });
+    
+    return this.service.$get<ResponseWithMetadata<ActionV2[]>>(`/currency/${metagraphId}/addresses/${address}/actions`, params);
+  }
+
   async getCurrencyTransactionsBySnapshot(metagraphId: string, hashOrOrdinal: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
     return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}/transactions`, params);
+  }
+
+  async getActionsByAddress(address: string, actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, actionType });
+
+    return this.service.$get<ResponseWithMetadata<ActionV2[]>>(`/addresses/${address}/actions`, params);
+  }
+
+  async getTokenLocksByAddress(address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
+
+    return this.service.$get<ResponseWithMetadata<TokenLockV2[]>>(`/addresses/${address}/token-locks`, params);
+  }
+
+  async getAllowSpendsByAddress(address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
+    
+    return this.service.$get<ResponseWithMetadata<AllowSpendV2[]>>(`/addresses/${address}/allow-spends`, params);
   }
 }
 

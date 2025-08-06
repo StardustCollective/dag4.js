@@ -1,4 +1,5 @@
 import { BigNumber } from "bignumber.js";
+import type { Transaction } from "../v1";
 
 export type TransactionReference = {
   hash: string
@@ -54,3 +55,5 @@ export type PostTransactionV2 = {
 export type PostTransactionResponseV2 = {
   hash: string
 };
+
+export type DagTransaction = Transaction | TransactionV2;

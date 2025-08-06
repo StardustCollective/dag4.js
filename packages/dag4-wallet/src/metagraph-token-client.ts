@@ -1,14 +1,15 @@
-import { PostTransactionV2 } from "@stardust-collective/dag4-keystore";
 import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
+import { PostTransactionV2 } from "@stardust-collective/dag4-keystore";
 import {
-  PendingTx,
-  TransactionReference,
-  MetagraphTokenNetwork,
-  MetagraphNetworkInfo,
+  ActionType,
   AllowSpend,
   AllowSpendWithCurrencyId,
+  MetagraphNetworkInfo,
+  MetagraphTokenNetwork,
+  PendingTx,
   TokenLock,
   TokenLockWithCurrencyId,
+  TransactionReference,
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import type { DagAccount } from "./dag-account";
@@ -39,6 +40,14 @@ class MetagraphTokenClient {
       limit,
       searchAfter
     );
+  }
+
+  async getActions(actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const actions = await this.network.getActionsByAddress(this.address, actionType, limit, searchAfter, searchBefore, next);
+
+    if (!actions?.length) return [];
+
+    return actions.filter(action => action.source === this.address);
   }
 
   async getBalance() {
