@@ -55,5 +55,3 @@ export type PostTransactionV2 = {
 export type PostTransactionResponseV2 = {
   hash: string
 };
-
-export type DagTransaction = Transaction | TransactionV2;

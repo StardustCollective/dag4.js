@@ -1,4 +1,4 @@
-export type TokenLockV2 = {
+export type TokenLockResponse = {
   currencyId: string | null;
   hash: string;
   ordinal: number;
@@ -13,7 +13,7 @@ export type TokenLockV2 = {
   unlockedAtOrdinal: number | null;
 };
 
-export type AllowSpendV2 = {
+export type AllowSpendResponse = {
   currencyId: string | null;
   hash: string;
   ordinal: number;
@@ -32,7 +32,7 @@ export type AllowSpendV2 = {
 export const Actions = ["TokenLock", "TokenUnlock", "AllowSpend", "ExpiredAllowSpend", "DelegateStakeCreate", "DelegateStakeWithdraw", "SpendTransaction", "FeeTransaction", "ExpiredSpendTransaction"] as const;
 export type ActionType = (typeof Actions)[number];
 
-export type ActionV2 = {
+export type ActionResponse = {
   type: ActionType;
   currencyId: string | null;
   hash: string;

@@ -7,9 +7,9 @@ import {
 } from "@stardust-collective/dag4-keystore";
 import {
   ActionType,
-  ActionV2,
+  ActionResponse,
   AllowSpend,
-  AllowSpendV2,
+  AllowSpendResponse,
   AllowSpendWithCurrencyId,
   DagNetwork,
   DelegatedStake,
@@ -23,7 +23,7 @@ import {
   SignedDelegatedStake,
   SignedWithdrawDelegatedStake,
   TokenLock,
-  TokenLockV2,
+  TokenLockResponse,
   TokenLockWithCurrencyId,
   TransactionReference,
   WithdrawDelegatedStake
@@ -152,7 +152,7 @@ export class DagAccount {
     );
   }
 
-  async getActions(actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string): Promise<ActionV2[]> {
+  async getActions(actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string): Promise<ActionResponse[]> {
     const actions = await this.network.blockExplorerV2Api.getActionsByAddress(this.address, actionType, limit, searchAfter, searchBefore, next);  
 
     if (!actions?.data?.length) return [];
@@ -188,8 +188,8 @@ export class DagAccount {
     return 0;
   }
 
-  async getTokenLocksTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<TokenLockV2[]> {
-    const allTokenLocks: TokenLockV2[] = [];
+  async getActiveTokenLocksTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<TokenLockResponse[]> {
+    const allTokenLocks: TokenLockResponse[] = [];
     let next: string | undefined;
     
     do {
@@ -198,7 +198,8 @@ export class DagAccount {
         limit,
         searchAfter,
         searchBefore,
-        next
+        next,
+        true,
       );
       
       if (response?.data) {
@@ -211,8 +212,8 @@ export class DagAccount {
     return allTokenLocks;
   };
 
-  async getAllowSpendsTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<AllowSpendV2[]> {
-    const allAllowSpends: AllowSpendV2[] = [];
+  async getActiveAllowSpendsTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<AllowSpendResponse[]> {
+    const allAllowSpends: AllowSpendResponse[] = [];
     let next: string | undefined;
     
     do {
@@ -221,7 +222,8 @@ export class DagAccount {
         limit,
         searchAfter,
         searchBefore,
-        next
+        next,
+        true,
       );
       
       if (response?.data) {
@@ -237,30 +239,26 @@ export class DagAccount {
   async getLockedBalance(currencyId?: string): Promise<number> {
     const currency = currencyId || null; // Default to null (DAG)
 
-    const [tokenLocks, allowSpends, latestSnapshot] = await Promise.all([
-      this.getTokenLocksTransactions(),
-      this.getAllowSpendsTransactions(),
-      this.network.l0Api.getLatestSnapshot()
+    const [tokenLocks, allowSpends] = await Promise.all([
+      this.getActiveTokenLocksTransactions(),
+      this.getActiveAllowSpendsTransactions()
     ]);
 
     let lockedAmount = 0;
 
     if (tokenLocks.length > 0) {
       for (const tokenLock of tokenLocks) {
-        if (tokenLock.currencyId === currency && tokenLock.unlockedAtOrdinal === null) {
+        if (tokenLock.currencyId === currency) {
           lockedAmount += tokenLock.amount;
         }
       }
     }
 
-    if (allowSpends.length > 0 && latestSnapshot?.value?.epochProgress !== undefined) {
-      const currentEpochProgress = latestSnapshot.value.epochProgress;
-      
+    if (allowSpends.length > 0) {
       for (const allowSpend of allowSpends) {
         if (
           allowSpend.currencyId === currency &&
-          allowSpend.source === this.address &&
-          allowSpend.lastValidEpochProgress >= currentEpochProgress
+          allowSpend.source === this.address 
         ) {
           lockedAmount += allowSpend.amount;
         }

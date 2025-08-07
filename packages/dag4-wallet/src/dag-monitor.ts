@@ -1,5 +1,5 @@
 import { crossPlatformDi } from '@stardust-collective/dag4-core';
-import { type CbTransaction, type DagTransaction, loadBalancerApi, type PendingTx, type Transaction, type TransactionV2 } from '@stardust-collective/dag4-network';
+import { type CbTransaction, loadBalancerApi, type PendingTx, type Transaction, type TransactionV2 } from '@stardust-collective/dag4-network';
 import { Subject } from 'rxjs';
 import { DagAccount } from './dag-account';
 
@@ -56,9 +56,9 @@ export class DagMonitor {
     return this.transformPendingToTransaction(tx);
   }
 
-  async getLatestTransactions (address: string, limit?: number, searchAfter?: string): Promise<DagTransaction[]> {
+  async getLatestTransactions (address: string, limit?: number, searchAfter?: string): Promise<(Transaction | TransactionV2)[]> {
     const transactions = await this.dagAccount.networkInstance.getTransactionsByAddress(address, limit, searchAfter);  
-    const allTxs = await this.concatPendingTransactions(transactions) as DagTransaction[];
+    const allTxs = await this.concatPendingTransactions(transactions) as (Transaction | TransactionV2)[];
 
     return allTxs
   }
@@ -105,9 +105,9 @@ export class DagMonitor {
     this.pollPendingTxs();
   }
 
-  private async concatPendingTransactions(transactions: DagTransaction[]): Promise<DagTransaction[]> {
+  private async concatPendingTransactions(transactions: (Transaction | TransactionV2)[]): Promise<(Transaction | TransactionV2)[]> {
     const { pendingTxs } = await this.processPendingTxs();
-    const pendingTransactions: DagTransaction[] = pendingTxs.map(pending => this.transformPendingToTransaction(pending));
+    const pendingTransactions: (Transaction | TransactionV2)[] = pendingTxs.map(pending => this.transformPendingToTransaction(pending));
 
     if (transactions && transactions.length) {
       return [...pendingTransactions, ...transactions];

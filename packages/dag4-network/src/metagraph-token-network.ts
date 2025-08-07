@@ -4,7 +4,7 @@ import { MetagraphTokenL1Api } from "./api/metagraph-token/l1-api";
 import { BlockExplorerV2Api } from './api/v2/block-explorer-api';
 import {
   ActionType,
-  ActionV2,
+  ActionResponse,
   CurrencySnapshotV2,
   PendingTransaction,
   PostTransactionV2,
@@ -78,7 +78,7 @@ class MetagraphTokenNetwork {
     searchAfter?: string,
     searchBefore?: string,
     next?: string
-  ): Promise<ActionV2[]> {
+  ): Promise<ActionResponse[]> {
     const actions = await this.beApi.getCurrencyActionsByAddress(this.connectedNetwork.metagraphId, address, actionType, limit, searchAfter, searchBefore, next);
 
     if (!actions?.data?.length) return [];
