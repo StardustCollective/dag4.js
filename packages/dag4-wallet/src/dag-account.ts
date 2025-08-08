@@ -189,7 +189,7 @@ export class DagAccount {
   }
 
   async getActiveTokenLocksTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<TokenLockResponse[]> {
-    const allTokenLocks: TokenLockResponse[] = [];
+    const activeTokenLocks: TokenLockResponse[] = [];
     let next: string | undefined;
     
     do {
@@ -203,17 +203,17 @@ export class DagAccount {
       );
       
       if (response?.data) {
-        allTokenLocks.push(...response.data);
+        activeTokenLocks.push(...response.data);
       }
       
       next = response?.meta?.next;
     } while (next);
     
-    return allTokenLocks;
+    return activeTokenLocks;
   };
 
   async getActiveAllowSpendsTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<AllowSpendResponse[]> {
-    const allAllowSpends: AllowSpendResponse[] = [];
+    const activeAllowSpends: AllowSpendResponse[] = [];
     let next: string | undefined;
     
     do {
@@ -227,18 +227,16 @@ export class DagAccount {
       );
       
       if (response?.data) {
-        allAllowSpends.push(...response.data);
+        activeAllowSpends.push(...response.data);
       }
       
       next = response?.meta?.next;
     } while (next);
     
-    return allAllowSpends;
+    return activeAllowSpends;
   };
 
-  async getLockedBalance(currencyId?: string): Promise<number> {
-    const currency = currencyId || null; // Default to null (DAG)
-
+  async getLockedBalance(): Promise<number> {
     const [tokenLocks, allowSpends] = await Promise.all([
       this.getActiveTokenLocksTransactions(),
       this.getActiveAllowSpendsTransactions()
@@ -248,18 +246,13 @@ export class DagAccount {
 
     if (tokenLocks.length > 0) {
       for (const tokenLock of tokenLocks) {
-        if (tokenLock.currencyId === currency) {
-          lockedAmount += tokenLock.amount;
-        }
+        lockedAmount += tokenLock.amount;
       }
     }
 
     if (allowSpends.length > 0) {
       for (const allowSpend of allowSpends) {
-        if (
-          allowSpend.currencyId === currency &&
-          allowSpend.source === this.address 
-        ) {
+        if (allowSpend.source === this.address) {
           lockedAmount += allowSpend.amount;
         }
       }

@@ -201,6 +201,18 @@ export class BlockExplorerV2Api {
     return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}/transactions`, params);
   }
 
+  async getCurrencyTokenLocksByAddress(metagraphId: string, address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string, active?: boolean) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, active });
+
+    return this.service.$get<ResponseWithMetadata<TokenLockResponse[]>>(`/currency/${metagraphId}/addresses/${address}/token-locks`, params);
+  }
+
+  async getCurrencyAllowSpendsByAddress(metagraphId: string, address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string, active?: boolean) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, active });
+
+    return this.service.$get<ResponseWithMetadata<AllowSpendResponse[]>>(`/currency/${metagraphId}/addresses/${address}/allow-spends`, params);
+  }
+
   async getActionsByAddress(address: string, actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, actionType });
 

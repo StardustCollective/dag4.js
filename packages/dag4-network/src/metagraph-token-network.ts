@@ -8,7 +8,9 @@ import {
   CurrencySnapshotV2,
   PendingTransaction,
   PostTransactionV2,
-  TransactionV2
+  TransactionV2,
+  AllowSpendResponse,
+  TokenLockResponse
 } from "./dto/v2";
 import { MetagraphNetworkInfo } from "./types/network-info";
 
@@ -85,6 +87,56 @@ class MetagraphTokenNetwork {
 
     return actions.data;
   }
+
+  async getActiveTokenLocksTransactions(address: string, limit?: number, searchAfter?: string, searchBefore?: string): Promise<TokenLockResponse[]> {
+    const activeTokenLocks: TokenLockResponse[] = [];
+    let next: string | undefined;
+    
+    do {
+      const response = await this.beApi.getCurrencyTokenLocksByAddress(
+        this.connectedNetwork.metagraphId,
+        address,
+        limit,
+        searchAfter,
+        searchBefore,
+        next,
+        true,
+      );
+      
+      if (response?.data) {
+        activeTokenLocks.push(...response.data);
+      }
+      
+      next = response?.meta?.next;
+    } while (next);
+    
+    return activeTokenLocks;
+  };
+
+  async getActiveAllowSpendsTransactions(address: string, limit?: number, searchAfter?: string, searchBefore?: string): Promise<AllowSpendResponse[]> {
+    const activeAllowSpends: AllowSpendResponse[] = [];
+    let next: string | undefined;
+    
+    do {
+      const response = await this.beApi.getCurrencyAllowSpendsByAddress(
+        this.connectedNetwork.metagraphId,
+        address,
+        limit,
+        searchAfter,
+        searchBefore,
+        next,
+        true,
+      );
+      
+      if (response?.data) {
+        activeAllowSpends.push(...response.data);
+      }
+      
+      next = response?.meta?.next;
+    } while (next);
+    
+    return activeAllowSpends;
+  };
 
   async getTransaction(
     hash: string | null

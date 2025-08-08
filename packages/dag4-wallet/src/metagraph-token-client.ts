@@ -66,6 +66,31 @@ class MetagraphTokenClient {
     return 0;
   }
 
+  async getLockedBalance() {
+    const [tokenLocks, allowSpends] = await Promise.all([
+      this.network.getActiveTokenLocksTransactions(this.address),
+      this.network.getActiveAllowSpendsTransactions(this.address)
+    ]);
+
+    let lockedAmount = 0;
+
+    if (tokenLocks.length > 0) {
+      for (const tokenLock of tokenLocks) {
+        lockedAmount += tokenLock.amount;
+      }
+    }
+
+    if (allowSpends.length > 0) {
+      for (const allowSpend of allowSpends) {
+        if (allowSpend.source === this.address) {
+          lockedAmount += allowSpend.amount;
+        }
+      }
+    }
+
+    return lockedAmount;
+  }
+
   async getFeeRecommendation() {
     //Get last tx ref
     const lastRef = await this.network.getAddressLastAcceptedTransactionRef(
