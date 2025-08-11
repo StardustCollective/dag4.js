@@ -72,23 +72,24 @@ class MetagraphTokenClient {
       this.network.getActiveAllowSpendsTransactions(this.address)
     ]);
 
-    let lockedAmount = 0;
+    let lockedAmount = new BigNumber(0);
 
     if (tokenLocks.length > 0) {
       for (const tokenLock of tokenLocks) {
-        lockedAmount += tokenLock.amount;
+        lockedAmount = lockedAmount.plus(new BigNumber(tokenLock.amount));
       }
     }
 
     if (allowSpends.length > 0) {
       for (const allowSpend of allowSpends) {
         if (allowSpend.source === this.address) {
-          lockedAmount += allowSpend.amount;
+          lockedAmount = lockedAmount.plus(new BigNumber(allowSpend.amount));
         }
       }
     }
 
-    return lockedAmount;
+     // Returns locked amount in DAG
+    return lockedAmount.multipliedBy(DAG_DECIMALS).toNumber();
   }
 
   async getFeeRecommendation() {
