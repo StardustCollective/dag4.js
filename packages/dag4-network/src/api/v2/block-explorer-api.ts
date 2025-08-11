@@ -1,12 +1,16 @@
-import {RestApi} from '@stardust-collective/dag4-core';
-import {DNC} from '../../DNC';
+import { RestApi } from '@stardust-collective/dag4-core';
+import { DNC } from '../../DNC';
 import {
-  SnapshotV2, 
-  TransactionV2, 
-  RewardTransaction, 
-  AddressBalanceV2, 
+  ActionType,
+  ActionResponse,
+  AddressBalanceV2,
+  AllowSpendResponse,
   BlockV2,
-  CurrencySnapshotV2
+  CurrencySnapshotV2,
+  RewardTransaction,
+  SnapshotV2,
+  TokenLockResponse,
+  TransactionV2
 } from '../../dto/v2';
 
 type HashOrOrdinal = string | number;
@@ -70,20 +74,32 @@ export class BlockExplorerV2Api {
     limit = null, 
     searchAfter = null, 
     searchBefore = null,
-    next = null
+    next = null,
+    actionType = null,
+    active = false
   } : {
     limit?: number, 
     searchAfter?: string, 
     searchBefore?: string,
-    next?: string
+    next?: string,
+    actionType?: ActionType,
+    active?: boolean
   }) {
     let params;
 
-    if (limit || searchAfter || searchBefore || next) {
+    if (limit || searchAfter || searchBefore || next || active) {
       params = {};
 
       if (limit && limit > 0) {
         params.limit = limit;
+      }
+
+      if (actionType) {
+        params.transactionType = actionType;
+      }
+
+      if (active) {
+        params.active = active;
       }
 
       // search_after, search_before and next are mutually exclusive
@@ -173,10 +189,46 @@ export class BlockExplorerV2Api {
     return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/addresses/${address}/transactions${searchPath}`, params);
   }
 
+  async getCurrencyActionsByAddress(metagraphId: string, address: string, actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, actionType });
+    
+    return this.service.$get<ResponseWithMetadata<ActionResponse[]>>(`/currency/${metagraphId}/addresses/${address}/actions`, params);
+  }
+
   async getCurrencyTransactionsBySnapshot(metagraphId: string, hashOrOrdinal: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
     const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next });
     
     return this.service.$get<ResponseWithMetadata<TransactionV2[]>>(`/currency/${metagraphId}/snapshots/${hashOrOrdinal}/transactions`, params);
+  }
+
+  async getCurrencyTokenLocksByAddress(metagraphId: string, address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string, active?: boolean) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, active });
+
+    return this.service.$get<ResponseWithMetadata<TokenLockResponse[]>>(`/currency/${metagraphId}/addresses/${address}/token-locks`, params);
+  }
+
+  async getCurrencyAllowSpendsByAddress(metagraphId: string, address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string, active?: boolean) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, active });
+
+    return this.service.$get<ResponseWithMetadata<AllowSpendResponse[]>>(`/currency/${metagraphId}/addresses/${address}/allow-spends`, params);
+  }
+
+  async getActionsByAddress(address: string, actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, actionType });
+
+    return this.service.$get<ResponseWithMetadata<ActionResponse[]>>(`/addresses/${address}/actions`, params);
+  }
+
+  async getTokenLocksByAddress(address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string, active?: boolean) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, active });
+
+    return this.service.$get<ResponseWithMetadata<TokenLockResponse[]>>(`/addresses/${address}/token-locks`, params);
+  }
+
+  async getAllowSpendsByAddress(address: string, limit?: number, searchAfter?: string, searchBefore?: string, next?: string, active?: boolean) {
+    const params = this.buildRequestParams({ limit, searchAfter, searchBefore, next, active });
+    
+    return this.service.$get<ResponseWithMetadata<AllowSpendResponse[]>>(`/addresses/${address}/allow-spends`, params);
   }
 }
 

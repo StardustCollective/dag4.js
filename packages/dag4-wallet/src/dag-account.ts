@@ -1,44 +1,48 @@
+import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
 import {
   keyStore,
   KeyTrio,
   PostTransaction,
   PostTransactionV2,
 } from "@stardust-collective/dag4-keystore";
-import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
 import {
+  ActionType,
+  ActionResponse,
+  AllowSpend,
+  AllowSpendResponse,
+  AllowSpendWithCurrencyId,
+  DagNetwork,
+  DelegatedStake,
+  DelegatedStakeWithParent,
   globalDagNetwork,
   GlobalDagNetwork,
-  DagNetwork,
+  HashResponse,
+  MetagraphNetworkInfo,
   NetworkInfo,
   PendingTx,
-  TransactionReference,
-  MetagraphNetworkInfo,
-  AllowSpendWithCurrencyId,
-  AllowSpend,
-  TokenLock,
-  TokenLockWithCurrencyId,
-  DelegatedStake,
-  WithdrawDelegatedStake,
-  HashResponse,
   SignedDelegatedStake,
   SignedWithdrawDelegatedStake,
-  DelegatedStakeWithParent,
+  TokenLock,
+  TokenLockResponse,
+  TokenLockWithCurrencyId,
+  TransactionReference,
+  WithdrawDelegatedStake
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import { Subject } from "rxjs";
-import { networkConfig } from "./network-config";
 import { MetagraphTokenClient } from "./metagraph-token-client";
+import { networkConfig } from "./network-config";
+import { allowSpend, tokenLock } from "./shared/operations";
 import { normalizePublicKey } from "./utils";
 import {
-  validateSchema,
-  delegatedStakeSchema,
-  withdrawDelegatedStakeSchema,
-  postAllowSpendSchema,
-  validateArraySchema,
   dagAddressValidator,
+  delegatedStakeSchema,
+  postAllowSpendSchema,
   postTokenLockSchema,
+  validateArraySchema,
+  validateSchema,
+  withdrawDelegatedStakeSchema,
 } from "./validationSchemas";
-import { allowSpend, tokenLock } from "./shared/operations";
 
 export class DagAccount {
   private m_keyTrio: KeyTrio;
@@ -148,6 +152,14 @@ export class DagAccount {
     );
   }
 
+  async getActions(actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string): Promise<ActionResponse[]> {
+    const actions = await this.network.blockExplorerV2Api.getActionsByAddress(this.address, actionType, limit, searchAfter, searchBefore, next);  
+
+    if (!actions?.data?.length) return [];
+
+    return actions.data.filter(action => action.source === this.address);
+  }
+
   assertValidPrivateKey() {
     if (!this.m_keyTrio.privateKey) {
       throw new Error(
@@ -174,6 +186,80 @@ export class DagAccount {
     }
 
     return 0;
+  }
+
+  async getActiveTokenLocksTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<TokenLockResponse[]> {
+    const activeTokenLocks: TokenLockResponse[] = [];
+    let next: string | undefined;
+    
+    do {
+      const response = await this.network.blockExplorerV2Api.getTokenLocksByAddress(
+        this.address,
+        limit,
+        searchAfter,
+        searchBefore,
+        next,
+        true,
+      );
+      
+      if (response?.data) {
+        activeTokenLocks.push(...response.data);
+      }
+      
+      next = response?.meta?.next;
+    } while (next);
+    
+    return activeTokenLocks;
+  };
+
+  async getActiveAllowSpendsTransactions(limit?: number, searchAfter?: string, searchBefore?: string): Promise<AllowSpendResponse[]> {
+    const activeAllowSpends: AllowSpendResponse[] = [];
+    let next: string | undefined;
+    
+    do {
+      const response = await this.network.blockExplorerV2Api.getAllowSpendsByAddress(
+        this.address,
+        limit,
+        searchAfter,
+        searchBefore,
+        next,
+        true,
+      );
+      
+      if (response?.data) {
+        activeAllowSpends.push(...response.data);
+      }
+      
+      next = response?.meta?.next;
+    } while (next);
+    
+    return activeAllowSpends;
+  };
+
+  async getLockedBalance(): Promise<number> {
+    const [tokenLocks, allowSpends] = await Promise.all([
+      this.getActiveTokenLocksTransactions(),
+      this.getActiveAllowSpendsTransactions()
+    ]);
+
+    let lockedAmount = new BigNumber(0);
+
+    if (tokenLocks.length > 0) {
+      for (const tokenLock of tokenLocks) {
+        lockedAmount = lockedAmount.plus(new BigNumber(tokenLock.amount));
+      }
+    }
+
+    if (allowSpends.length > 0) {
+      for (const allowSpend of allowSpends) {
+        if (allowSpend.source === this.address) {
+          lockedAmount = lockedAmount.plus(new BigNumber(allowSpend.amount));
+        }
+      }
+    }
+
+    // Returns locked amount in DAG
+    return lockedAmount.multipliedBy(DAG_DECIMALS).toNumber();
   }
 
   async getFeeRecommendation() {

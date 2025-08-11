@@ -1,4 +1,5 @@
 import { BigNumber } from "bignumber.js";
+import type { Transaction } from "../v1";
 
 export type TransactionReference = {
   hash: string

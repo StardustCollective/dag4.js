@@ -1,12 +1,12 @@
-import {Subject} from 'rxjs';
-import {NetworkInfo} from './types/network-info';
-import {LoadBalancerApi} from './api/v1/load-balancer-api';
-import {BlockExplorerApi} from './api/v1/block-explorer-api';
-import {L0Api} from './api/v2/l0-api';
-import {L1Api} from './api/v2/l1-api';
-import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
-import {PostTransactionV2, PendingTransaction, TransactionV2, SnapshotV2} from './dto/v2';
-import {PostTransaction, CbTransaction, Transaction, Snapshot} from './dto/v1';
+import { Subject } from 'rxjs';
+import { BlockExplorerApi } from './api/v1/block-explorer-api';
+import { LoadBalancerApi } from './api/v1/load-balancer-api';
+import { BlockExplorerV2Api } from './api/v2/block-explorer-api';
+import { L0Api } from './api/v2/l0-api';
+import { L1Api } from './api/v2/l1-api';
+import { CbTransaction, PostTransaction, Snapshot, Transaction } from './dto/v1';
+import { PendingTransaction, PostTransactionV2, SnapshotV2, TransactionV2 } from './dto/v2';
+import { NetworkInfo } from './types/network-info';
 
 export class DagNetwork {
   private connectedNetwork: NetworkInfo = { 

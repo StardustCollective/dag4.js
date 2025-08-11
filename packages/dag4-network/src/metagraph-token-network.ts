@@ -1,14 +1,18 @@
-import { MetagraphNetworkInfo } from "./types/network-info";
-import {
-  PostTransactionV2,
-  PendingTransaction,
-  TransactionV2,
-  CurrencySnapshotV2
-} from "./dto/v2";
-import {BlockExplorerV2Api} from './api/v2/block-explorer-api';
+import { MetagraphTokenDataL1Api } from "./api/metagraph-token/data-l1-api";
 import { MetagraphTokenL0Api } from "./api/metagraph-token/l0-api";
 import { MetagraphTokenL1Api } from "./api/metagraph-token/l1-api";
-import { MetagraphTokenDataL1Api } from "./api/metagraph-token/data-l1-api";
+import { BlockExplorerV2Api } from './api/v2/block-explorer-api';
+import {
+  ActionType,
+  ActionResponse,
+  CurrencySnapshotV2,
+  PendingTransaction,
+  PostTransactionV2,
+  TransactionV2,
+  AllowSpendResponse,
+  TokenLockResponse
+} from "./dto/v2";
+import { MetagraphNetworkInfo } from "./types/network-info";
 
 class MetagraphTokenNetwork {
   private connectedNetwork: MetagraphNetworkInfo;
@@ -68,6 +72,71 @@ class MetagraphTokenNetwork {
     }
     return response ? response.data : null;
   }
+
+  async getActionsByAddress(
+    address: string,
+    actionType?: ActionType,
+    limit?: number,
+    searchAfter?: string,
+    searchBefore?: string,
+    next?: string
+  ): Promise<ActionResponse[]> {
+    const actions = await this.beApi.getCurrencyActionsByAddress(this.connectedNetwork.metagraphId, address, actionType, limit, searchAfter, searchBefore, next);
+
+    if (!actions?.data?.length) return [];
+
+    return actions.data;
+  }
+
+  async getActiveTokenLocksTransactions(address: string, limit?: number, searchAfter?: string, searchBefore?: string): Promise<TokenLockResponse[]> {
+    const activeTokenLocks: TokenLockResponse[] = [];
+    let next: string | undefined;
+    
+    do {
+      const response = await this.beApi.getCurrencyTokenLocksByAddress(
+        this.connectedNetwork.metagraphId,
+        address,
+        limit,
+        searchAfter,
+        searchBefore,
+        next,
+        true,
+      );
+      
+      if (response?.data) {
+        activeTokenLocks.push(...response.data);
+      }
+      
+      next = response?.meta?.next;
+    } while (next);
+    
+    return activeTokenLocks;
+  };
+
+  async getActiveAllowSpendsTransactions(address: string, limit?: number, searchAfter?: string, searchBefore?: string): Promise<AllowSpendResponse[]> {
+    const activeAllowSpends: AllowSpendResponse[] = [];
+    let next: string | undefined;
+    
+    do {
+      const response = await this.beApi.getCurrencyAllowSpendsByAddress(
+        this.connectedNetwork.metagraphId,
+        address,
+        limit,
+        searchAfter,
+        searchBefore,
+        next,
+        true,
+      );
+      
+      if (response?.data) {
+        activeAllowSpends.push(...response.data);
+      }
+      
+      next = response?.meta?.next;
+    } while (next);
+    
+    return activeAllowSpends;
+  };
 
   async getTransaction(
     hash: string | null

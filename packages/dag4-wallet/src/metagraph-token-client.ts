@@ -1,14 +1,15 @@
-import { PostTransactionV2 } from "@stardust-collective/dag4-keystore";
 import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
+import { PostTransactionV2 } from "@stardust-collective/dag4-keystore";
 import {
-  PendingTx,
-  TransactionReference,
-  MetagraphTokenNetwork,
-  MetagraphNetworkInfo,
+  ActionType,
   AllowSpend,
   AllowSpendWithCurrencyId,
+  MetagraphNetworkInfo,
+  MetagraphTokenNetwork,
+  PendingTx,
   TokenLock,
   TokenLockWithCurrencyId,
+  TransactionReference,
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import type { DagAccount } from "./dag-account";
@@ -41,6 +42,14 @@ class MetagraphTokenClient {
     );
   }
 
+  async getActions(actionType?: ActionType, limit?: number, searchAfter?: string, searchBefore?: string, next?: string) {
+    const actions = await this.network.getActionsByAddress(this.address, actionType, limit, searchAfter, searchBefore, next);
+
+    if (!actions?.length) return [];
+
+    return actions.filter(action => action.source === this.address);
+  }
+
   async getBalance() {
     return this.getBalanceFor(this.address);
   }
@@ -55,6 +64,32 @@ class MetagraphTokenClient {
     }
 
     return 0;
+  }
+
+  async getLockedBalance() {
+    const [tokenLocks, allowSpends] = await Promise.all([
+      this.network.getActiveTokenLocksTransactions(this.address),
+      this.network.getActiveAllowSpendsTransactions(this.address)
+    ]);
+
+    let lockedAmount = new BigNumber(0);
+
+    if (tokenLocks.length > 0) {
+      for (const tokenLock of tokenLocks) {
+        lockedAmount = lockedAmount.plus(new BigNumber(tokenLock.amount));
+      }
+    }
+
+    if (allowSpends.length > 0) {
+      for (const allowSpend of allowSpends) {
+        if (allowSpend.source === this.address) {
+          lockedAmount = lockedAmount.plus(new BigNumber(allowSpend.amount));
+        }
+      }
+    }
+
+     // Returns locked amount in DAG
+    return lockedAmount.multipliedBy(DAG_DECIMALS).toNumber();
   }
 
   async getFeeRecommendation() {
