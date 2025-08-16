@@ -73,6 +73,11 @@ export const tokenLockSchema = z.object({
     .refine((value) => value === null || value > 0, {
       message: "Unlock epoch must be greater than zero or null",
     }),
+  replaceTokenLockRef: z
+    .union([z.string(), z.null()])
+    .refine((value) => value === null || value !== "", {
+      message: "Must be a valid hash or null",
+    }),
 });
 
 /**

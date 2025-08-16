@@ -131,6 +131,7 @@ export const tokenLock = async (
       currencyId: body.currencyId ?? null,
       fee: body.fee ?? 0,
       unlockEpoch: body.unlockEpoch ?? null,
+      replaceTokenLockRef: body.replaceTokenLockRef ?? null,
     };
     signedTokenLock = await keyStore.generateBrotliSignature(
       tokenLockBody,
