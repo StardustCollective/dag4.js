@@ -1,4 +1,4 @@
-import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
+import { DAG_DECIMALS, RestApiOptions } from "@stardust-collective/dag4-core";
 import {
   keyStore,
   KeyTrio,
@@ -633,7 +633,7 @@ export class DagAccount {
     return allowSpendResponse;
   }
 
-  async createAllowSpend(body: AllowSpend) {
+  async createAllowSpend(body: AllowSpend, params?: Record<string, any>, options?: RestApiOptions) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
 
@@ -646,7 +646,7 @@ export class DagAccount {
       currencyId: null,
     };
 
-    return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio);
+    return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio, params, options);
   }
 
   /**
@@ -735,7 +735,7 @@ export class DagAccount {
     return tokenLockResponse;
   }
 
-  async createTokenLock(body: TokenLock) {
+  async createTokenLock(body: TokenLock, params?: Record<string, any>, options?: RestApiOptions) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
 
@@ -748,7 +748,7 @@ export class DagAccount {
       currencyId: null,
     };
 
-    return tokenLock(bodyWithCurrencyId, this.network, this.keyTrio);
+    return tokenLock(bodyWithCurrencyId, this.network, this.keyTrio, params, options);
   }
 
   /**

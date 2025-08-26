@@ -1,4 +1,4 @@
-import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
+import { DAG_DECIMALS, RestApiOptions } from "@stardust-collective/dag4-core";
 import { PostTransactionV2 } from "@stardust-collective/dag4-keystore";
 import {
   ActionType,
@@ -249,7 +249,7 @@ class MetagraphTokenClient {
     return this.sendBatchTransactions(txns);
   }
 
-  async createAllowSpend(body: AllowSpend) {
+  async createAllowSpend(body: AllowSpend, params?: Record<string, any>, options?: RestApiOptions) {
     this.account.assertAccountIsActive();
     this.account.assertValidPrivateKey();
 
@@ -262,10 +262,10 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio);
+    return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio, params, options);
   }
 
-  async createTokenLock(body: TokenLock) {
+  async createTokenLock(body: TokenLock, params?: Record<string, any>, options?: RestApiOptions) {
     this.account.assertAccountIsActive();
     this.account.assertValidPrivateKey();
 
@@ -278,7 +278,7 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio);
+    return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio, params, options);
   }
 
   async getDataFeeEstimate(data: any) {

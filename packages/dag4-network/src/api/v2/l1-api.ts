@@ -1,4 +1,4 @@
-import { RestApi } from "@stardust-collective/dag4-core";
+import { RestApi, RestApiOptions } from "@stardust-collective/dag4-core";
 import { DNC } from "../../DNC";
 import {
   ClusterInfoV2,
@@ -90,8 +90,8 @@ class L1Api {
     );
   }
 
-  async postAllowSpend(signedAllowSpend: SignedAllowSpend) {
-    return this.service.$post<HashResponse>(`/allow-spends`, signedAllowSpend);
+  async postAllowSpend(signedAllowSpend: SignedAllowSpend, params?: Record<string, any>, options?: RestApiOptions) {
+    return this.service.$post<HashResponse>(`/allow-spends`, signedAllowSpend, options, params);
   }
 
   async getTokenLockLastRef(address: string) {
@@ -100,16 +100,16 @@ class L1Api {
     );
   }
 
-  async postTokenLock(signedTokenLock: SignedTokenLock) {
-    return this.service.$post<HashResponse>(`/token-locks`, signedTokenLock);
+  async postTokenLock(signedTokenLock: SignedTokenLock, params?: Record<string, any>, options?: RestApiOptions) {
+    return this.service.$post<HashResponse>(`/token-locks`, signedTokenLock, options, params);
   }
 
   async getPendingTransaction(hash: string) {
     return this.service.$get<PendingTransaction>(`/transactions/${hash}`);
   }
 
-  async postTransaction(tx: PostTransactionV2) {
-    return this.service.$post<PostTransactionResponseV2>("/transactions", tx);
+  async postTransaction(tx: PostTransactionV2, params?: Record<string, any>, options?: RestApiOptions) {
+    return this.service.$post<PostTransactionResponseV2>("/transactions", tx, options, params);
   }
 
   async getClusterInfo(): Promise<ClusterPeerInfoV2[]> {
