@@ -1,4 +1,4 @@
-import { DAG_DECIMALS, RestApiOptions } from "@stardust-collective/dag4-core";
+import { DAG_DECIMALS } from "@stardust-collective/dag4-core";
 import { PostTransactionV2 } from "@stardust-collective/dag4-keystore";
 import {
   ActionType,
@@ -116,8 +116,7 @@ class MetagraphTokenClient {
     amount: number,
     fee = 0,
     autoEstimateFee = false,
-    params?: Record<string, any>,
-    options?: RestApiOptions
+    params?: Record<string, any>
   ): Promise<PendingTx> {
     let normalizedAmount = Math.floor(
       new BigNumber(amount).multipliedBy(this.tokenDecimals).toNumber()
@@ -154,7 +153,7 @@ class MetagraphTokenClient {
       throw new Error("Unable to post v1 transaction");
     }
 
-    const txHash = await this.network.postTransaction(tx, params, options);
+    const txHash = await this.network.postTransaction(tx, params);
 
     if (txHash) {
       return {
@@ -251,7 +250,7 @@ class MetagraphTokenClient {
     return this.sendBatchTransactions(txns);
   }
 
-  async createAllowSpend(body: AllowSpend, params?: Record<string, any>, options?: RestApiOptions) {
+  async createAllowSpend(body: AllowSpend, params?: Record<string, any>) {
     this.account.assertAccountIsActive();
     this.account.assertValidPrivateKey();
 
@@ -264,10 +263,10 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio, params, options);
+    return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio, params);
   }
 
-  async createTokenLock(body: TokenLock, params?: Record<string, any>, options?: RestApiOptions) {
+  async createTokenLock(body: TokenLock, params?: Record<string, any>) {
     this.account.assertAccountIsActive();
     this.account.assertValidPrivateKey();
 
@@ -280,7 +279,7 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio, params, options);
+    return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio, params);
   }
 
   async getDataFeeEstimate(data: any) {

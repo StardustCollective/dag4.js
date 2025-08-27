@@ -1,4 +1,3 @@
-import { RestApiOptions } from "@stardust-collective/dag4-core";
 import { MetagraphTokenDataL1Api } from "./api/metagraph-token/data-l1-api";
 import { MetagraphTokenL0Api } from "./api/metagraph-token/l0-api";
 import { MetagraphTokenL1Api } from "./api/metagraph-token/l1-api";
@@ -151,11 +150,10 @@ class MetagraphTokenNetwork {
     return response ? response.data : null;
   }
 
-  async postTransaction(tx: PostTransactionV2, params?: Record<string, any>, options?: RestApiOptions): Promise<string> {
+  async postTransaction(tx: PostTransactionV2, params?: Record<string, any>): Promise<string> {
     const response = (await this.l1Api.postTransaction(
       tx as PostTransactionV2,
-      params,
-      options
+      params
     )) as any;
 
     // Support data/meta format and object return format

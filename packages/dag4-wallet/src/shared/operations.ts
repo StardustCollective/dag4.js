@@ -19,7 +19,6 @@ import {
   validateArraySchema,
   validateSchema,
 } from "../validationSchemas";
-import { RestApiOptions } from "@stardust-collective/dag4-core";
 
 type SharedNetwork = DagNetwork | GlobalDagNetwork | MetagraphTokenNetwork;
 
@@ -27,8 +26,7 @@ export const allowSpend = async (
   body: AllowSpendWithCurrencyId,
   network: SharedNetwork,
   keyTrio: KeyTrio,
-  params?: Record<string, any>,
-  options?: RestApiOptions
+  params?: Record<string, any>
 ): Promise<HashResponse> => {
   validateSchema(body, allowSpendSchema, true);
 
@@ -85,7 +83,7 @@ export const allowSpend = async (
 
   try {
     // Post signed allow spend body
-    allowSpendResponse = await network.l1Api.postAllowSpend(signedAllowSpend, params, options);
+    allowSpendResponse = await network.l1Api.postAllowSpend(signedAllowSpend, params);
   } catch (err) {
     console.error("Error sending the allow spend transaction");
     throw err;
@@ -102,8 +100,7 @@ export const tokenLock = async (
   body: TokenLockWithCurrencyId,
   network: SharedNetwork,
   keyTrio: KeyTrio,
-  params?: Record<string, any>,
-  options?: RestApiOptions
+  params?: Record<string, any>
 ): Promise<HashResponse> => {
   validateSchema(body, tokenLockSchema, true);
 
@@ -153,7 +150,7 @@ export const tokenLock = async (
 
   try {
     // Post signed token lock body
-    tokenLockResponse = await network.l1Api.postTokenLock(signedTokenLock, params, options);
+    tokenLockResponse = await network.l1Api.postTokenLock(signedTokenLock, params);
   } catch (err) {
     console.error("Error sending the token lock transaction");
     throw err;
