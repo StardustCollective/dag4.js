@@ -358,7 +358,8 @@ export class DagAccount {
     toAddress: string,
     amount: number,
     fee = 0,
-    autoEstimateFee = false
+    autoEstimateFee = false,
+    params?: Record<string, any>
   ): Promise<PendingTx> {
     let normalizedAmount = Math.floor(
       new BigNumber(amount).multipliedBy(DAG_DECIMALS).toNumber()
@@ -385,7 +386,7 @@ export class DagAccount {
     }
 
     const tx = await this.generateSignedTransaction(toAddress, amount, fee);
-    const txHash = await this.network.postTransaction(tx);
+    const txHash = await this.network.postTransaction(tx, params);
 
     if (txHash) {
       return {
@@ -633,7 +634,7 @@ export class DagAccount {
     return allowSpendResponse;
   }
 
-  async createAllowSpend(body: AllowSpend) {
+  async createAllowSpend(body: AllowSpend, params?: Record<string, any>) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
 
@@ -646,7 +647,7 @@ export class DagAccount {
       currencyId: null,
     };
 
-    return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio);
+    return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio, params);
   }
 
   /**
@@ -735,7 +736,7 @@ export class DagAccount {
     return tokenLockResponse;
   }
 
-  async createTokenLock(body: TokenLock) {
+  async createTokenLock(body: TokenLock, params?: Record<string, any>) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
 
@@ -748,7 +749,7 @@ export class DagAccount {
       currencyId: null,
     };
 
-    return tokenLock(bodyWithCurrencyId, this.network, this.keyTrio);
+    return tokenLock(bodyWithCurrencyId, this.network, this.keyTrio, params);
   }
 
   /**

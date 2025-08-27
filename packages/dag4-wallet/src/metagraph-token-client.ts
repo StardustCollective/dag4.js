@@ -115,7 +115,8 @@ class MetagraphTokenClient {
     toAddress: string,
     amount: number,
     fee = 0,
-    autoEstimateFee = false
+    autoEstimateFee = false,
+    params?: Record<string, any>
   ): Promise<PendingTx> {
     let normalizedAmount = Math.floor(
       new BigNumber(amount).multipliedBy(this.tokenDecimals).toNumber()
@@ -152,7 +153,7 @@ class MetagraphTokenClient {
       throw new Error("Unable to post v1 transaction");
     }
 
-    const txHash = await this.network.postTransaction(tx);
+    const txHash = await this.network.postTransaction(tx, params);
 
     if (txHash) {
       return {
@@ -249,7 +250,7 @@ class MetagraphTokenClient {
     return this.sendBatchTransactions(txns);
   }
 
-  async createAllowSpend(body: AllowSpend) {
+  async createAllowSpend(body: AllowSpend, params?: Record<string, any>) {
     this.account.assertAccountIsActive();
     this.account.assertValidPrivateKey();
 
@@ -262,10 +263,10 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio);
+    return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio, params);
   }
 
-  async createTokenLock(body: TokenLock) {
+  async createTokenLock(body: TokenLock, params?: Record<string, any>) {
     this.account.assertAccountIsActive();
     this.account.assertValidPrivateKey();
 
@@ -278,7 +279,7 @@ class MetagraphTokenClient {
       currencyId: this.networkInfo.metagraphId,
     };
 
-    return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio);
+    return tokenLock(bodyWithCurrencyId, this.network, this.account.keyTrio, params);
   }
 
   async getDataFeeEstimate(data: any) {

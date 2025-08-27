@@ -124,9 +124,9 @@ export class DagNetwork {
     return this.blockExplorerApi.getTransaction(hash);
   }
 
-  async postTransaction(tx: PostTransaction | PostTransactionV2): Promise<string> {
+  async postTransaction(tx: PostTransaction | PostTransactionV2, params?: Record<string, any>): Promise<string> {
     if (this.getNetworkVersion() === '2.0') {
-      const response = await this.l1Api.postTransaction(tx as PostTransactionV2) as any;
+      const response = await this.l1Api.postTransaction(tx as PostTransactionV2, params) as any;
 
       // Support data/meta format and object return format
       return response.data ? response.data.hash : response.hash;
