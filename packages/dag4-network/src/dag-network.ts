@@ -7,6 +7,7 @@ import { L1Api } from './api/v2/l1-api';
 import { CbTransaction, PostTransaction, Snapshot, Transaction } from './dto/v1';
 import { PendingTransaction, PostTransactionV2, SnapshotV2, TransactionV2 } from './dto/v2';
 import { NetworkInfo } from './types/network-info';
+import { RestApiOptions } from '@stardust-collective/dag4-core';
 
 export class DagNetwork {
   private connectedNetwork: NetworkInfo = { 
@@ -124,9 +125,9 @@ export class DagNetwork {
     return this.blockExplorerApi.getTransaction(hash);
   }
 
-  async postTransaction(tx: PostTransaction | PostTransactionV2): Promise<string> {
+  async postTransaction(tx: PostTransaction | PostTransactionV2, params?: Record<string, any>, options?: RestApiOptions): Promise<string> {
     if (this.getNetworkVersion() === '2.0') {
-      const response = await this.l1Api.postTransaction(tx as PostTransactionV2) as any;
+      const response = await this.l1Api.postTransaction(tx as PostTransactionV2, params, options) as any;
 
       // Support data/meta format and object return format
       return response.data ? response.data.hash : response.hash;

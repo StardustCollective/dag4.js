@@ -358,7 +358,9 @@ export class DagAccount {
     toAddress: string,
     amount: number,
     fee = 0,
-    autoEstimateFee = false
+    autoEstimateFee = false,
+    params?: Record<string, any>,
+    options?: RestApiOptions
   ): Promise<PendingTx> {
     let normalizedAmount = Math.floor(
       new BigNumber(amount).multipliedBy(DAG_DECIMALS).toNumber()
@@ -385,7 +387,7 @@ export class DagAccount {
     }
 
     const tx = await this.generateSignedTransaction(toAddress, amount, fee);
-    const txHash = await this.network.postTransaction(tx);
+    const txHash = await this.network.postTransaction(tx, params, options);
 
     if (txHash) {
       return {

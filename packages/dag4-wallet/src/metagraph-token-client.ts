@@ -115,7 +115,9 @@ class MetagraphTokenClient {
     toAddress: string,
     amount: number,
     fee = 0,
-    autoEstimateFee = false
+    autoEstimateFee = false,
+    params?: Record<string, any>,
+    options?: RestApiOptions
   ): Promise<PendingTx> {
     let normalizedAmount = Math.floor(
       new BigNumber(amount).multipliedBy(this.tokenDecimals).toNumber()
@@ -152,7 +154,7 @@ class MetagraphTokenClient {
       throw new Error("Unable to post v1 transaction");
     }
 
-    const txHash = await this.network.postTransaction(tx);
+    const txHash = await this.network.postTransaction(tx, params, options);
 
     if (txHash) {
       return {
