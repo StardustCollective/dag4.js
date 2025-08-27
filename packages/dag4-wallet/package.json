@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-wallet",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -21,9 +21,9 @@
     "yalcpush": "yalc push --sig"
   },
   "dependencies": {
-    "@stardust-collective/dag4-core": "2.6.0",
-    "@stardust-collective/dag4-keystore": "2.6.0",
-    "@stardust-collective/dag4-network": "2.6.0",
+    "@stardust-collective/dag4-core": "2.7.0",
+    "@stardust-collective/dag4-keystore": "2.7.0",
+    "@stardust-collective/dag4-network": "2.7.0",
     "bignumber.js": "^9.0.1",
     "rimraf": "^3.0.2",
     "zod": "^3.24.2"
