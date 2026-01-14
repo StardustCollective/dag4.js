@@ -660,6 +660,7 @@ export class DagAccount {
     unlockEpoch: number | null;
     currencyId: string | null;
     fee?: number;
+    replaceTokenLockRef: string | null;
   }) {
     console.warn(
       "postTokenLock() is deprecated. Use createTokenLock() instead."
@@ -669,7 +670,7 @@ export class DagAccount {
 
     validateSchema(body, postTokenLockSchema, true);
 
-    const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch } = body;
+    const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch, replaceTokenLockRef } = body;
 
     if (source !== this.address) {
       throw new Error('"source" must be the same as the account address');
@@ -703,7 +704,9 @@ export class DagAccount {
         currencyId: currencyId ?? null,
         fee: fee ?? 0,
         unlockEpoch: unlockEpoch ?? null,
+        replaceTokenLockRef: replaceTokenLockRef ?? null,
       };
+  
       signedTokenLock = await keyStore.generateBrotliSignature(
         tokenLockBody,
         normalizePublicKey(this.publicKey),
