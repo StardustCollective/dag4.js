@@ -52,14 +52,6 @@ export const allowSpendSchema = z.object({
     .positive("Valid until epoch must be greater than zero"),
 });
 
-/**
- * @deprecated Use allowSpendSchema instead. This schema will be removed in the next major version.
- * Schema for validating post allow spend body
- */
-export const postAllowSpendSchema = allowSpendSchema.extend({
-  tokenL1Url: nonEmptyString,
-  currencyId: currencyIdValidator,
-});
 
 /**
  * Schema for validating token lock body
@@ -80,14 +72,6 @@ export const tokenLockSchema = z.object({
     }),
 });
 
-/**
- * @deprecated Use tokenLockSchema instead. This schema will be removed in the next major version.
- * Schema for validating post token lock body
- */
-export const postTokenLockSchema = tokenLockSchema.extend({
-  tokenL1Url: nonEmptyString,
-  currencyId: currencyIdValidator,
-});
 
 /**
  * Schema for validating delegated stake body

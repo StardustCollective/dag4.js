@@ -36,54 +36,6 @@ class L1Api {
     );
   }
 
-  /**
-   * @deprecated Use getAllowSpendLastRef() instead. This method will be removed in the next major version.
-   */
-  async getAllowSpendLastRefDeprecated(l1Url: string, address: string) {
-    const l1Service = new RestApi(l1Url);
-    return l1Service.$get<TransactionReference>(
-      `/allow-spends/last-reference/${address}`
-    );
-  }
-
-  /**
-   * @deprecated Use postAllowSpend() instead. This method will be removed in the next major version.
-   */
-  async postAllowSpendDeprecated(
-    l1Url: string,
-    signedAllowSpend: SignedAllowSpend
-  ) {
-    const l1Service = new RestApi(l1Url);
-    return l1Service.$post<TransactionReference>(
-      `/allow-spends`,
-      signedAllowSpend
-    );
-  }
-
-  /**
-   * @deprecated Use getTokenLockLastRef() instead. This method will be removed in the next major version.
-   */
-  async getTokenLockLastRefDeprecated(l1Url: string, address: string) {
-    const l1Service = new RestApi(l1Url);
-    return l1Service.$get<TransactionReference>(
-      `/token-locks/last-reference/${address}`
-    );
-  }
-
-  /**
-   * @deprecated Use postTokenLock() instead. This method will be removed in the next major version.
-   */
-  async postTokenLockDeprecated(
-    l1Url: string,
-    signedTokenLock: SignedTokenLock
-  ) {
-    const l1Service = new RestApi(l1Url);
-    return l1Service.$post<TransactionReference>(
-      `/token-locks`,
-      signedTokenLock
-    );
-  }
-
   async getAllowSpendLastRef(address: string) {
     return this.service.$get<TransactionReference>(
       `/allow-spends/last-reference/${address}`

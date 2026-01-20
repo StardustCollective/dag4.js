@@ -35,11 +35,7 @@ import { networkConfig } from "./network-config";
 import { allowSpend, tokenLock } from "./shared/operations";
 import { normalizePublicKey } from "./utils";
 import {
-  dagAddressValidator,
-  delegatedStakeSchema,
-  postAllowSpendSchema,
-  postTokenLockSchema,
-  validateArraySchema,
+  delegatedStakeSchema,  
   validateSchema,
   withdrawDelegatedStakeSchema,
 } from "./validationSchemas";
@@ -531,109 +527,6 @@ export class DagAccount {
     return hashes;
   }
 
-  /**
-   * @deprecated Use createAllowSpend() instead. This method will be removed in the next major version.
-   */
-  async postAllowSpend(body: {
-    source: string;
-    destination: string;
-    approvers: string[];
-    amount: number;
-    fee: number;
-    currencyId: string | null;
-    validUntilEpoch: number;
-    tokenL1Url: string;
-  }) {
-    console.warn(
-      "postAllowSpend() is deprecated. Use createAllowSpend() instead."
-    );
-    this.assertAccountIsActive();
-    this.assertValidPrivateKey();
-
-    validateSchema(body, postAllowSpendSchema, true);
-
-    // Validate approvers array
-    validateArraySchema(body.approvers, dagAddressValidator, true);
-
-    const {
-      source,
-      destination,
-      approvers,
-      amount,
-      fee,
-      currencyId,
-      validUntilEpoch,
-      tokenL1Url,
-    } = body;
-
-    if (source !== this.address) {
-      throw new Error('"source" must be the same as the account address');
-    }
-
-    let allowSpendLastRef: TransactionReference | null = null;
-    let signedAllowSpend: any | null = null;
-    let allowSpendResponse: { hash: string } | null = null;
-
-    try {
-      // Get allow spend last reference
-      allowSpendLastRef =
-        await this.network.l1Api.getAllowSpendLastRefDeprecated(
-          tokenL1Url,
-          this.address
-        );
-    } catch (err) {
-      console.error("Error getting the allow spend last reference");
-      throw err;
-    }
-
-    if (!allowSpendLastRef) {
-      throw new Error("Unable to find allow spend last reference");
-    }
-
-    try {
-      // Generate signed allow spend body
-      const allowSpendBody = {
-        source,
-        amount,
-        destination,
-        approvers,
-        parent: allowSpendLastRef,
-        lastValidEpochProgress: validUntilEpoch,
-        currencyId: currencyId ?? null,
-        fee: fee ?? 0,
-      };
-      signedAllowSpend = await keyStore.generateBrotliSignature(
-        allowSpendBody,
-        normalizePublicKey(this.publicKey),
-        this.m_keyTrio.privateKey
-      );
-    } catch (err) {
-      console.error("Error generating the signed allow spend");
-      throw err;
-    }
-
-    if (!signedAllowSpend) {
-      throw new Error("Unable to generate signed allow spend");
-    }
-
-    try {
-      // Post signed allow spend body
-      allowSpendResponse = await this.network.l1Api.postAllowSpendDeprecated(
-        tokenL1Url,
-        signedAllowSpend
-      );
-    } catch (err) {
-      console.error("Error sending the allow spend transaction");
-      throw err;
-    }
-
-    if (!allowSpendResponse) {
-      throw new Error("Unable to get allow spend response");
-    }
-
-    return allowSpendResponse;
-  }
-
   async createAllowSpend(body: AllowSpend, params?: Record<string, any>) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
@@ -650,95 +543,6 @@ export class DagAccount {
     return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio, params);
   }
 
-  /**
-   * @deprecated Use createTokenLock() instead. This method will be removed in the next major version.
-   */
-  async postTokenLock(body: {
-    source: string;
-    amount: number;
-    tokenL1Url: string;
-    unlockEpoch: number | null;
-    currencyId: string | null;
-    fee?: number;
-    replaceTokenLockRef: string | null;
-  }) {
-    console.warn(
-      "postTokenLock() is deprecated. Use createTokenLock() instead."
-    );
-    this.assertAccountIsActive();
-    this.assertValidPrivateKey();
-
-    validateSchema(body, postTokenLockSchema, true);
-
-    const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch, replaceTokenLockRef } = body;
-
-    if (source !== this.address) {
-      throw new Error('"source" must be the same as the account address');
-    }
-
-    let tokenLockLastRef: TransactionReference | null = null;
-    let signedTokenLock: any | null = null;
-    let tokenLockResponse: { hash: string } | null = null;
-
-    try {
-      // Get token lock last reference
-      tokenLockLastRef = await this.network.l1Api.getTokenLockLastRefDeprecated(
-        tokenL1Url,
-        this.address
-      );
-    } catch (err) {
-      console.error("Error getting the token lock last reference");
-      throw err;
-    }
-
-    if (!tokenLockLastRef) {
-      throw new Error("Unable to find token lock last reference");
-    }
-
-    try {
-      // Generate signed token lock body
-      const tokenLockBody = {
-        source,
-        amount,
-        parent: tokenLockLastRef,
-        currencyId: currencyId ?? null,
-        fee: fee ?? 0,
-        unlockEpoch: unlockEpoch ?? null,
-        replaceTokenLockRef: replaceTokenLockRef ?? null,
-      };
-  
-      signedTokenLock = await keyStore.generateBrotliSignature(
-        tokenLockBody,
-        normalizePublicKey(this.publicKey),
-        this.m_keyTrio.privateKey
-      );
-    } catch (err) {
-      console.error("Error generating the signed token lock");
-      throw err;
-    }
-
-    if (!signedTokenLock) {
-      throw new Error("Unable to generate signed token lock");
-    }
-
-    try {
-      // Post signed token lock body
-      tokenLockResponse = await this.network.l1Api.postTokenLockDeprecated(
-        tokenL1Url,
-        signedTokenLock
-      );
-    } catch (err) {
-      console.error("Error sending the token lock transaction");
-      throw err;
-    }
-
-    if (!tokenLockResponse) {
-      throw new Error("Unable to get token lock response");
-    }
-
-    return tokenLockResponse;
-  }
-
   async createTokenLock(body: TokenLock, params?: Record<string, any>) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
@@ -753,16 +557,6 @@ export class DagAccount {
     };
 
     return tokenLock(bodyWithCurrencyId, this.network, this.keyTrio, params);
-  }
-
-  /**
-   * @deprecated Use createDelegatedStake() instead. This method will be removed in the next major version.
-   */
-  async postDelegatedStake(body: DelegatedStake) {
-    console.warn(
-      "postDelegatedStake() is deprecated. Use createDelegatedStake() instead."
-    );
-    return this.createDelegatedStake(body);
   }
 
   async createDelegatedStake(body: DelegatedStake) {
@@ -830,16 +624,6 @@ export class DagAccount {
     }
 
     return delegatedStakeResponse;
-  }
-
-  /**
-   * @deprecated Use withdrawDelegatedStake() instead. This method will be removed in the next major version.
-   */
-  async putWithdrawDelegatedStake(body: WithdrawDelegatedStake) {
-    console.warn(
-      "putWithdrawDelegatedStake() is deprecated. Use withdrawDelegatedStake() instead."
-    );
-    return this.withdrawDelegatedStake(body);
   }
 
   async withdrawDelegatedStake(body: WithdrawDelegatedStake) {
