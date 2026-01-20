@@ -26,7 +26,9 @@ import {
   TokenLockResponse,
   TokenLockWithCurrencyId,
   TransactionReference,
-  WithdrawDelegatedStake
+  WithdrawDelegatedStake,
+  TokenLockWithParent,
+  SignedTokenLock
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import { Subject } from "rxjs";
@@ -35,7 +37,11 @@ import { networkConfig } from "./network-config";
 import { allowSpend, tokenLock } from "./shared/operations";
 import { normalizePublicKey } from "./utils";
 import {
-  delegatedStakeSchema,  
+  dagAddressValidator,
+  delegatedStakeSchema,
+  postAllowSpendSchema,
+  postTokenLockSchema,
+  validateArraySchema,
   validateSchema,
   withdrawDelegatedStakeSchema,
 } from "./validationSchemas";
@@ -646,7 +652,96 @@ export class DagAccount {
     return allowSpend(bodyWithCurrencyId, this.network, this.keyTrio, params);
   }
 
-  async createTokenLock(body: TokenLock, params?: Record<string, any>) {
+  /**
+   * @deprecated Use createTokenLock() instead. This method will be removed in the next major version.
+   */
+  async postTokenLock(body: {
+    source: string;
+    amount: number;
+    tokenL1Url: string;
+    unlockEpoch: number | null;
+    currencyId: string | null;
+    fee?: number;
+    replaceTokenLockRef?: string | null;
+  }) {
+    console.warn(
+      "postTokenLock() is deprecated. Use createTokenLock() instead."
+    );
+    this.assertAccountIsActive();
+    this.assertValidPrivateKey();
+
+    validateSchema(body, postTokenLockSchema, true);
+
+    const { amount, currencyId, fee, source, tokenL1Url, unlockEpoch, replaceTokenLockRef } = body;
+
+    if (source !== this.address) {
+      throw new Error('"source" must be the same as the account address');
+    }
+
+    let tokenLockLastRef: TransactionReference | null = null;
+    let signedTokenLock: SignedTokenLock | null = null;
+    let tokenLockResponse: { hash: string } | null = null;
+
+    try {
+      // Get token lock last reference
+      tokenLockLastRef = await this.network.l1Api.getTokenLockLastRefDeprecated(
+        tokenL1Url,
+        this.address
+      );
+    } catch (err) {
+      console.error("Error getting the token lock last reference");
+      throw err;
+    }
+
+    if (!tokenLockLastRef) {
+      throw new Error("Unable to find token lock last reference");
+    }
+
+    try {
+      // Generate signed token lock body
+      const tokenLockBody: TokenLockWithParent = {
+        source,
+        amount,
+        parent: tokenLockLastRef,
+        currencyId: currencyId ?? null,
+        fee: fee ?? 0,
+        unlockEpoch: unlockEpoch ?? null,
+        replaceTokenLockRef: replaceTokenLockRef ?? null,
+      };
+  
+      signedTokenLock = await keyStore.generateBrotliSignature(
+        tokenLockBody,
+        normalizePublicKey(this.publicKey),
+        this.m_keyTrio.privateKey
+      );
+    } catch (err) {
+      console.error("Error generating the signed token lock");
+      throw err;
+    }
+
+    if (!signedTokenLock) {
+      throw new Error("Unable to generate signed token lock");
+    }
+
+    try {
+      // Post signed token lock body
+      tokenLockResponse = await this.network.l1Api.postTokenLockDeprecated(
+        tokenL1Url,
+        signedTokenLock
+      );
+    } catch (err) {
+      console.error("Error sending the token lock transaction");
+      throw err;
+    }
+
+    if (!tokenLockResponse) {
+      throw new Error("Unable to get token lock response");
+    }
+
+    return tokenLockResponse;
+  }
+
+  async createTokenLock(body: TokenLock & { replaceTokenLockRef?: string | null }, params?: Record<string, any>) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
 
@@ -654,7 +749,7 @@ export class DagAccount {
       throw new Error("body must be a valid object");
     }
 
-    const bodyWithCurrencyId: TokenLockWithCurrencyId = {
+    const bodyWithCurrencyId: TokenLockWithCurrencyId & { replaceTokenLockRef?: string | null } = {
       ...body,
       currencyId: null,
     };

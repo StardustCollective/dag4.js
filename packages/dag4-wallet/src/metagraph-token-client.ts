@@ -266,7 +266,7 @@ class MetagraphTokenClient {
     return allowSpend(bodyWithCurrencyId, this.network, this.account.keyTrio, params);
   }
 
-  async createTokenLock(body: TokenLock, params?: Record<string, any>) {
+  async createTokenLock(body: TokenLock & { replaceTokenLockRef?: string | null }, params?: Record<string, any>) {
     this.account.assertAccountIsActive();
     this.account.assertValidPrivateKey();
 
@@ -274,7 +274,7 @@ class MetagraphTokenClient {
       throw new Error("body must be a valid object");
     }
 
-    const bodyWithCurrencyId: TokenLockWithCurrencyId = {
+    const bodyWithCurrencyId: TokenLockWithCurrencyId & { replaceTokenLockRef?: string | null } = {
       ...body,
       currencyId: this.networkInfo.metagraphId,
     };

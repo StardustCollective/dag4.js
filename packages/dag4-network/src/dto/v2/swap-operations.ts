@@ -28,7 +28,7 @@ export type TokenLock = {
   amount: number;
   fee?: number;
   unlockEpoch: number | null;
-  replaceTokenLockRef?: string | null;
+  replaceTokenLockRef: string | null;
 };
 
 export type TokenLockWithCurrencyId = WithCurrencyId<TokenLock>;

@@ -70,6 +70,19 @@ class L1Api {
     );
   }
 
+  /**
+   * @deprecated Use postTokenLock() instead. This method will be removed in the next major version.
+   */
+  async postTokenLockDeprecated(
+    l1Url: string,
+    signedTokenLock: SignedTokenLock
+  ) {
+    const l1Service = new RestApi(l1Url);
+    return l1Service.$post<TransactionReference>(
+      `/token-locks`,
+      signedTokenLock
+    );
+  }
 
   async getAllowSpendLastRef(address: string) {
     return this.service.$get<TransactionReference>(
