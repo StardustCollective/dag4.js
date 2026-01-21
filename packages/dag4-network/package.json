@@ -1,6 +1,6 @@
 {
   "name": "@stardust-collective/dag4-network",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "A key management tool for the Constellation Network",
   "author": "Frank Fox",
   "email": "ffox77@gmail.com",
@@ -22,7 +22,7 @@
     "yalcpush": "yalc push --sig"
   },
   "dependencies": {
-    "@stardust-collective/dag4-core": "2.8.0",
+    "@stardust-collective/dag4-core": "2.8.1",
     "rxjs": "^6.6.3",
     "bignumber.js": "^9.0.1",
     "zod": "^3.24.2"
