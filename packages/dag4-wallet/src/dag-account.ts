@@ -26,7 +26,9 @@ import {
   TokenLockResponse,
   TokenLockWithCurrencyId,
   TransactionReference,
-  WithdrawDelegatedStake
+  WithdrawDelegatedStake,
+  TokenLockWithParent,
+  SignedTokenLock
 } from "@stardust-collective/dag4-network";
 import { BigNumber } from "bignumber.js";
 import { Subject } from "rxjs";
@@ -660,7 +662,7 @@ export class DagAccount {
     unlockEpoch: number | null;
     currencyId: string | null;
     fee?: number;
-    replaceTokenLockRef: string | null;
+    replaceTokenLockRef?: string | null;
   }) {
     console.warn(
       "postTokenLock() is deprecated. Use createTokenLock() instead."
@@ -677,7 +679,7 @@ export class DagAccount {
     }
 
     let tokenLockLastRef: TransactionReference | null = null;
-    let signedTokenLock: any | null = null;
+    let signedTokenLock: SignedTokenLock | null = null;
     let tokenLockResponse: { hash: string } | null = null;
 
     try {
@@ -697,7 +699,7 @@ export class DagAccount {
 
     try {
       // Generate signed token lock body
-      const tokenLockBody = {
+      const tokenLockBody: TokenLockWithParent = {
         source,
         amount,
         parent: tokenLockLastRef,
@@ -739,7 +741,7 @@ export class DagAccount {
     return tokenLockResponse;
   }
 
-  async createTokenLock(body: TokenLock, params?: Record<string, any>) {
+  async createTokenLock(body: TokenLock & { replaceTokenLockRef?: string | null }, params?: Record<string, any>) {
     this.assertAccountIsActive();
     this.assertValidPrivateKey();
 
@@ -747,7 +749,7 @@ export class DagAccount {
       throw new Error("body must be a valid object");
     }
 
-    const bodyWithCurrencyId: TokenLockWithCurrencyId = {
+    const bodyWithCurrencyId: TokenLockWithCurrencyId & { replaceTokenLockRef?: string | null } = {
       ...body,
       currencyId: null,
     };

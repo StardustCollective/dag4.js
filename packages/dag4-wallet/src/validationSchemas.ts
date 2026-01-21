@@ -77,7 +77,8 @@ export const tokenLockSchema = z.object({
     .union([z.string(), z.null()])
     .refine((value) => value === null || value !== "", {
       message: "Must be a valid hash or null",
-    }),
+    })
+    .nullish(),
 });
 
 /**

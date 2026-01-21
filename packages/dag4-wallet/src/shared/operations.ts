@@ -97,7 +97,7 @@ export const allowSpend = async (
 };
 
 export const tokenLock = async (
-  body: TokenLockWithCurrencyId,
+  body: TokenLockWithCurrencyId & { replaceTokenLockRef?: string | null },
   network: SharedNetwork,
   keyTrio: KeyTrio,
   params?: Record<string, any>
