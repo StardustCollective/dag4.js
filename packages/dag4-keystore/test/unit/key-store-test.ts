@@ -102,10 +102,7 @@ describe('Key Store', () => {
 
   it('ETH address from Public', () => {
 
-    const result = ethFromPublicKey(testData.PUBLIC_KEY);
-    const result2 = getAddressFromPublicKey(testData.PUBLIC_KEY.slice(2));
-
-    console.log(result, result2);
+    const result = getAddressFromPublicKey(testData.PUBLIC_KEY.slice(2));
 
     expect(result).to.equal(testData.ETH_ADDRESS);
 
@@ -143,29 +140,6 @@ function btcFromPublicKey (publicKey) {
   // console.log(publicKey, base, shaSha, result)
 
   return bs58.encode(Buffer.from(result, 'hex'));
-}
-
-//https://medium.com/coinmonks/compiling-deploying-and-interacting-with-smart-contract-using-javascript-641cf0342824
-
-const Hash = require("eth-lib/lib/hash");
-// const ethers = require('ethers');
-
-const toChecksum = address => {
-  const addressHash = Hash.keccak256(address.slice(2));
-  let checksumAddress = "0x";
-  for (let i = 0; i < 40; i++)
-    checksumAddress += parseInt(addressHash[i + 2], 16) > 7
-      ? address[i + 2].toUpperCase()
-      : address[i + 2];
-  return checksumAddress;
-}
-
-function ethFromPublicKey (publicKey) {
-
-  publicKey = "0x" + publicKey.slice(2);
-  const publicHash = Hash.keccak256(publicKey);
-  const address = toChecksum("0x" + publicHash.slice(-40));
-  return address;
 }
 
 function getAddressFromPublicKey (publicKey) {
